@@ -1,0 +1,30 @@
+# Line endings are decided here, not by whoever cloned the repository.
+#
+# Without this, git falls back to each developer's core.autocrlf. On Windows
+# that is usually true, so every file written by anything that emits LF gets
+# rewritten on the next `git add` — and the warning arrives twelve at a time,
+# for files whose content did not change. Worse, it makes a diff between two
+# machines show whole files as modified.
+#
+# eol=lf rather than eol=native on purpose. The estate builds on Windows, Linux
+# and macOS, and the checked-in bytes should be the same everywhere; Rust,
+# .NET, PowerShell 7 and every editor in use read LF without complaint.
+* text=auto eol=lf
+
+# Binary, so git never inspects or converts them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.pdb binary
+
+# Windows-only tooling that genuinely wants CRLF. A .cmd or .bat run by
+# cmd.exe is the one case where LF is not merely unconventional but wrong.
+*.cmd text eol=crlf
+*.bat text eol=crlf
