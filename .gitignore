@@ -2,8 +2,18 @@
 target/
 **/target/
 
-# Keep Cargo.lock committed for Xmip runtime/platform reproducibility.
-# Do not add Cargo.lock here.
+# Cargo.lock is not committed.
+#
+# Every Xmip module is a library, and a library's lock file is never read by
+# anything that depends on it. More decisively: dependencies track `branch =
+# "main"` under ADR-0005, and a committed lock pins a commit — which re-derives
+# by hand exactly what tracking main exists to avoid, and churns in every
+# module on every update.
+#
+# This is reversed at first release, when dependencies move from a branch to
+# pinned versions and the assembly becomes something worth reproducing byte for
+# byte.
+Cargo.lock
 
 # Rust compiler intermediate artifacts
 *.rlib
