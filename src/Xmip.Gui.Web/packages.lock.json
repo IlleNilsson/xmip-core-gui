@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net11.0": {
+      "Microsoft.AspNetCore.App.Internal.Assets": {
+        "type": "Direct",
+        "requested": "[11.0.0-preview.7.26381.103, )",
+        "resolved": "11.0.0-preview.7.26381.103",
+        "contentHash": "pKUm+h+BVe7yLdqDeKhA9ydc4S5xdZNcDKTdFQ25lXjkicHqGj3BR0miY0L68zynMl3KyY74aJkF9kkdHBm2Sw=="
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+<Project>
+
+  <!--
+    Properties every project in this repository shares.
+
+    Here rather than in each .csproj on purpose. A repository with a surface
+    project and a test project has two manifests, and two manifests that must
+    agree about the target framework will eventually stop agreeing.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- A warning nobody has to fix is a warning nobody reads. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+
+    <!-- Required by EnforceCodeStyleInBuild: IDE0005, unnecessary usings, only
+         runs when the documentation file is generated. Wanted regardless — a
+         public surface without documentation is one CS1591 away from being
+         told so, and that is the point. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NETSDK1057 says .NET 11 is a preview. Known and chosen; ADR-0021
+         keeps Xmip on current platforms. Left as a warning rather than
+         suppressed, so it stops being ignorable when 11 goes stable. -->
+    <NoWarn>$(NoWarn)</NoWarn>
+
+    <!-- An operator surface reports identifiers, status codes and module
+         names. None of that is locale-dependent, and pulling ICU in for it
+         costs about 30 MB in a self-contained build. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- A restore that resolves differently on two machines is not a problem
+         this repository wants to own. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+    <Authors>Ilian Nilsson</Authors>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!--
+    unsafe is off by default and turned on per project.
+
+    The Rust template forbids it outright. Here it cannot be forbidden: a
+    surface that crosses the C ABI in include/xmip_module.h needs function
+    pointers and raw structs, and that is the whole reason the project exists.
+    A project that does not cross the boundary should leave this alone.
+  -->
+  <PropertyGroup>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

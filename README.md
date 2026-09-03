@@ -10,7 +10,15 @@ with.
 
 ## State
 
-Declared, empty, and honestly so: `maturity = "planned"` in
-`architecture.toml`. The market survey calls this gap wider than any open
-runtime feature — every competitor leads with a visual designer — so when
-work starts here, it starts with that weight on it.
+The web host exists: `src/Xmip.Gui.Web`, a .NET 11 Blazor Web App with one
+screen, health and throughput over the operator boundary in `xmip_operate.h`.
+It loads `xmip_core_runtime` and reads its table; when it cannot, a stand-in
+answers and every page says SAMPLE in red. Started 2026-09-04.
+
+The market survey calls this gap wider than any open runtime feature — every
+competitor leads with a visual designer. One screen is not a designer. It is
+the first thing an operator can look at.
+
+Run it: `dotnet run --project src/Xmip.Gui.Web`. `appsettings.Development.json`
+points at the runtime's debug build; set `Xmip:RuntimeLibrary` to point
+elsewhere.
