@@ -1,0 +1,91 @@
+/* Health is a colour and a word, never a colour alone — the same rule the
+   estate's tooling follows. Every state prints its name beside its dot. */
+
+:root {
+    --green: #1f9d55;
+    --yellow: #d69e2e;
+    --red: #c53030;
+    --unreachable: #6b7280;
+    --ink: #1a202c;
+    --muted: #718096;
+    --line: #e2e8f0;
+    --paper: #ffffff;
+    --ground: #f7fafc;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--ground);
+}
+
+.bar {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+}
+
+.bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.04em; }
+.bar .source { color: var(--muted); font-size: 0.85rem; }
+.bar .source.sample { color: var(--red); font-weight: 600; }
+
+.summary {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.worst, .count {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+}
+
+.worst { display: flex; align-items: center; gap: 0.75rem; }
+.worst .label { font-family: ui-monospace, monospace; color: var(--muted); }
+.worst .state { margin-left: auto; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.count { display: flex; flex-direction: column; }
+.count .value { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.count .kind { color: var(--muted); }
+.count .window { color: var(--muted); font-size: 0.8rem; }
+
+.tree { padding: 0 1.5rem 1.5rem; }
+.tree .empty { color: var(--muted); }
+
+.row {
+    display: grid;
+    grid-template-columns: 1rem 1fr 2fr 6rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-top: none;
+}
+
+.row:first-child { border-top: 1px solid var(--line); border-radius: 6px 6px 0 0; }
+.row:last-child { border-radius: 0 0 6px 6px; }
+.row .scope { font-family: ui-monospace, monospace; }
+.row .evidence { color: var(--ink); }
+.row .age { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+.dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; }
+.green .dot { background: var(--green); }
+.yellow .dot { background: var(--yellow); }
+.red .dot { background: var(--red); }
+.unreachable .dot { background: var(--unreachable); }
+
+.green .state { color: var(--green); }
+.yellow .state { color: var(--yellow); }
+.red .state { color: var(--red); }
+.unreachable .state { color: var(--unreachable); }

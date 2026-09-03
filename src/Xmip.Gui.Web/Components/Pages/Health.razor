@@ -1,0 +1,102 @@
+@page "/"
+@using Xmip.Gui.Web.Surface
+
+<PageTitle>Xmip — Health</PageTitle>
+
+<header class="bar">
+    <h1>Xmip</h1>
+    <span class="source @(IsSample ? "sample" : "")">@Surface.Source</span>
+</header>
+
+<section class="summary">
+    <div class="worst @Worst.ToString().ToLowerInvariant()">
+        <span class="dot"></span>
+        <span class="label">@Scope</span>
+        <span class="state">@Worst</span>
+    </div>
+
+    <div class="counts">
+        @foreach (Counted kind in Kinds)
+        {
+            MeasurementRecord? measured = Surface.Measure(Scope, kind);
+            <div class="count">
+                <span class="value">@Format(measured)</span>
+                <span class="kind">@kind.ToString().ToLowerInvariant()</span>
+                <span class="window">@(measured is null ? "not recorded" : "last minute")</span>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="tree">
+    @if (Records.Count == 0)
+    {
+        <p class="empty">Nothing recorded beneath <code>@Scope</code>.</p>
+    }
+    else
+    {
+        @foreach (HealthRecord record in Records)
+        {
+            <div class="row @record.State.ToString().ToLowerInvariant()">
+                <span class="dot"></span>
+                <span class="scope">@Trim(record.Scope)</span>
+                <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
+                <span class="age">@Age(record.Observed)</span>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private const string Scope = "xmip:///";
+
+    private static readonly Counted[] Kinds =
+        [Counted.Streams, Counted.Messages, Counted.Journeys, Counted.Bytes];
+
+    [Inject]
+    private IOperatorSurface Surface { get; set; } = default!;
+
+    private IReadOnlyList<HealthRecord> Records => Surface.Health(Scope);
+
+    private bool IsSample => Surface.Source.StartsWith("SAMPLE", StringComparison.Ordinal);
+
+    // observability-model.md section 6: the worst state beneath is the state
+    // shown. Nothing recorded is not green — it is nothing recorded.
+    private HealthState Worst =>
+        Records.Count == 0 ? HealthState.Unreachable : Records.Max(record => record.State);
+
+    private static string Trim(string scope)
+    {
+        return scope.Replace("xmip:///", "", StringComparison.Ordinal);
+    }
+
+    private static string Format(MeasurementRecord? measured)
+    {
+        return measured switch
+        {
+            null => "–",
+            { Counted: Counted.Bytes } bytes => Bytes(bytes.Value),
+            { } count => count.Value.ToString("N0", System.Globalization.CultureInfo.InvariantCulture),
+        };
+    }
+
+    private static string Bytes(ulong value)
+    {
+        return value switch
+        {
+            >= 1_000_000_000 => $"{value / 1_000_000_000.0:F1} GB",
+            >= 1_000_000 => $"{value / 1_000_000.0:F1} MB",
+            >= 1_000 => $"{value / 1_000.0:F1} kB",
+            _ => $"{value} B",
+        };
+    }
+
+    private static string Age(DateTimeOffset observed)
+    {
+        TimeSpan age = DateTimeOffset.UtcNow - observed;
+
+        return age.TotalSeconds < 60
+            ? $"{(int)age.TotalSeconds}s ago"
+            : $"{(int)age.TotalMinutes}m ago";
+    }
+}

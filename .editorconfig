@@ -1,0 +1,35 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{rs,toml}]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{cs,csproj,props,targets}]
+indent_style = space
+indent_size = 4
+
+[*.{json,csproj,props,targets}]
+indent_size = 2
+
+# C# style. Enforced at build, not by review: TreatWarningsAsErrors in
+# Directory.Build.props turns each of these into a failure rather than a note
+# somebody scrolls past.
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:error
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_prefer_braces = true:error
+dotnet_style_require_accessibility_modifiers = always:error
+dotnet_diagnostic.CA1416.severity = error

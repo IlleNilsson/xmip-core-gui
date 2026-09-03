@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Target framework, nullability, analysis level and warnings-as-errors come
+    from Directory.Build.props at the repository root, the same as every .NET
+    repository in the estate. Only what is specific to this project is here.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>Xmip.Gui.Web</RootNamespace>
+    <AssemblyName>Xmip.Gui.Web</AssemblyName>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+
+    <!-- The web host of the GUI, per ADR-0014: it P/Invokes xmip_operate.h
+         in xmip-core-abi, and that needs function pointers and raw structs.
+         Operator/NativeOperator.cs is the one file that uses it. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Razor-generated code does not carry XML documentation and the template
+         turns CS1591 into an error for everything. Documented public surface
+         still matters for the operator classes; the components are pages. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>
