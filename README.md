@@ -11,7 +11,11 @@ with.
 ## State
 
 The web host exists: `src/Xmip.Gui.Web`, a .NET 11 Blazor Web App with one
-screen, health and throughput over the operator boundary in `xmip_operate.h`.
+screen over the operator boundary in `xmip_operate.h`. **The landing page is
+the cluster and its message path** — Receive, Process, Send, each with its
+health and what it moved — because that is what an operator runs. Nodes are
+infrastructure and sit at the bottom, for when a stage is red and the question
+becomes where. Stated by the owner, 2026-09-05.
 It loads `xmip_core_runtime` and reads its table; when it cannot, a stand-in
 answers and every page says SAMPLE in red. Started 2026-09-04.
 

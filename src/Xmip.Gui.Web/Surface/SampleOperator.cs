@@ -11,14 +11,16 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
 
     private static readonly HealthRecord[] Tree =
     [
-        new("xmip:///edge-01/transport/sftp", HealthState.Red,
+        // xmip:///<node>/<receive|process|send>/<name>: the node is where it
+        // runs, the stage is what it is. The landing page groups by stage.
+        new("xmip:///edge-01/receive/partner-x-sftp", HealthState.Red,
             "connection refused by partner-x (10.0.4.21:22)", Now.AddSeconds(-4)),
         new("xmip:///edge-01/process/approval", HealthState.Yellow,
             "3 Journeys waiting longer than 5 minutes", Now.AddSeconds(-2)),
-        new("xmip:///edge-01/transport/ftp", HealthState.Green, "", Now.AddSeconds(-2)),
-        new("xmip:///edge-01/transport/http", HealthState.Green, "", Now.AddSeconds(-1)),
+        new("xmip:///edge-01/receive/orders-ftp", HealthState.Green, "", Now.AddSeconds(-2)),
+        new("xmip:///edge-01/receive/orders-http", HealthState.Green, "", Now.AddSeconds(-1)),
         new("xmip:///edge-01/send/billing", HealthState.Green, "", Now.AddSeconds(-1)),
-        new("xmip:///edge-02", HealthState.Unreachable, "no answer in 10 s", Now.AddSeconds(-10)),
+        new("xmip:///edge-02/send/warehouse", HealthState.Unreachable, "no answer in 10 s", Now.AddSeconds(-10)),
     ];
 
     /// <inheritdoc />
