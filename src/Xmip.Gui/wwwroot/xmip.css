@@ -198,3 +198,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .locs input, .locs select { width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
 .locs input.addr { min-width: 16rem; }
 .locs button.del { border-color: var(--red); color: var(--red); padding: 0.2rem 0.5rem; }
+
+/* Configuration editor: a list of the main and node configs, and the editor. */
+.cfg-layout { display: grid; grid-template-columns: 15rem 1fr; align-items: start; }
+.configs { padding: 1.25rem 1rem; border-right: 1px solid var(--line); display: grid; gap: 0.35rem; align-content: start; }
+.configs h2 { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.config-item {
+    display: flex; align-items: center; gap: 0.5rem; text-align: left; width: 100%;
+    background: none; border: 1px solid transparent; border-radius: 6px;
+    padding: 0.4rem 0.6rem; cursor: pointer; font: inherit;
+}
+.config-item:hover { background: var(--ground); }
+.config-item.selected { background: var(--ground); border-color: var(--line); font-weight: 600; }
+.config-item .config-name { flex: 1; }
+.config-item .badge { font-size: 0.7rem; color: var(--paper); background: var(--green); padding: 0.05rem 0.4rem; border-radius: 999px; }
+.configs .dir { margin-top: 0.75rem; color: var(--muted); font-size: 0.72rem; word-break: break-all; font-family: ui-monospace, monospace; }
