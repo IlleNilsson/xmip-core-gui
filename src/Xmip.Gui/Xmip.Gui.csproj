@@ -27,6 +27,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0-preview.7.*" />
+    <!-- The file surface reads the playground's TOML snapshot and history. On
+         disk the estate is TOML; JSON is reserved for memory and the wire. The
+         same TOML reader the hosts use for configuration reads it here. -->
+    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.7.*" />
   </ItemGroup>
 
 </Project>

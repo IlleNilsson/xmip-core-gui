@@ -1,4 +1,5 @@
-using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Tomlyn.Extensions.Configuration;
 
 namespace Xmip.Gui.Surface;
 
@@ -9,16 +10,18 @@ namespace Xmip.Gui.Surface;
 /// fresh on every query so each render reflects the latest round.
 /// </summary>
 /// <remarks>
-/// A read-only surface: it reports what the playground published and never acts
-/// on it, so <see cref="PauseScope"/> and <see cref="ResumeScope"/> decline —
-/// the playground is a test, not a node to mitigate. ADR-0027, ADR-0028.
+/// The file is TOML — on disk the estate is TOML, and JSON is reserved for
+/// memory and the wire — read with the same TOML reader the hosts use for
+/// configuration. A read-only surface: it reports what the playground published
+/// and never acts on it, so <see cref="PauseScope"/> and <see cref="ResumeScope"/>
+/// decline. ADR-0027, ADR-0028, ADR-0029.
 /// </remarks>
 public sealed class FileOperator(string path) : IOperatorSurface
 {
     /// <summary>The well-known snapshot path, shared with the playground's own
     /// default so the two agree with no configuration.</summary>
     public static string DefaultPath { get; } =
-        Path.Combine(Path.GetTempPath(), "xmip-playground-snapshot.json");
+        Path.Combine(Path.GetTempPath(), "xmip-playground-snapshot.toml");
 
     /// <inheritdoc />
     public string Source => $"PLAYGROUND — {path}";
@@ -78,50 +81,41 @@ public sealed class FileOperator(string path) : IOperatorSurface
     {
         try
         {
-            using FileStream stream = File.OpenRead(path);
-            using JsonDocument document = JsonDocument.Parse(stream);
-            JsonElement root = document.RootElement;
+            if (!File.Exists(path))
+            {
+                return new Snapshot([], []);
+            }
+
+            IConfigurationRoot document = new ConfigurationBuilder()
+                .AddTomlFile(path, optional: true, reloadOnChange: false)
+                .Build();
+
+            string node = document["node"] ?? "xmip:///";
 
             List<HealthRecord> records = [];
-            if (root.TryGetProperty("records", out JsonElement recordsElement))
+            foreach (IConfigurationSection row in document.GetSection("records").GetChildren())
             {
-                foreach (JsonElement item in recordsElement.EnumerateArray())
-                {
-                    records.Add(ReadHealth(item));
-                }
+                records.Add(new HealthRecord(
+                    row["scope"] ?? string.Empty,
+                    ParseState(row["state"]),
+                    ParseByte(row["severity"]),
+                    row["evidence"] ?? string.Empty,
+                    ParseObserved(row["observed_unix_nanos"])));
             }
 
             List<CountRecord> counts = [];
-            if (root.TryGetProperty("counts", out JsonElement countsElement))
+            foreach (IConfigurationSection row in document.GetSection("counts").GetChildren())
             {
-                foreach (JsonElement item in countsElement.EnumerateArray())
-                {
-                    counts.Add(new CountRecord(
-                        root.GetProperty("node").GetString() ?? "xmip:///",
-                        ParseCounted(item.GetProperty("counted").GetString()),
-                        item.GetProperty("value").GetUInt64()));
-                }
+                counts.Add(new CountRecord(node, ParseCounted(row["counted"]), ParseUlong(row["value"])));
             }
 
             return new Snapshot(records, counts);
         }
-        catch (Exception exception) when (exception is IOException or JsonException)
+        catch (Exception exception)
+            when (exception is IOException or FormatException or InvalidOperationException)
         {
             return new Snapshot([], []);
         }
-    }
-
-    private static HealthRecord ReadHealth(JsonElement item)
-    {
-        long nanos = item.GetProperty("observedUnixNanos").GetInt64();
-        DateTimeOffset observed = DateTimeOffset.UnixEpoch.AddTicks(nanos / 100);
-
-        return new HealthRecord(
-            item.GetProperty("scope").GetString() ?? "",
-            ParseState(item.GetProperty("state").GetString()),
-            item.GetProperty("severity").GetByte(),
-            item.GetProperty("evidence").GetString() ?? "",
-            observed);
     }
 
     private static HealthState ParseState(string? state)
@@ -145,6 +139,23 @@ public sealed class FileOperator(string path) : IOperatorSurface
             "bytes" => Counted.Bytes,
             _ => Counted.Streams,
         };
+    }
+
+    private static byte ParseByte(string? value)
+    {
+        return byte.TryParse(value, out byte parsed) ? parsed : (byte)0;
+    }
+
+    private static ulong ParseUlong(string? value)
+    {
+        return ulong.TryParse(value, out ulong parsed) ? parsed : 0UL;
+    }
+
+    private static DateTimeOffset ParseObserved(string? nanos)
+    {
+        return long.TryParse(nanos, out long value)
+            ? DateTimeOffset.UnixEpoch.AddTicks(value / 100)
+            : DateTimeOffset.UtcNow;
     }
 
     private static bool Beneath(string candidate, string scope)

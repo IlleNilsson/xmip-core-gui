@@ -432,7 +432,9 @@
       "xmip.gui": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Web": "[11.0.0-preview.7.*, )"
+          "Microsoft.AspNetCore.Components.Web": "[11.0.0-preview.7.*, )",
+          "Microsoft.Extensions.Configuration": "[11.0.0-preview.7.*, )",
+          "Tomlyn.Extensions.Configuration": "[2.0.0, )"
         }
       }
     },
