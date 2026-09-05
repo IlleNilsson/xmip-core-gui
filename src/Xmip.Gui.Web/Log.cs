@@ -15,4 +15,8 @@ internal static partial class Log
     /// <summary>What the runtime said when asked to start the configured node.</summary>
     [LoggerMessage(Level = LogLevel.Information, Message = "Node: {Outcome}")]
     public static partial void NodeStarted(this ILogger logger, string outcome);
+
+    /// <summary>The Xmip Playground is rolling and its snapshot is being shown.</summary>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Showing playground snapshot: {Path}")]
+    public static partial void ShowingPlayground(this ILogger logger, string path);
 }

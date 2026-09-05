@@ -35,6 +35,15 @@ public static class MauiProgram
         // when it cannot, and says so.
         builder.Services.AddSingleton<IOperatorSurface>(_ =>
         {
+            // The Xmip Playground, if it is rolling: its snapshot is the live
+            // matrix to watch over time. Shown when present, before any runtime.
+            string snapshot = builder.Configuration["Xmip:PlaygroundSnapshot"] ?? FileOperator.DefaultPath;
+
+            if (File.Exists(snapshot))
+            {
+                return new FileOperator(snapshot);
+            }
+
             string configured = builder.Configuration["Xmip:RuntimeLibrary"] ?? "xmip_core_runtime.dll";
             string path = Resolve(configured, basePath);
 
