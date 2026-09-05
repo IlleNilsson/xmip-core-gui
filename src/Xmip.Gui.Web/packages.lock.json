@@ -7,6 +7,20 @@
         "requested": "[11.0.0-preview.7.26381.103, )",
         "resolved": "11.0.0-preview.7.26381.103",
         "contentHash": "pKUm+h+BVe7yLdqDeKhA9ydc4S5xdZNcDKTdFQ25lXjkicHqGj3BR0miY0L68zynMl3KyY74aJkF9kkdHBm2Sw=="
+      },
+      "Tomlyn.Extensions.Configuration": {
+        "type": "Direct",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "j2tkaXy3yfsMUd3fwg5qEKTwmwUsxcI5NSoBGGgOvrEC6M72FJnta0yuah9M72xj1wNT3scI0oUQAIkDWXeSsQ==",
+        "dependencies": {
+          "Tomlyn": "2.3.0"
+        }
+      },
+      "Tomlyn": {
+        "type": "Transitive",
+        "resolved": "2.3.0",
+        "contentHash": "kA3P/rsBD4HUio0Q67GUgYuWdfoV273HhQJmIRfJymKiZKEi1+xgjXTRW0OtcdEJqL4vTzDvKxbOMYR4tjBCPw=="
       }
     }
   }

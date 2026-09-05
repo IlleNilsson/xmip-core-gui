@@ -10,6 +10,34 @@
         "buildMultiTargeting": {
           "buildMultiTargeting/Microsoft.AspNetCore.App.Internal.Assets.targets": {}
         }
+      },
+      "Tomlyn/2.3.0": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Tomlyn.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Tomlyn.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/Tomlyn.targets": {}
+        }
+      },
+      "Tomlyn.Extensions.Configuration/2.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Tomlyn": "2.3.0"
+        },
+        "compile": {
+          "lib/net10.0/Tomlyn.Extensions.Configuration.dll": {}
+        },
+        "runtime": {
+          "lib/net10.0/Tomlyn.Extensions.Configuration.dll": {}
+        }
       }
     }
   },
@@ -36,11 +64,47 @@
         "staticwebassets/_framework/blazor.web.js",
         "staticwebassets/_framework/blazor.web.js.map"
       ]
+    },
+    "Tomlyn/2.3.0": {
+      "sha512": "kA3P/rsBD4HUio0Q67GUgYuWdfoV273HhQJmIRfJymKiZKEi1+xgjXTRW0OtcdEJqL4vTzDvKxbOMYR4tjBCPw==",
+      "type": "package",
+      "path": "tomlyn/2.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Tomlyn.png",
+        "analyzers/dotnet/cs/Tomlyn.SourceGeneration.dll",
+        "buildTransitive/Tomlyn.targets",
+        "lib/net10.0/Tomlyn.dll",
+        "lib/net10.0/Tomlyn.xml",
+        "lib/net8.0/Tomlyn.dll",
+        "lib/net8.0/Tomlyn.xml",
+        "lib/netstandard2.0/Tomlyn.dll",
+        "lib/netstandard2.0/Tomlyn.xml",
+        "readme.md",
+        "tomlyn.2.3.0.nupkg.sha512",
+        "tomlyn.nuspec"
+      ]
+    },
+    "Tomlyn.Extensions.Configuration/2.0.0": {
+      "sha512": "j2tkaXy3yfsMUd3fwg5qEKTwmwUsxcI5NSoBGGgOvrEC6M72FJnta0yuah9M72xj1wNT3scI0oUQAIkDWXeSsQ==",
+      "type": "package",
+      "path": "tomlyn.extensions.configuration/2.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net10.0/Tomlyn.Extensions.Configuration.dll",
+        "lib/net8.0/Tomlyn.Extensions.Configuration.dll",
+        "lib/netstandard2.0/Tomlyn.Extensions.Configuration.dll",
+        "tomlyn.extensions.configuration.2.0.0.nupkg.sha512",
+        "tomlyn.extensions.configuration.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net11.0": [
-      "Microsoft.AspNetCore.App.Internal.Assets >= 11.0.0-preview.7.26381.103"
+      "Microsoft.AspNetCore.App.Internal.Assets >= 11.0.0-preview.7.26381.103",
+      "Tomlyn.Extensions.Configuration >= 2.0.0"
     ]
   },
   "packageFolders": {
@@ -49,11 +113,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\Xmip.Gui.Web.csproj",
+      "projectUniqueName": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\Xmip.Gui.Web.csproj",
       "projectName": "Xmip.Gui.Web",
-      "projectPath": "d:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\Xmip.Gui.Web.csproj",
+      "projectPath": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\Xmip.Gui.Web.csproj",
       "packagesPath": "C:\\Users\\IlianNilsson\\.nuget\\packages\\",
-      "outputPath": "d:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\obj\\",
+      "outputPath": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\IlianNilsson\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -97,6 +161,10 @@
             "target": "Package",
             "version": "[11.0.0-preview.7.26381.103, )",
             "autoReferenced": true
+          },
+          "Tomlyn.Extensions.Configuration": {
+            "target": "Package",
+            "version": "[2.0.0, )"
           }
         },
         "imports": [

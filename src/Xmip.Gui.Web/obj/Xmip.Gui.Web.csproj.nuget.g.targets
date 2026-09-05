@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)tomlyn\2.3.0\buildTransitive\Tomlyn.targets" Condition="Exists('$(NuGetPackageRoot)tomlyn\2.3.0\buildTransitive\Tomlyn.targets')" />
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.app.internal.assets\11.0.0-preview.7.26381.103\buildTransitive\Microsoft.AspNetCore.App.Internal.Assets.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.app.internal.assets\11.0.0-preview.7.26381.103\buildTransitive\Microsoft.AspNetCore.App.Internal.Assets.targets')" />
   </ImportGroup>
 </Project>

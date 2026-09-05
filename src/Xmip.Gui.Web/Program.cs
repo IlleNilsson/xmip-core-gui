@@ -1,8 +1,24 @@
+using Tomlyn.Extensions.Configuration;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
 using Xmip.Gui.Web.Surface;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// TOML, and only TOML. The host would read appsettings.json and its
+// environment variant by default; Xmip configures nothing in JSON anywhere,
+// so those sources go and xmip.gui.toml takes their place. Command line and
+// environment variables stay, because an operator overriding one key at
+// launch is not a configuration file.
+foreach (IConfigurationSource source in builder.Configuration.Sources.ToArray())
+{
+    if (source is Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+    {
+        builder.Configuration.Sources.Remove(source);
+    }
+}
+
+builder.Configuration.AddTomlFile("xmip.gui.toml", optional: false, reloadOnChange: true);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
