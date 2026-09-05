@@ -21,6 +21,9 @@
         "type": "Transitive",
         "resolved": "2.3.0",
         "contentHash": "kA3P/rsBD4HUio0Q67GUgYuWdfoV273HhQJmIRfJymKiZKEi1+xgjXTRW0OtcdEJqL4vTzDvKxbOMYR4tjBCPw=="
+      },
+      "xmip.gui": {
+        "type": "Project"
       }
     }
   }

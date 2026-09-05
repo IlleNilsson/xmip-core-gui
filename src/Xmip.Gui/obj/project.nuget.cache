@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "9gM48jRy5no=",
+  "success": true,
+  "projectFilePath": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui\\Xmip.Gui.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.authorization\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.authorization.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.components\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.components.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.components.analyzers.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.components.forms\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.components.forms.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.components.web\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.components.web.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.metadata\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.metadata.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.configuration\\11.0.0-preview.7.26381.103\\microsoft.extensions.configuration.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.configuration.binder\\11.0.0-preview.7.26381.103\\microsoft.extensions.configuration.binder.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\11.0.0-preview.7.26381.103\\microsoft.extensions.dependencyinjection.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.diagnostics\\11.0.0-preview.7.26381.103\\microsoft.extensions.diagnostics.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.localization.abstractions\\11.0.0-preview.7.26381.103\\microsoft.extensions.localization.abstractions.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.options.configurationextensions\\11.0.0-preview.7.26381.103\\microsoft.extensions.options.configurationextensions.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.extensions.validation\\11.0.0-preview.7.26381.103\\microsoft.extensions.validation.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.jsinterop\\11.0.0-preview.7.26381.103\\microsoft.jsinterop.11.0.0-preview.7.26381.103.nupkg.sha512"
+  ],
+  "logs": []
+}

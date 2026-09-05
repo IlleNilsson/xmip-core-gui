@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Xmip.Gui.Web.Surface;
+namespace Xmip.Gui.Surface;
 
 /// <summary>
 /// The operator boundary as <c>include/xmip_operate.h</c> declares it, crossed

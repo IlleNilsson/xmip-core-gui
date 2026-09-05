@@ -1,0 +1,9 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAssetPackageManifest Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)Xmip.Gui.PackageAssets.json'))">
+      <SourceId>Xmip.Gui</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <PackageRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</PackageRoot>
+    </StaticWebAssetPackageManifest>
+  </ItemGroup>
+</Project>

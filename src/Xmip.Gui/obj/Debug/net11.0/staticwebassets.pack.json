@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui\\wwwroot\\xmip.css",
+      "PackagePath": "staticwebassets\\xmip.css"
+    },
+    {
+      "Id": "obj\\Debug\\net11.0\\staticwebassets\\Xmip.Gui.PackageAssets.json",
+      "PackagePath": "build\\Xmip.Gui.PackageAssets.json"
+    },
+    {
+      "Id": "obj\\Debug\\net11.0\\staticwebassets\\msbuild.Xmip.Gui.Microsoft.AspNetCore.StaticWebAssets.targets",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.targets"
+    },
+    {
+      "Id": "obj\\Debug\\net11.0\\staticwebassets\\msbuild.build.Xmip.Gui.targets",
+      "PackagePath": "build\\Xmip.Gui.targets"
+    },
+    {
+      "Id": "obj\\Debug\\net11.0\\staticwebassets\\msbuild.buildMultiTargeting.Xmip.Gui.targets",
+      "PackagePath": "buildMultiTargeting\\Xmip.Gui.targets"
+    },
+    {
+      "Id": "obj\\Debug\\net11.0\\staticwebassets\\msbuild.buildTransitive.Xmip.Gui.targets",
+      "PackagePath": "buildTransitive\\Xmip.Gui.targets"
+    }
+  ],
+  "ElementsToRemove": []
+}
