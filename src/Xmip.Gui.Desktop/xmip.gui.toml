@@ -1,0 +1,14 @@
+# The desktop GUI's configuration. TOML, like everything Xmip configures —
+# Xmip uses no JSON for configuration anywhere.
+#
+# Paths are resolved against the repository root during development (see
+# MauiProgram.cs); a packaged app resolves them against its own directory.
+# Set them to the runtime library and the node you want to watch.
+
+[Xmip]
+# The runtime's native library, exporting xmip_operate_v1 and xmip_start_v1.
+# Empty, or missing, and the GUI shows sample data and says so.
+RuntimeLibrary = "modules/platform/runtime/target/debug/xmip_core_runtime.dll"
+
+# The node to start and watch. Remove the line to start nothing.
+NodeConfiguration = "modules/operations/gui/samples/edge-01.xmip.toml"

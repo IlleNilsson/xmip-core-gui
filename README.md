@@ -23,7 +23,13 @@ The market survey calls this gap wider than any open runtime feature — every
 competitor leads with a visual designer. One screen is not a designer. It is
 the first thing an operator can look at.
 
-Run it: `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
+Two hosts, one library. ADR-0014.
+
+**Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
+
+**Desktop** — `dotnet run --project src/Xmip.Gui.Desktop -f net11.0-windows10.0.19041.0`.
+A native window; needs the maui-windows workload. Same screen, same operator
+boundary, so the two cannot disagree.
 
 Configuration is `src/Xmip.Gui.Web/xmip.gui.toml`: where the runtime library
 is, which node to start, the port, logging. TOML, because Xmip configures

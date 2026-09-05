@@ -1,0 +1,11 @@
+@* The pages live in Xmip.Gui, the shared library — the same ones the web host
+   serves. The router is told to look there; this host contributes only the
+   window, the layout and the not-found page. *@
+<Router AppAssembly="typeof(MauiProgram).Assembly"
+        AdditionalAssemblies="new[] { typeof(Xmip.Gui.Surface.IOperatorSurface).Assembly }"
+        NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
