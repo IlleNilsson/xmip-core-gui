@@ -159,6 +159,12 @@
         <member name="M:Xmip.Gui.Web.Surface.SampleOperator.Measure(System.String,Xmip.Gui.Web.Surface.Counted)">
             <inheritdoc />
         </member>
+        <member name="T:Xmip.Gui.Web.Components.Pages.Health.Stage">
+            <summary>A stage of the message path, and what it counts.</summary>
+        </member>
+        <member name="M:Xmip.Gui.Web.Components.Pages.Health.Stage.#ctor(System.String,System.String,Xmip.Gui.Web.Surface.Counted)">
+            <summary>A stage of the message path, and what it counts.</summary>
+        </member>
         <member name="T:Program">
             <summary>
             Auto-generated public partial Program class for top-level statement apps.

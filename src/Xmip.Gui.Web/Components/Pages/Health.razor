@@ -1,51 +1,86 @@
 @page "/"
+@rendermode InteractiveServer
 @using Xmip.Gui.Web.Surface
 
-<PageTitle>Xmip — Health</PageTitle>
+<PageTitle>Xmip — Cluster</PageTitle>
 
 <header class="bar">
     <h1>Xmip</h1>
+    <span class="crumb">cluster</span>
     <span class="source @(IsSample ? "sample" : "")">@Surface.Source</span>
 </header>
 
-<section class="summary">
-    <div class="worst @WorstClass">
-        <span class="dot"></span>
-        <span class="label">@Scope</span>
-        <span class="state">@WorstLabel</span>
-    </div>
-
-    <div class="counts">
-        @foreach (Counted kind in Kinds)
-        {
-            MeasurementRecord? measured = Surface.Measure(Scope, kind);
-            <div class="count">
-                <span class="value">@Format(measured)</span>
-                <span class="kind">@kind.ToString().ToLowerInvariant()</span>
-                <span class="window">@(measured is null ? "not recorded" : "last minute")</span>
-            </div>
-        }
-    </div>
+@* The cluster: how it is, and what it moves. An operator runs the message
+   path — Receive, Process, Send — and looks at a node only when a stage is
+   red. So the stages are the landing page and the nodes are at the bottom. *@
+<section class="cluster @WorstClass(All)">
+    <span class="dot"></span>
+    <span class="state">@WorstLabel(All)</span>
+    <span class="detail">@Nodes.Count node(s) · @All.Count thing(s) observed</span>
 </section>
 
-<section class="tree">
-    @if (Records.Count == 0)
+<section class="stages">
+    @foreach (Stage stage in Stages)
+    {
+        IReadOnlyList<HealthRecord> inStage = InStage(stage);
+        MeasurementRecord? moved = Surface.Measure(Scope, stage.Counted);
+        <button class="stage @WorstClass(inStage) @(Selected == stage ? "selected" : "")"
+                @onclick="() => Select(stage)">
+            <span class="name"><span class="dot"></span>@stage.Name</span>
+            <span class="value">@Format(moved)</span>
+            <span class="kind">@stage.Counted.ToString().ToLowerInvariant(), last minute</span>
+            <span class="items">@(inStage.Count == 0 ? "none configured" : $"{inStage.Count} configured · {WorstLabel(inStage)}")</span>
+        </button>
+    }
+</section>
+
+<section class="list">
+    <h2>@(Selected is null ? "Needs attention" : Selected.Name) <small>@(Selected is null ? "everything not green, worst first" : "every node, worst first")</small></h2>
+    @{
+        IReadOnlyList<HealthRecord> shown = Selected is null
+            ? All.Where(r => r.State != HealthState.Green).ToList()
+            : InStage(Selected);
+    }
+    @if (shown.Count == 0)
+    {
+        <p class="empty">@(Selected is null ? "Nothing needs attention." : $"No {Selected.Name.ToLowerInvariant()} configured on any node.")</p>
+    }
+    else
+    {
+        @foreach (HealthRecord record in shown)
+        {
+            <div class="row @record.State.ToString().ToLowerInvariant()">
+                <span class="dot"></span>
+                <span class="scope">@Name(record.Scope)</span>
+                <span class="node">@Node(record.Scope)</span>
+                <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
+                <span class="age">@Age(record.Observed)</span>
+            </div>
+        }
+    }
+</section>
+
+<section class="nodes">
+    <h2>Nodes <small>infrastructure — where to look when a stage is red</small></h2>
+    @if (Nodes.Count == 0)
     {
         <p class="empty">
-            Nothing recorded beneath <code>@Scope</code>. To start a node, set
-            <code>Xmip:NodeConfiguration</code> in <code>appsettings.Development.json</code>
-            to a node TOML — <code>samples/edge-01.xmip.toml</code> is one — and restart.
+            No node has published. To start one, set <code>Xmip:NodeConfiguration</code> in
+            <code>xmip.gui.toml</code> to a node TOML — <code>samples/edge-01.xmip.toml</code>
+            is one — and restart.
         </p>
     }
     else
     {
-        @foreach (HealthRecord record in Records)
+        @foreach (string node in Nodes)
         {
-            <div class="row @record.State.ToString().ToLowerInvariant()">
+            IReadOnlyList<HealthRecord> onNode = All.Where(r => Node(r.Scope) == node).ToList();
+            <div class="row @WorstClass(onNode)">
                 <span class="dot"></span>
-                <span class="scope">@Trim(record.Scope)</span>
-                <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
-                <span class="age">@Age(record.Observed)</span>
+                <span class="scope">@node</span>
+                <span class="node">@onNode.Count thing(s)</span>
+                <span class="evidence">@(onNode.FirstOrDefault()?.Evidence ?? "—")</span>
+                <span class="age">@WorstLabel(onNode)</span>
             </div>
         }
     }
@@ -54,37 +89,66 @@
 @code {
     private const string Scope = "xmip:///";
 
-    private static readonly Counted[] Kinds =
-        [Counted.Streams, Counted.Messages, Counted.Journeys, Counted.Bytes];
+    /// <summary>A stage of the message path, and what it counts.</summary>
+    private sealed record Stage(string Name, string Segment, Counted Counted);
+
+    private static readonly Stage[] Stages =
+    [
+        new("Receive", "receive", Counted.Streams),
+        new("Process", "process", Counted.Journeys),
+        new("Send", "send", Counted.Messages),
+    ];
 
     [Inject]
     private IOperatorSurface Surface { get; set; } = default!;
 
-    // Read once per render, not once per property access. The page reads
-    // Records several times while rendering, and each read is a call across
-    // the boundary.
-    private IReadOnlyList<HealthRecord> Records { get; set; } = [];
+    // Read once per render, not once per property access — every read is a
+    // call across the boundary.
+    private IReadOnlyList<HealthRecord> All { get; set; } = [];
+
+    private Stage? Selected { get; set; }
 
     protected override void OnParametersSet()
     {
-        Records = Surface.Health(Scope);
+        All = Surface.Health(Scope);
+    }
+
+    private void Select(Stage stage)
+    {
+        Selected = Selected == stage ? null : stage;
     }
 
     private bool IsSample => Surface.Source.StartsWith("SAMPLE", StringComparison.Ordinal);
 
-    // observability-model.md section 6: the worst state beneath is the state
-    // shown. Nothing recorded is neither green nor unreachable — the node
-    // answered, and had nothing to say. It gets its own word.
-    private string WorstLabel =>
-        Records.Count == 0 ? "nothing recorded" : Records.Max(record => record.State).ToString();
+    private IReadOnlyList<string> Nodes =>
+        All.Select(r => Node(r.Scope)).Where(n => n.Length > 0).Distinct().Order().ToList();
 
-    private string WorstClass =>
-        Records.Count == 0 ? "none" : Records.Max(record => record.State).ToString().ToLowerInvariant();
+    private IReadOnlyList<HealthRecord> InStage(Stage stage) =>
+        All.Where(r => Segment(r.Scope, 1) == stage.Segment).ToList();
 
-    private static string Trim(string scope)
+    // xmip:///<node>/<stage>/<name>. The node is where a thing runs; the stage
+    // is what it is. Nothing here is a level an operator has to descend.
+    private static string[] Parts(string scope) =>
+        scope.Replace("xmip:///", "", StringComparison.Ordinal).Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+    private static string Node(string scope) => Parts(scope).ElementAtOrDefault(0) ?? "";
+
+    private static string Segment(string scope, int index) => Parts(scope).ElementAtOrDefault(index) ?? "";
+
+    private static string Name(string scope)
     {
-        return scope.Replace("xmip:///", "", StringComparison.Ordinal);
+        string[] parts = Parts(scope);
+        return parts.Length >= 3 ? string.Join('/', parts.Skip(2)) : (parts.Length == 2 ? parts[1] : scope);
     }
+
+    // observability-model.md section 6: the worst state beneath is the state
+    // shown. Nothing recorded is neither green nor unreachable — it answered,
+    // and had nothing to say.
+    private static string WorstLabel(IReadOnlyList<HealthRecord> records) =>
+        records.Count == 0 ? "nothing recorded" : records.Max(r => r.State).ToString().ToLowerInvariant();
+
+    private static string WorstClass(IReadOnlyList<HealthRecord> records) =>
+        records.Count == 0 ? "none" : records.Max(r => r.State).ToString().ToLowerInvariant();
 
     private static string Format(MeasurementRecord? measured)
     {
