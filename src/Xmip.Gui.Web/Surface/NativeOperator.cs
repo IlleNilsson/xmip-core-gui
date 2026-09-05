@@ -18,6 +18,13 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     private readonly Operate _table;
     private bool _disposed;
 
+    // The header says entries are valid until the next call on the table, and
+    // a Blazor Server app calls from a prerender thread and a circuit thread.
+    // Two callers at once would have one reading pointers the other has just
+    // replaced. One call at a time, and every string is copied out before the
+    // lock is released.
+    private readonly Lock _gate = new();
+
     /// <inheritdoc />
     public string Source { get; }
 
@@ -113,6 +120,8 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
         byte[] bytes = Encoding.UTF8.GetBytes(scope);
         List<HealthRecord> found = [];
 
+        using Lock.Scope held = _gate.EnterScope();
+
         fixed (byte* text = bytes)
         {
             XmipStr xmipScope = new(text, (nuint)bytes.Length);
@@ -151,6 +160,8 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     public MeasurementRecord? Measure(string scope, Counted counted)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(scope);
+
+        using Lock.Scope held = _gate.EnterScope();
 
         fixed (byte* text = bytes)
         {

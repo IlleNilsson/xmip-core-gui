@@ -3,13 +3,30 @@ using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
 using Xmip.Gui.Web.Surface;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Development unless the environment says otherwise. launchSettings.json used
+// to set this and it is gone with the rest of the JSON; without it the host
+// assumes Production, serves the development static-asset manifest as if it
+// were published, and every script and stylesheet 500s — which the browser
+// reports as "an unhandled error has occurred". A deployment sets
+// ASPNETCORE_ENVIRONMENT in its service definition, per registration.rs.
+WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName =
+        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development,
+});
 
 // TOML, and only TOML. The host would read appsettings.json and its
 // environment variant by default; Xmip configures nothing in JSON anywhere,
 // so those sources go and xmip.gui.toml takes their place. Command line and
 // environment variables stay, because an operator overriding one key at
 // launch is not a configuration file.
+// Later sources win. The TOML file goes after the removed JSON ones, and the
+// environment and command line are added again after it, so that
+// `--Kestrel:Endpoints:Http:Url=...` at launch still overrides the file.
+// Adding a source twice is harmless; inserting one by position is not — a
+// source inserted rather than added never had its file provider set, and read
+// nothing (2026-09-05).
 foreach (IConfigurationSource source in builder.Configuration.Sources.ToArray())
 {
     if (source is Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
@@ -19,6 +36,8 @@ foreach (IConfigurationSource source in builder.Configuration.Sources.ToArray())
 }
 
 builder.Configuration.AddTomlFile("xmip.gui.toml", optional: false, reloadOnChange: true);
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddCommandLine(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
