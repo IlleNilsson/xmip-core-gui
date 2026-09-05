@@ -132,3 +132,33 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 
 /* The dot's colour is set inline per row, shaded by severity, so the flat
    state rules below are the fallback when no inline shade is given. */
+
+/* Drill-down: the path to the lowest error, and what sits beneath the focus. */
+.drill { padding: 1.5rem 1.5rem 0; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-bottom: 0.75rem; }
+.crumbs .crumb-btn {
+    border: none; background: none; color: var(--muted); cursor: pointer;
+    font: inherit; padding: 0.1rem 0.3rem; border-radius: 4px;
+}
+.crumbs .crumb-btn:hover { color: var(--ink); background: var(--ground); }
+.crumbs .sep { color: var(--line); }
+.crumbs .to-error {
+    margin-left: auto; border: 1px solid var(--red); color: var(--red);
+    background: none; cursor: pointer; font: inherit; font-weight: 600;
+    padding: 0.15rem 0.6rem; border-radius: 6px;
+}
+.crumbs .to-error:hover { background: var(--red); color: var(--paper); }
+.branches { display: grid; gap: 0.4rem; }
+.branch {
+    display: grid; grid-template-columns: auto 1fr auto 2fr; align-items: center;
+    gap: 0.75rem; text-align: left; width: 100%;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.6rem 0.9rem; cursor: pointer; font: inherit;
+}
+.branch:hover { border-color: var(--muted); }
+.branch .label { font-weight: 600; }
+.branch .worst { color: var(--muted); font-size: 0.85rem; }
+.branch .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.branch.red .worst, .branch.red .label { color: var(--red); }
+.branch.yellow .worst { color: var(--yellow); }
+.branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }

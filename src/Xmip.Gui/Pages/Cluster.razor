@@ -34,6 +34,46 @@
     }
 </section>
 
+@* Drill from the cluster down the scope tree to the lowest point where an error
+   is. The breadcrumb is the path to here and each step climbs back; the rows are
+   what sits directly beneath, worst first, and clicking one descends. "Follow
+   the error" jumps straight to the parent of the worst leaf. *@
+<section class="drill">
+    <nav class="crumbs">
+        @foreach ((string label, string scope) in Trail(Focus))
+        {
+            <button class="crumb-btn" @onclick="() => Focus = scope">@label</button>
+            <span class="sep">/</span>
+        }
+        @if (WorstLeaf is not null && WorstLeaf.State != HealthState.Green)
+        {
+            <button class="to-error" @onclick="FollowError">follow the error →</button>
+        }
+    </nav>
+    @{
+        IReadOnlyList<Branch> branches = Branches(Focus);
+    }
+    @if (branches.Count == 0)
+    {
+        <p class="empty">Nothing beneath this point.</p>
+    }
+    else
+    {
+        <div class="branches">
+            @foreach (Branch branch in branches)
+            {
+                <button class="branch @branch.State.ToString().ToLowerInvariant()"
+                        @onclick="() => Focus = branch.Scope">
+                    <span class="dot" style="@DotStyle(branch.Severity, branch.State)"></span>
+                    <span class="label">@branch.Label</span>
+                    <span class="worst">@(branch.IsLeaf ? branch.State.ToString().ToLowerInvariant() : $"{branch.Count} beneath · {WorstLabelFor(branch.State)}")</span>
+                    <span class="evidence">@(branch.IsLeaf && !string.IsNullOrEmpty(branch.Evidence) ? branch.Evidence : "")</span>
+                </button>
+            }
+        </div>
+    }
+</section>
+
 <section class="list">
     <h2>@(Selected is null ? "Needs attention" : Selected.Name) <small>@(Selected is null ? "everything not green, worst first" : "every node, worst first")</small></h2>
     @{
@@ -148,6 +188,106 @@
     }
 
     public void Dispose() => _refresh?.Dispose();
+
+    // ---- Drill-down: from the cluster to the lowest point where an error is ----
+
+    private string Focus { get; set; } = Scope;
+
+    private sealed record Branch(
+        string Scope, string Label, HealthState State, byte Severity, string Evidence, bool IsLeaf, int Count);
+
+    // The path from the cluster to the current focus, each step a place to climb
+    // back to.
+    private IReadOnlyList<(string Label, string Scope)> Trail(string focus)
+    {
+        List<(string, string)> trail = [("cluster", Scope)];
+        string accumulated = "xmip:///";
+        foreach (string segment in Parts(focus))
+        {
+            accumulated = accumulated.TrimEnd('/') + "/" + segment;
+            trail.Add((segment, accumulated));
+        }
+        return trail;
+    }
+
+    // What sits directly beneath the focus: every record beneath it grouped by
+    // its next path segment, each group rolled up to its worst.
+    private IReadOnlyList<Branch> Branches(string focus)
+    {
+        int depth = Parts(focus).Length;
+
+        return All
+            .Where(record => Beneath(record.Scope, focus))
+            .GroupBy(record => string.Join('/', Parts(record.Scope).Take(depth + 1)))
+            .Select(group =>
+            {
+                HealthRecord worst = group
+                    .OrderByDescending(r => r.State)
+                    .ThenByDescending(r => r.Severity)
+                    .First();
+                bool isLeaf = group.All(r => Parts(r.Scope).Length == depth + 1);
+                string label = Parts("xmip:///" + group.Key).LastOrDefault() ?? group.Key;
+                return new Branch(
+                    "xmip:///" + group.Key, label, worst.State, worst.Severity,
+                    isLeaf ? worst.Evidence : "", isLeaf, group.Count());
+            })
+            .OrderByDescending(b => b.State)
+            .ThenByDescending(b => b.Severity)
+            .ThenBy(b => b.Label, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private HealthRecord? WorstLeaf
+    {
+        get
+        {
+            return All
+                .OrderByDescending(r => r.State)
+                .ThenByDescending(r => r.Severity)
+                .FirstOrDefault();
+        }
+    }
+
+    private void FollowError()
+    {
+        if (WorstLeaf is not null)
+        {
+            Focus = ParentScope(WorstLeaf.Scope);
+        }
+    }
+
+    private static string ParentScope(string scope)
+    {
+        string[] parts = Parts(scope);
+        return parts.Length <= 1
+            ? "xmip:///"
+            : "xmip:///" + string.Join('/', parts.Take(parts.Length - 1));
+    }
+
+    // Beneath in the scope tree: the focus's segments are a prefix of the
+    // candidate's. The cluster root has no segments, so everything is beneath it.
+    private static bool Beneath(string candidate, string focus)
+    {
+        string[] want = Parts(focus);
+        string[] have = Parts(candidate);
+        if (have.Length < want.Length)
+        {
+            return false;
+        }
+        for (int index = 0; index < want.Length; index++)
+        {
+            if (have[index] != want[index])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static string WorstLabelFor(HealthState state)
+    {
+        return state.ToString().ToLowerInvariant();
+    }
 
     private void Select(Stage stage)
     {
