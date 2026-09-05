@@ -19,6 +19,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddSingleton<Xmip.Gui.Desktop.Configuration.ConfigStore>();
+        builder.Services.AddSingleton<Xmip.Gui.Desktop.Configuration.RuntimeCommands>();
 
         // TOML beside the executable, like the web host — Xmip configures
         // nothing in JSON. The file is deployed as content next to the app.
