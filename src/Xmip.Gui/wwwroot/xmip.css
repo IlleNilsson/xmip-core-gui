@@ -35,6 +35,7 @@ body {
 }
 
 .bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.04em; }
+.bar .logo { height: 1.75rem; width: auto; display: block; }
 .bar .crumb { color: var(--muted); }
 .bar .source { margin-left: auto; color: var(--muted); font-size: 0.85rem; }
 .bar .source.sample { color: var(--red); font-weight: 600; }
