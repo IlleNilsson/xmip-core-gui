@@ -17,6 +17,12 @@
             <para><b>Level:</b> Warning</para>
             </summary>
         </member>
+        <member name="M:Xmip.Gui.Web.Log.NodeStarted(Microsoft.Extensions.Logging.ILogger,System.String)">
+            <summary>
+            <para><b>Message:</b> Node: {Outcome}</para>
+            <para><b>Level:</b> Information</para>
+            </summary>
+        </member>
         <member name="T:Xmip.Gui.Web.Surface.IOperatorSurface">
             <summary>
             What every screen reads. One implementation crosses the C ABI in
@@ -97,6 +103,13 @@
             Load the runtime's native library and take its operator table.
             Returns <c>null</c>, with the reason, when it cannot — a surface that
             cannot reach a node shows that rather than an empty tree.
+            </summary>
+        </member>
+        <member name="M:Xmip.Gui.Web.Surface.NativeOperator.Start(System.String)">
+            <summary>
+            Start a node from its configuration file — as far as the runtime can
+            today, which is read, build, validate and plan. Returns what the
+            runtime said. The table's next read shows the result either way.
             </summary>
         </member>
         <member name="M:Xmip.Gui.Web.Surface.NativeOperator.Health(System.String)">

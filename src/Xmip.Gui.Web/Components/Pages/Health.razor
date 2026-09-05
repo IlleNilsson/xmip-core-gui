@@ -31,7 +31,11 @@
 <section class="tree">
     @if (Records.Count == 0)
     {
-        <p class="empty">Nothing recorded beneath <code>@Scope</code>.</p>
+        <p class="empty">
+            Nothing recorded beneath <code>@Scope</code>. To start a node, set
+            <code>Xmip:NodeConfiguration</code> in <code>appsettings.Development.json</code>
+            to a node TOML — <code>samples/edge-01.xmip.toml</code> is one — and restart.
+        </p>
     }
     else
     {

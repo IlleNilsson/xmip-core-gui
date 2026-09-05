@@ -11,4 +11,8 @@ internal static partial class Log
     /// answering. Warning, because every page says so too.</summary>
     [LoggerMessage(Level = LogLevel.Warning, Message = "Showing sample data: {Reason}")]
     public static partial void ShowingSample(this ILogger logger, string reason);
+
+    /// <summary>What the runtime said when asked to start the configured node.</summary>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Node: {Outcome}")]
+    public static partial void NodeStarted(this ILogger logger, string outcome);
 }

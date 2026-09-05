@@ -1,0 +1,38 @@
+# A node configuration the GUI can start, so there is something to look at.
+#
+# The shape is what xmip-core-configure parses today. The node configuration
+# format itself is open problem 14 — three candidates, none decided — so treat
+# this as the current parser's input rather than as the decided format.
+#
+# The runtime performs startup phases 1 to 3 on it: read, build the execution
+# tree, validate. It does not load the module or run the process yet, and
+# every record it publishes says so.
+
+[service]
+name = "xmip-edge-01"
+cluster_name = "lab"
+node_name = "edge-01"
+
+[[modules]]
+name = "file"
+start = true
+
+[modules.manifest.identity]
+name = "file"
+version = "0.1.0"
+
+[[modules.manifest.capabilities]]
+capability = "transport:file"
+execution_host = "native-rust"
+trusted_required = true
+
+[modules.manifest.entrypoint]
+library_path = "xmip_core_transport_file"
+symbol = "xmip_create_module_v1"
+
+[[xmip_processes]]
+name = "approval"
+start = true
+required_modules = ["file"]
+xmip_subprocesses = []
+extensions = []

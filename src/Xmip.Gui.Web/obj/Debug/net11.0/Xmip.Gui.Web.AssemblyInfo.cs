@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Ilian Nilsson")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77ed96bdd66baf810318dab5988d7d7aef7e7e68")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f061a3e9247cdc9e90c56b9a69e64985e56b4ce5")]
 [assembly: System.Reflection.AssemblyProductAttribute("Xmip.Gui.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Xmip.Gui.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
