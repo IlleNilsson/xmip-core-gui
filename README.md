@@ -19,6 +19,6 @@ The market survey calls this gap wider than any open runtime feature — every
 competitor leads with a visual designer. One screen is not a designer. It is
 the first thing an operator can look at.
 
-Run it: `dotnet run --project src/Xmip.Gui.Web`. `appsettings.Development.json`
+Run it: `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087. `appsettings.Development.json`
 points at the runtime's debug build; set `Xmip:RuntimeLibrary` to point
 elsewhere.
