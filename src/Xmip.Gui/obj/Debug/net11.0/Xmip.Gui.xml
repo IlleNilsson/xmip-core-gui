@@ -20,10 +20,19 @@
             mistakes a stand-in for a node.</summary>
         </member>
         <member name="M:Xmip.Gui.Surface.IOperatorSurface.Health(System.String)">
-            <summary>Health at and beneath a scope, worst first.</summary>
+            <summary>Health at and beneath a scope, worst first, most severe first
+            within a state.</summary>
         </member>
         <member name="M:Xmip.Gui.Surface.IOperatorSurface.Measure(System.String,Xmip.Gui.Surface.Counted)">
             <summary>One kind of count, summed over the scope.</summary>
+        </member>
+        <member name="M:Xmip.Gui.Surface.IOperatorSurface.PauseScope(System.String,System.String)">
+            <summary>Pause everything at and beneath a scope, by <paramref name="who"/>.
+            The first operation that acts rather than reads. Returns what the runtime
+            said, for the operator to see.</summary>
+        </member>
+        <member name="M:Xmip.Gui.Surface.IOperatorSurface.ResumeScope(System.String)">
+            <summary>Resume everything at and beneath a scope.</summary>
         </member>
         <member name="T:Xmip.Gui.Surface.HealthState">
             <summary>observability-model.md section 6, plus the surface's own word.</summary>
@@ -53,10 +62,14 @@
             <summary>Bytes, wherever content moved.</summary>
         </member>
         <member name="T:Xmip.Gui.Surface.HealthRecord">
-            <summary>One scope's health, the line that explains it, and when it was seen.</summary>
+            <summary>One scope's health, how far from healthy, the line that explains
+            it, and when it was seen. Severity is 0–100: the word says which colour,
+            the number shades it.</summary>
         </member>
-        <member name="M:Xmip.Gui.Surface.HealthRecord.#ctor(System.String,Xmip.Gui.Surface.HealthState,System.String,System.DateTimeOffset)">
-            <summary>One scope's health, the line that explains it, and when it was seen.</summary>
+        <member name="M:Xmip.Gui.Surface.HealthRecord.#ctor(System.String,Xmip.Gui.Surface.HealthState,System.Byte,System.String,System.DateTimeOffset)">
+            <summary>One scope's health, how far from healthy, the line that explains
+            it, and when it was seen. Severity is 0–100: the word says which colour,
+            the number shades it.</summary>
         </member>
         <member name="T:Xmip.Gui.Surface.MeasurementRecord">
             <summary>One count over a window, and when it was taken.</summary>
@@ -93,6 +106,12 @@
             <inheritdoc />
         </member>
         <member name="M:Xmip.Gui.Surface.NativeOperator.Measure(System.String,Xmip.Gui.Surface.Counted)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Gui.Surface.NativeOperator.PauseScope(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Gui.Surface.NativeOperator.ResumeScope(System.String)">
             <inheritdoc />
         </member>
         <member name="M:Xmip.Gui.Surface.NativeOperator.Dispose">
@@ -134,6 +153,12 @@
             <inheritdoc />
         </member>
         <member name="M:Xmip.Gui.Surface.SampleOperator.Measure(System.String,Xmip.Gui.Surface.Counted)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Gui.Surface.SampleOperator.PauseScope(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Gui.Surface.SampleOperator.ResumeScope(System.String)">
             <inheritdoc />
         </member>
         <member name="T:Xmip.Gui.Pages.Cluster.Stage">

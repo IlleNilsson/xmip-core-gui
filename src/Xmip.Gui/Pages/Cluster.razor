@@ -25,7 +25,7 @@
         MeasurementRecord? moved = Surface.Measure(Scope, stage.Counted);
         <button class="stage @WorstClass(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
-            <span class="name"><span class="dot"></span>@stage.Name</span>
+            <span class="name"><span class="dot" style="@DotStyle(inStage)"></span>@stage.Name</span>
             <span class="value">@Format(moved)</span>
             <span class="kind">@stage.Counted.ToString().ToLowerInvariant(), last minute</span>
             <span class="items">@(inStage.Count == 0 ? "none configured" : $"{inStage.Count} configured · {WorstLabel(inStage)}")</span>
@@ -49,11 +49,26 @@
         @foreach (HealthRecord record in shown)
         {
             <div class="row @record.State.ToString().ToLowerInvariant()">
-                <span class="dot"></span>
+                <span class="dot" style="@DotStyle(record.Severity, record.State)" title="severity @record.Severity"></span>
                 <span class="scope">@Name(record.Scope)</span>
                 <span class="node">@Node(record.Scope)</span>
                 <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
                 <span class="age">@Age(record.Observed)</span>
+                @if (IsPausable(record.Scope))
+                {
+                    @if (record.Evidence.StartsWith("paused by", StringComparison.Ordinal))
+                    {
+                        <button class="act" @onclick="() => Resume(record.Scope)">Resume</button>
+                    }
+                    else
+                    {
+                        <button class="act" @onclick="() => Pause(record.Scope)">Pause</button>
+                    }
+                }
+                else
+                {
+                    <span></span>
+                }
             </div>
         }
     }
@@ -116,6 +131,70 @@
     {
         Selected = Selected == stage ? null : stage;
     }
+
+    private void Pause(string scope)
+    {
+        Surface.PauseScope(scope, "operator");
+        All = Surface.Health(Scope);
+    }
+
+    private void Resume(string scope)
+    {
+        Surface.ResumeScope(scope);
+        All = Surface.Health(Scope);
+    }
+
+    // Receive and Send Locations can be paused; a Process runs off a
+    // subscription and an operator pauses the Location that feeds it, not the
+    // Process itself.
+    private static bool IsPausable(string scope)
+    {
+        string stage = Segment(scope, 1);
+        return stage is "receive" or "send";
+    }
+
+    // The dot's colour is the state; its depth is the severity. A light yellow
+    // at 40 and a deep amber at 85 are both "yellow", and the operator sees
+    // which without reading the number.
+    private static string DotStyle(byte severity, HealthState state)
+    {
+        // 0 keeps the flat state colour; higher darkens toward the edge of the
+        // band. Kept in the page rather than the stylesheet because it is a
+        // computed value per row.
+        double weight = severity / 100.0;
+        string shade = state switch
+        {
+            HealthState.Green => Mix("#1f9d55", "#146638", weight),
+            HealthState.Yellow => Mix("#e9c46a", "#c0791f", weight),
+            HealthState.Red => Mix("#e06666", "#8f1d1d", weight),
+            _ => "#6b7280",
+        };
+        return $"background:{shade}";
+    }
+
+    private static string DotStyle(IReadOnlyList<HealthRecord> records)
+    {
+        HealthRecord? worst = records
+            .OrderByDescending(r => r.State)
+            .ThenByDescending(r => r.Severity)
+            .FirstOrDefault();
+        return worst is null ? "" : DotStyle(worst.Severity, worst.State);
+    }
+
+    private static string Mix(string light, string dark, double weight)
+    {
+        (int lr, int lg, int lb) = Rgb(light);
+        (int dr, int dg, int db) = Rgb(dark);
+        int r = (int)(lr + (dr - lr) * weight);
+        int g = (int)(lg + (dg - lg) * weight);
+        int b = (int)(lb + (db - lb) * weight);
+        return $"#{r:x2}{g:x2}{b:x2}";
+    }
+
+    private static (int, int, int) Rgb(string hex) =>
+        (Convert.ToInt32(hex.Substring(1, 2), 16),
+         Convert.ToInt32(hex.Substring(3, 2), 16),
+         Convert.ToInt32(hex.Substring(5, 2), 16));
 
     private bool IsSample => Surface.Source.StartsWith("SAMPLE", StringComparison.Ordinal);
 
