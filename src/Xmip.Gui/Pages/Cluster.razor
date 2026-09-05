@@ -141,7 +141,7 @@
     }
 
     // observability-model.md section 6: the worst state beneath is the state
-    // shown. Nothing recorded is neither green nor unreachable — it answered,
+    // shown. Nothing recorded is not green — it answered,
     // and had nothing to say.
     private static string WorstLabel(IReadOnlyList<HealthRecord> records) =>
         records.Count == 0 ? "nothing recorded" : records.Max(r => r.State).ToString().ToLowerInvariant();

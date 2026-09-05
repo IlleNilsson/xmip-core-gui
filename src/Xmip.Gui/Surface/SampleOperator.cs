@@ -20,7 +20,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
         new("xmip:///edge-01/receive/orders-ftp", HealthState.Green, "", Now.AddSeconds(-2)),
         new("xmip:///edge-01/receive/orders-http", HealthState.Green, "", Now.AddSeconds(-1)),
         new("xmip:///edge-01/send/billing", HealthState.Green, "", Now.AddSeconds(-1)),
-        new("xmip:///edge-02/send/warehouse", HealthState.Unreachable, "no answer in 10 s", Now.AddSeconds(-10)),
+        new("xmip:///edge-02/send/warehouse", HealthState.Red, "no answer in 10 s", Now.AddSeconds(-10)),
     ];
 
     /// <inheritdoc />

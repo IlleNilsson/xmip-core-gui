@@ -33,10 +33,6 @@ public enum HealthState
 
     /// <summary>Failing.</summary>
     Red = 2,
-
-    /// <summary>A node that did not answer. Never reported by a node about
-    /// itself; ADR-0027 clause 8.</summary>
-    Unreachable = 3,
 }
 
 /// <summary>What a measurement counts. Never a bare number.</summary>

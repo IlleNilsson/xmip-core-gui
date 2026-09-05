@@ -9,7 +9,6 @@
     --green: #1f9d55;
     --yellow: #d69e2e;
     --red: #c53030;
-    --unreachable: #6b7280;
     --ink: #1a202c;
     --muted: #718096;
     --line: #e2e8f0;
@@ -110,11 +109,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .green .dot { background: var(--green); }
 .yellow .dot { background: var(--yellow); }
 .red .dot { background: var(--red); }
-.unreachable .dot { background: var(--unreachable); }
 .none .dot { background: var(--line); border: 1px solid var(--muted); }
 
 .green .state { color: var(--green); }
 .yellow .state { color: var(--yellow); }
 .red .state { color: var(--red); }
-.unreachable .state { color: var(--unreachable); }
 .none .state { color: var(--muted); }
