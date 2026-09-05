@@ -47,6 +47,18 @@ builder.Services.AddRazorComponents()
 // takes its place and says so on every page. ADR-0027.
 builder.Services.AddSingleton<IOperatorSurface>(services =>
 {
+    // The Xmip Playground, if it is rolling. Its snapshot file is the live
+    // matrix an operator watches over time; when it is present, show it. The
+    // path is configurable and defaults to the one the playground writes to.
+    string snapshot = builder.Configuration["Xmip:PlaygroundSnapshot"] ?? FileOperator.DefaultPath;
+
+    if (File.Exists(snapshot))
+    {
+        services.GetRequiredService<ILogger<Program>>().ShowingPlayground(snapshot);
+
+        return new FileOperator(snapshot);
+    }
+
     string? configured = builder.Configuration["Xmip:RuntimeLibrary"];
     string path = string.IsNullOrWhiteSpace(configured)
         ? Path.Combine(AppContext.BaseDirectory, "xmip_core_runtime.dll")
