@@ -114,6 +114,33 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
         }
     }
 
+    /// <summary>
+    /// Validate a node's configuration file without starting it: read it, build
+    /// the execution tree, check it. A command a browser cannot run — it loads
+    /// the native runtime. Returns what the runtime said; the health tree carries
+    /// the detail when it is invalid.
+    /// </summary>
+    public string Validate(string configurationPath)
+    {
+        if (!NativeLibrary.TryGetExport(_library, "xmip_validate_v1", out nint symbol))
+        {
+            return "this runtime does not export xmip_validate_v1";
+        }
+
+        delegate* unmanaged[Cdecl]<XmipStr, int> validate =
+            (delegate* unmanaged[Cdecl]<XmipStr, int>)symbol;
+        byte[] bytes = Encoding.UTF8.GetBytes(configurationPath);
+
+        fixed (byte* text = bytes)
+        {
+            int status = validate(new XmipStr(text, (nuint)bytes.Length));
+
+            return status == 0
+                ? $"{configurationPath} is valid"
+                : $"{configurationPath} is invalid (status {status}); the health tree says why";
+        }
+    }
+
     /// <inheritdoc />
     public IReadOnlyList<HealthRecord> Health(string scope)
     {
