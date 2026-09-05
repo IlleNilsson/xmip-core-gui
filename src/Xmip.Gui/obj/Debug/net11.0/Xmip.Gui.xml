@@ -37,10 +37,6 @@
         <member name="F:Xmip.Gui.Surface.HealthState.Red">
             <summary>Failing.</summary>
         </member>
-        <member name="F:Xmip.Gui.Surface.HealthState.Unreachable">
-            <summary>A node that did not answer. Never reported by a node about
-            itself; ADR-0027 clause 8.</summary>
-        </member>
         <member name="T:Xmip.Gui.Surface.Counted">
             <summary>What a measurement counts. Never a bare number.</summary>
         </member>
