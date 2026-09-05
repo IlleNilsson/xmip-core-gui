@@ -1,7 +1,7 @@
 @page "/configure"
 @using Microsoft.Extensions.Configuration
 @using Xmip.Gui.Desktop.Configuration
-@inject IConfiguration Config
+@inject ConfigStore Store
 
 <PageTitle>Xmip — Configure</PageTitle>
 
@@ -11,17 +11,31 @@
     <a class="crumb-link" href="/">← cluster</a>
 </header>
 
-<section class="cfg">
-    <div class="path">
-        <label>Node configuration file</label>
-        <input @bind="_path" />
-        <button @onclick="Load">Load</button>
-        <button class="primary" @onclick="Save" disabled="@(_node is null)">Save</button>
+<section class="cfg-layout">
+    <aside class="configs">
+        <h2>Configurations</h2>
+        @foreach (ConfigStore.Entry entry in _entries)
+        {
+            <button class="config-item @(entry.Path == _path ? "selected" : "")"
+                    @onclick="() => Open(entry.Path)">
+                <span class="config-name">@entry.Name</span>
+                @if (entry.IsMain)
+                {
+                    <span class="badge">main</span>
+                }
+            </button>
+        }
+        <p class="dir">@Store.Directory()</p>
+    </aside>
+
+    <div class="cfg">
         @if (!string.IsNullOrEmpty(_status))
         {
-            <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+            <div class="path">
+                <button class="primary" @onclick="Save" disabled="@(_node is null)">Save</button>
+                <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+            </div>
         }
-    </div>
 
     @if (_node is not null)
     {
@@ -75,9 +89,11 @@
             </div>
         }
     }
+    </div>
 </section>
 
 @code {
+    private IReadOnlyList<ConfigStore.Entry> _entries = [];
     private string _path = "";
     private NodeConfiguration? _node;
     private string _status = "";
@@ -85,20 +101,20 @@
 
     protected override void OnInitialized()
     {
-        _path = Config["Xmip:NodeConfiguration"] ?? "";
-        if (string.IsNullOrWhiteSpace(_path))
+        _entries = Store.List();
+        if (_entries.Count > 0)
         {
-            _path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "node.xmip.toml");
+            Open(_entries[0].Path);
         }
-        Load();
     }
 
-    private void Load()
+    private void Open(string path)
     {
+        _path = path;
         try
         {
             _node = NodeConfiguration.Read(_path);
-            _status = File.Exists(_path) ? "loaded" : "new configuration";
+            _status = File.Exists(_path) ? $"editing {Path.GetFileName(_path)}" : "new configuration";
             _ok = true;
         }
         catch (Exception exception) when (exception is IOException or FormatException)
@@ -119,7 +135,8 @@
         try
         {
             _node.Write(_path);
-            _status = $"saved to {_path}";
+            _entries = Store.List();
+            _status = $"saved {Path.GetFileName(_path)}";
             _ok = true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
