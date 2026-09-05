@@ -1,4 +1,4 @@
-namespace Xmip.Gui.Web.Surface;
+namespace Xmip.Gui.Surface;
 
 /// <summary>
 /// What every screen reads. One implementation crosses the C ABI in

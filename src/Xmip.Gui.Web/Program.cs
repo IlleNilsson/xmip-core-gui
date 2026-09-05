@@ -1,7 +1,7 @@
 using Tomlyn.Extensions.Configuration;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
-using Xmip.Gui.Web.Surface;
+using Xmip.Gui.Surface;
 
 // Development unless the environment says otherwise. launchSettings.json used
 // to set this and it is gone with the rest of the JSON; without it the host
@@ -87,7 +87,12 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 app.MapStaticAssets();
+// The pages are in Xmip.Gui, the shared library. Both the endpoint mapping
+// here and the <Router> in Routes.razor have to be told so; the router alone
+// finds the page and the endpoint alone serves it, and either without the
+// other is a 404 that looks like a missing route (2026-09-05).
 app.MapRazorComponents<App>()
+    .AddAdditionalAssemblies(typeof(IOperatorSurface).Assembly)
     .AddInteractiveServerRenderMode();
 
 app.Run();

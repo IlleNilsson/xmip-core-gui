@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    The component library. ADR-0014: one library, two hosts — Blazor on the web,
+    MAUI on the desktop — so what the desktop shows and what the web shows
+    cannot disagree, because there is only one implementation to disagree with.
+
+    Screens, and the surface they read through. Nothing here knows which host
+    it is in. Target framework and the rest come from Directory.Build.props.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>Xmip.Gui</RootNamespace>
+    <AssemblyName>Xmip.Gui</AssemblyName>
+
+    <!-- Surface/NativeOperator.cs P/Invokes xmip_operate.h: function pointers
+         and raw structs, the whole reason the surface exists. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Razor-generated code carries no XML documentation. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0-preview.7.*" />
+  </ItemGroup>
+
+</Project>

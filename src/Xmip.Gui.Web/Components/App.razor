@@ -6,14 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <BasePath />
     <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/Xmip.Gui/xmip.css"]" />
     <link rel="stylesheet" href="@Assets["Xmip.Gui.Web.styles.css"]" />
     <ImportMap />
     <HeadOutlet />
 </head>
 
 <body>
-    <Routes />
+    @* Interactive on the server: this host's decision, not the shared pages'.
+       A MAUI host renders the same pages with no render mode at all. *@
+    <Routes @rendermode="InteractiveServer" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>

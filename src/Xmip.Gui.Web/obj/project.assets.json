@@ -38,6 +38,16 @@
         "runtime": {
           "lib/net10.0/Tomlyn.Extensions.Configuration.dll": {}
         }
+      },
+      "Xmip.Gui/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v11.0",
+        "compile": {
+          "bin/placeholder/Xmip.Gui.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Xmip.Gui.dll": {}
+        }
       }
     }
   },
@@ -99,12 +109,18 @@
         "tomlyn.extensions.configuration.2.0.0.nupkg.sha512",
         "tomlyn.extensions.configuration.nuspec"
       ]
+    },
+    "Xmip.Gui/1.0.0": {
+      "type": "project",
+      "path": "../Xmip.Gui/Xmip.Gui.csproj",
+      "msbuildProject": "../Xmip.Gui/Xmip.Gui.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net11.0": [
       "Microsoft.AspNetCore.App.Internal.Assets >= 11.0.0-preview.7.26381.103",
-      "Tomlyn.Extensions.Configuration >= 2.0.0"
+      "Tomlyn.Extensions.Configuration >= 2.0.0",
+      "Xmip.Gui >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -132,7 +148,11 @@
         "net11.0": {
           "framework": "net11.0",
           "targetAlias": "net11.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui\\Xmip.Gui.csproj": {
+              "projectPath": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui\\Xmip.Gui.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

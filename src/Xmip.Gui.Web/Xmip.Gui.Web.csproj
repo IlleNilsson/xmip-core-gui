@@ -23,6 +23,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The screens and the surface. One library, two hosts — ADR-0014. -->
+    <ProjectReference Include="..\Xmip.Gui\Xmip.Gui.csproj" />
+
     <!-- TOML configuration for the .NET host. Xmip configures nothing in JSON,
          so the template's appsettings files are gone and this reads
          xmip.gui.toml instead. -->

@@ -1,4 +1,4 @@
-namespace Xmip.Gui.Web.Surface;
+namespace Xmip.Gui.Surface;
 
 /// <summary>
 /// Stands in when no runtime library can be loaded, so the screens have a
