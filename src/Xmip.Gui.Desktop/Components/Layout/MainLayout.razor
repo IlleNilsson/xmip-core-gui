@@ -1,7 +1,12 @@
 @inherits LayoutComponentBase
 
-@* No chrome of its own. The Xmip screens carry their own header, and the
-   desktop window is the frame. One screen, so no navigation yet. *@
+@* The desktop does both, so it navigates: monitoring (Cluster) and, unlike the
+   web, configuration (ADR-0014). *@
+<nav class="topnav">
+    <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
+    <NavLink class="topnav-link" href="/configure">Configure</NavLink>
+</nav>
+
 @Body
 
 <div id="blazor-error-ui" data-nosnippet>
