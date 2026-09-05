@@ -9,10 +9,10 @@
 </header>
 
 <section class="summary">
-    <div class="worst @Worst.ToString().ToLowerInvariant()">
+    <div class="worst @WorstClass">
         <span class="dot"></span>
         <span class="label">@Scope</span>
-        <span class="state">@Worst</span>
+        <span class="state">@WorstLabel</span>
     </div>
 
     <div class="counts">
@@ -61,9 +61,13 @@
     private bool IsSample => Surface.Source.StartsWith("SAMPLE", StringComparison.Ordinal);
 
     // observability-model.md section 6: the worst state beneath is the state
-    // shown. Nothing recorded is not green — it is nothing recorded.
-    private HealthState Worst =>
-        Records.Count == 0 ? HealthState.Unreachable : Records.Max(record => record.State);
+    // shown. Nothing recorded is neither green nor unreachable — the node
+    // answered, and had nothing to say. It gets its own word.
+    private string WorstLabel =>
+        Records.Count == 0 ? "nothing recorded" : Records.Max(record => record.State).ToString();
+
+    private string WorstClass =>
+        Records.Count == 0 ? "none" : Records.Max(record => record.State).ToString().ToLowerInvariant();
 
     private static string Trim(string scope)
     {

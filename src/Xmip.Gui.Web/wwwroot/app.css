@@ -89,3 +89,7 @@ body {
 .yellow .state { color: var(--yellow); }
 .red .state { color: var(--red); }
 .unreachable .state { color: var(--unreachable); }
+
+/* Answered, with nothing to say. Not unreachable, not green. */
+.none .dot { background: var(--line); border: 1px solid var(--muted); }
+.none .state { color: var(--muted); }
