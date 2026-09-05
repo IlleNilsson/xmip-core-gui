@@ -148,6 +148,7 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
                 found.Add(new HealthRecord(
                     entry.Scope.Read(),
                     (HealthState)entry.Health,
+                    entry.Severity,
                     entry.Evidence.Read(),
                     FromNanos(entry.ObservedUnixNanos)));
             }
@@ -180,6 +181,45 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
                     FromNanos(entry.WindowStartUnixNanos),
                     FromNanos(entry.WindowEndUnixNanos),
                     FromNanos(entry.ObservedUnixNanos));
+        }
+    }
+
+    /// <inheritdoc />
+    public string PauseScope(string scope, string who)
+    {
+        byte[] scopeBytes = Encoding.UTF8.GetBytes(scope);
+        byte[] whoBytes = Encoding.UTF8.GetBytes(who);
+
+        using Lock.Scope held = _gate.EnterScope();
+
+        fixed (byte* scopePtr = scopeBytes)
+        fixed (byte* whoPtr = whoBytes)
+        {
+            int status = _table.Pause(
+                _table.Ctx,
+                new XmipStr(scopePtr, (nuint)scopeBytes.Length),
+                new XmipStr(whoPtr, (nuint)whoBytes.Length));
+
+            return status == 0
+                ? $"paused {scope}"
+                : $"nothing to pause at {scope} (status {status})";
+        }
+    }
+
+    /// <inheritdoc />
+    public string ResumeScope(string scope)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(scope);
+
+        using Lock.Scope held = _gate.EnterScope();
+
+        fixed (byte* text = bytes)
+        {
+            int status = _table.Resume(_table.Ctx, new XmipStr(text, (nuint)bytes.Length));
+
+            return status == 0
+                ? $"resumed {scope}"
+                : $"nothing to resume at {scope} (status {status})";
         }
     }
 
@@ -229,6 +269,7 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     {
         public XmipStr Scope;
         public int Health;
+        public byte Severity;
         public XmipStr Evidence;
         public long ObservedUnixNanos;
     }
@@ -253,6 +294,8 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
         public void* Ctx;
         public delegate* unmanaged[Cdecl]<void*, XmipStr, HealthEntry*, nuint, nuint*, int> Health;
         public delegate* unmanaged[Cdecl]<void*, XmipStr, int, Measurement*, nuint, nuint*, int> Measure;
+        public delegate* unmanaged[Cdecl]<void*, XmipStr, XmipStr, int> Pause;
+        public delegate* unmanaged[Cdecl]<void*, XmipStr, int> Resume;
         public delegate* unmanaged[Cdecl]<void*, void> Destroy;
     }
 }

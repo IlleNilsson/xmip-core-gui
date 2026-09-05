@@ -90,7 +90,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 
 .row {
     display: grid;
-    grid-template-columns: 1rem 1.2fr 0.8fr 2fr 6rem;
+    grid-template-columns: 1rem 1.2fr 0.8fr 2fr 6rem 5rem;
     align-items: center;
     gap: 0.75rem;
     padding: 0.6rem 1rem;
@@ -115,3 +115,20 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .yellow .state { color: var(--yellow); }
 .red .state { color: var(--red); }
 .none .state { color: var(--muted); }
+
+/* Pause and resume: the operator acting, not just watching. Small, on the row,
+   never the loudest thing on the page. */
+.act {
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+}
+.act:hover { border-color: var(--muted); }
+
+/* The dot's colour is set inline per row, shaded by severity, so the flat
+   state rules below are the fallback when no inline shade is given. */

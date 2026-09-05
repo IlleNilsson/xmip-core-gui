@@ -15,11 +15,20 @@ public interface IOperatorSurface
     /// mistakes a stand-in for a node.</summary>
     public string Source { get; }
 
-    /// <summary>Health at and beneath a scope, worst first.</summary>
+    /// <summary>Health at and beneath a scope, worst first, most severe first
+    /// within a state.</summary>
     public IReadOnlyList<HealthRecord> Health(string scope);
 
     /// <summary>One kind of count, summed over the scope.</summary>
     public MeasurementRecord? Measure(string scope, Counted counted);
+
+    /// <summary>Pause everything at and beneath a scope, by <paramref name="who"/>.
+    /// The first operation that acts rather than reads. Returns what the runtime
+    /// said, for the operator to see.</summary>
+    public string PauseScope(string scope, string who);
+
+    /// <summary>Resume everything at and beneath a scope.</summary>
+    public string ResumeScope(string scope);
 }
 
 /// <summary>observability-model.md section 6, plus the surface's own word.</summary>
@@ -51,9 +60,11 @@ public enum Counted
     Bytes = 4,
 }
 
-/// <summary>One scope's health, the line that explains it, and when it was seen.</summary>
+/// <summary>One scope's health, how far from healthy, the line that explains
+/// it, and when it was seen. Severity is 0–100: the word says which colour,
+/// the number shades it.</summary>
 public sealed record HealthRecord(
-    string Scope, HealthState State, string Evidence, DateTimeOffset Observed);
+    string Scope, HealthState State, byte Severity, string Evidence, DateTimeOffset Observed);
 
 /// <summary>One count over a window, and when it was taken.</summary>
 public sealed record MeasurementRecord(
