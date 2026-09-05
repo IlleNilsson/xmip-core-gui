@@ -22,4 +22,15 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- TOML configuration for the .NET host. Xmip configures nothing in JSON,
+         so the template's appsettings files are gone and this reads
+         xmip.gui.toml instead. -->
+    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="xmip.gui.toml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

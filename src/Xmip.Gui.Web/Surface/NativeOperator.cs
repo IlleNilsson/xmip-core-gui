@@ -35,9 +35,26 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     /// </summary>
     public static NativeOperator? Load(string path, out string reason)
     {
-        if (!NativeLibrary.TryLoad(path, out nint library))
+        if (!File.Exists(path))
         {
             reason = $"no runtime library at {path}";
+            return null;
+        }
+
+        // Load a copy, never the build output itself. A loaded library is
+        // locked for as long as this process lives, and the path configured in
+        // development is the runtime's own target/debug — so every GUI left
+        // running made the next `cargo build` fail with a locked .dll, and the
+        // fix was always "stop the GUI first". Copying costs one file write and
+        // removes the hazard for good.
+        string copy = Path.Combine(
+            Path.GetTempPath(),
+            $"xmip-gui-{Guid.NewGuid():n}-{Path.GetFileName(path)}");
+        File.Copy(path, copy);
+
+        if (!NativeLibrary.TryLoad(copy, out nint library))
+        {
+            reason = $"{path} could not be loaded";
             return null;
         }
 

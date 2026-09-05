@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "7VV6D8dyF+s=",
+  "dgSpecHash": "NQ1rHTj1bc8=",
   "success": true,
   "projectFilePath": "D:\\Repos\\Xmip\\modules\\operations\\gui\\src\\Xmip.Gui.Web\\Xmip.Gui.Web.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.app.internal.assets.11.0.0-preview.7.26381.103.nupkg.sha512"
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\11.0.0-preview.7.26381.103\\microsoft.aspnetcore.app.internal.assets.11.0.0-preview.7.26381.103.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\tomlyn\\2.3.0\\tomlyn.2.3.0.nupkg.sha512",
+    "C:\\Users\\IlianNilsson\\.nuget\\packages\\tomlyn.extensions.configuration\\2.0.0\\tomlyn.extensions.configuration.2.0.0.nupkg.sha512"
   ],
   "logs": []
 }

@@ -6,8 +6,6 @@ D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\obj\Debug\net11.0\Xmip.Gui
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\obj\Debug\net11.0\Xmip.Gui.Web.MvcApplicationPartsAssemblyInfo.cache
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\obj\Debug\net11.0\Xmip.Gui.Web.sourcelink.json
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\obj\Debug\net11.0\Xmip.Gui.Web.xml
-D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\appsettings.Development.json
-D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\appsettings.json
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\Xmip.Gui.Web.staticwebassets.runtime.json
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\Xmip.Gui.Web.staticwebassets.endpoints.json
 D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\Xmip.Gui.Web.exe
@@ -88,3 +86,17 @@ C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-16b1570f\Xmip.Gui.Web\Xmip.
 C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-16b1570f\Xmip.Gui.Web\Xmip.Gui.Web.dll
 C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-16b1570f\Xmip.Gui.Web\Xmip.Gui.Web.pdb
 C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-16b1570f\Xmip.Gui.Web\Xmip.Gui.Web.xml
+D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\obj\Debug\net11.0\Xmip.Gui.Web.csproj.AssemblyReference.cache
+D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\xmip.gui.toml
+D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\Tomlyn.dll
+D:\Repos\Xmip\modules\operations\gui\src\Xmip.Gui.Web\bin\Debug\net11.0\Tomlyn.Extensions.Configuration.dll
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.staticwebassets.runtime.json
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.staticwebassets.endpoints.json
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\xmip.gui.toml
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.exe
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.deps.json
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.runtimeconfig.json
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.runtimeconfig.dev.json
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.dll
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.pdb
+C:\Users\IlianNilsson\AppData\Local\Temp\xmip-verify-935ae337\Xmip.Gui.Web\Xmip.Gui.Web.xml

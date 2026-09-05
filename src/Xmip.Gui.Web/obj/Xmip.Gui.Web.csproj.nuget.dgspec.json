@@ -55,6 +55,10 @@
               "target": "Package",
               "version": "[11.0.0-preview.7.26381.103, )",
               "autoReferenced": true
+            },
+            "Tomlyn.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[2.0.0, )"
             }
           },
           "imports": [
