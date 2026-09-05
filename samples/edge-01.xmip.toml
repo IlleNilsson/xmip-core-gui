@@ -36,3 +36,18 @@ start = true
 required_modules = ["file"]
 xmip_subprocesses = []
 extensions = []
+
+# Where Xmip starts working, and where a Message leaves. The transport names
+# the module above; the address is in that transport's own terms.
+
+[[receive_locations]]
+name = "orders-in"
+start = true
+transport = "file"
+address = "C:/xmip/edge-01/in/orders"
+
+[[send_locations]]
+name = "billing-out"
+start = true
+transport = "file"
+address = "C:/xmip/edge-01/out/billing"
