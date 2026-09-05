@@ -64,6 +64,32 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
         return new NativeOperator(library, table, path);
     }
 
+    /// <summary>
+    /// Start a node from its configuration file — as far as the runtime can
+    /// today, which is read, build, validate and plan. Returns what the
+    /// runtime said. The table's next read shows the result either way.
+    /// </summary>
+    public string Start(string configurationPath)
+    {
+        if (!NativeLibrary.TryGetExport(_library, "xmip_start_v1", out nint symbol))
+        {
+            return "this runtime does not export xmip_start_v1";
+        }
+
+        delegate* unmanaged[Cdecl]<XmipStr, int> start =
+            (delegate* unmanaged[Cdecl]<XmipStr, int>)symbol;
+        byte[] bytes = Encoding.UTF8.GetBytes(configurationPath);
+
+        fixed (byte* text = bytes)
+        {
+            int status = start(new XmipStr(text, (nuint)bytes.Length));
+
+            return status == 0
+                ? $"started {configurationPath}"
+                : $"{configurationPath} refused with status {status}; the health tree says why";
+        }
+    }
+
     /// <inheritdoc />
     public IReadOnlyList<HealthRecord> Health(string scope)
     {

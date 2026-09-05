@@ -21,6 +21,17 @@ builder.Services.AddSingleton<IOperatorSurface>(services =>
 
     if (native is not null)
     {
+        // A node to start, if one is configured. Without it the runtime says
+        // so itself, on the page, and says what to do.
+        string? node = builder.Configuration["Xmip:NodeConfiguration"];
+
+        if (!string.IsNullOrWhiteSpace(node))
+        {
+            string outcome = native.Start(node);
+
+            services.GetRequiredService<ILogger<Program>>().NodeStarted(outcome);
+        }
+
         return native;
     }
 
