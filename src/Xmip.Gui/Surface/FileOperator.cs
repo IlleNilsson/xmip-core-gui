@@ -21,7 +21,7 @@ public sealed class FileOperator(string path) : IOperatorSurface
     /// <summary>The well-known snapshot path, shared with the playground's own
     /// default so the two agree with no configuration.</summary>
     public static string DefaultPath { get; } =
-        Path.Combine(Path.GetTempPath(), "xmip-playground-snapshot.toml");
+        Path.Combine(Path.GetTempPath(), "playground-snapshot.toml");
 
     /// <inheritdoc />
     public string Source => $"PLAYGROUND — {path}";
