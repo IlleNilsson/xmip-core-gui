@@ -1,0 +1,143 @@
+@page "/configure"
+@using Microsoft.Extensions.Configuration
+@using Xmip.Gui.Desktop.Configuration
+@inject IConfiguration Config
+
+<PageTitle>Xmip — Configure</PageTitle>
+
+<header class="bar">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <span class="crumb">configure</span>
+    <a class="crumb-link" href="/">← cluster</a>
+</header>
+
+<section class="cfg">
+    <div class="path">
+        <label>Node configuration file</label>
+        <input @bind="_path" />
+        <button @onclick="Load">Load</button>
+        <button class="primary" @onclick="Save" disabled="@(_node is null)">Save</button>
+        @if (!string.IsNullOrEmpty(_status))
+        {
+            <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+        }
+    </div>
+
+    @if (_node is not null)
+    {
+        <div class="group">
+            <h2>Cluster and node</h2>
+            <div class="fields">
+                <label>Service name<input @bind="_node.ServiceName" /></label>
+                <label>Cluster<input @bind="_node.ClusterName" /></label>
+                <label>Node<input @bind="_node.NodeName" /></label>
+            </div>
+        </div>
+
+        @foreach ((string title, List<NodeConfiguration.Location> locations) in Stages())
+        {
+            <div class="group">
+                <div class="group-head">
+                    <h2>@title</h2>
+                    <button @onclick="() => locations.Add(new NodeConfiguration.Location())">+ add</button>
+                </div>
+                @if (locations.Count == 0)
+                {
+                    <p class="empty">None configured.</p>
+                }
+                else
+                {
+                    <table class="locs">
+                        <thead>
+                            <tr><th>Name</th><th>Transport</th><th>Address</th><th>On</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (NodeConfiguration.Location location in locations)
+                            {
+                                <tr>
+                                    <td><input @bind="location.Name" /></td>
+                                    <td>
+                                        <select @bind="location.Transport">
+                                            @foreach (string transport in Transports)
+                                            {
+                                                <option value="@transport">@transport</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td><input class="addr" @bind="location.Address" /></td>
+                                    <td><input type="checkbox" @bind="location.Start" /></td>
+                                    <td><button class="del" @onclick="() => locations.Remove(location)">✕</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private string _path = "";
+    private NodeConfiguration? _node;
+    private string _status = "";
+    private bool _ok = true;
+
+    protected override void OnInitialized()
+    {
+        _path = Config["Xmip:NodeConfiguration"] ?? "";
+        if (string.IsNullOrWhiteSpace(_path))
+        {
+            _path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "node.xmip.toml");
+        }
+        Load();
+    }
+
+    private void Load()
+    {
+        try
+        {
+            _node = NodeConfiguration.Read(_path);
+            _status = File.Exists(_path) ? "loaded" : "new configuration";
+            _ok = true;
+        }
+        catch (Exception exception) when (exception is IOException or FormatException)
+        {
+            _node = null;
+            _status = exception.Message;
+            _ok = false;
+        }
+    }
+
+    private void Save()
+    {
+        if (_node is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _node.Write(_path);
+            _status = $"saved to {_path}";
+            _ok = true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _status = exception.Message;
+            _ok = false;
+        }
+    }
+
+    private (string Title, List<NodeConfiguration.Location> Locations)[] Stages()
+    {
+        return
+        [
+            ("Receive Locations", _node!.ReceiveLocations),
+            ("Send Locations", _node!.SendLocations),
+        ];
+    }
+
+    private static readonly string[] Transports =
+        ["file", "tcp", "udp", "http", "smtp", "websocket"];
+}
