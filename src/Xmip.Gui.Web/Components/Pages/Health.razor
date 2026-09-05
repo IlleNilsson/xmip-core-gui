@@ -60,7 +60,15 @@
     [Inject]
     private IOperatorSurface Surface { get; set; } = default!;
 
-    private IReadOnlyList<HealthRecord> Records => Surface.Health(Scope);
+    // Read once per render, not once per property access. The page reads
+    // Records several times while rendering, and each read is a call across
+    // the boundary.
+    private IReadOnlyList<HealthRecord> Records { get; set; } = [];
+
+    protected override void OnParametersSet()
+    {
+        Records = Surface.Health(Scope);
+    }
 
     private bool IsSample => Surface.Source.StartsWith("SAMPLE", StringComparison.Ordinal);
 
