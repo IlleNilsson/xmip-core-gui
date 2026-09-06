@@ -20,11 +20,13 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
 
         // The role is assigned, never chosen in the UI (ADR-0009): a person
-        // cannot promote themselves. It comes from configuration and defaults to
-        // Observer, so a missing or wrong value grants nothing. A real identity
-        // will supersede this (ADR-0022/ADR-0027).
-        builder.Services.AddSingleton(_ =>
-            new RoleContext(RoleContext.Parse(builder.Configuration["Xmip:Role"])));
+        // cannot promote themselves. It comes from the config file or the
+        // XMIP_ROLE environment variable and defaults to Observer, so a missing
+        // or wrong value grants nothing. A real identity supersedes this later
+        // (ADR-0022/ADR-0027).
+        string? assignedRole =
+            builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
+        builder.Services.AddSingleton(_ => new RoleContext(RoleContext.Parse(assignedRole)));
 
         builder.Services.AddSingleton<Xmip.Operations.Configuration.ConfigStore>();
         builder.Services.AddSingleton<Xmip.Operations.Configuration.RuntimeCommands>();
