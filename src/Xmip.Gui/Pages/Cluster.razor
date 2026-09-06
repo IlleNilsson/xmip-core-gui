@@ -330,7 +330,9 @@
         string shade = state switch
         {
             HealthState.Fine => Mix("#1f9d55", "#146638", weight),
-            HealthState.Average => Mix("#e9c46a", "#c0791f", weight),
+            HealthState.Working => Mix("#3182ce", "#1f4f80", weight),
+            HealthState.Stressed => Mix("#e9c46a", "#c0791f", weight),
+            HealthState.Exhausted => Mix("#dd6b20", "#9c4210", weight),
             HealthState.Holding => Mix("#ed8936", "#b7521a", weight),
             HealthState.Done => Mix("#e06666", "#8f1d1d", weight),
             _ => "#6b7280",
@@ -391,7 +393,7 @@
     // A Done does not propagate (ADR-0041): an aggregate above a Done leaf shows
     // Holding — attention, drill in. Fine up the tree still means all fine below.
     private static HealthState Rolled(HealthState worst) =>
-        worst == HealthState.Done ? HealthState.Holding : worst;
+        worst == HealthState.Fine ? HealthState.Fine : HealthState.Holding;
 
     private static string WorstLabel(IReadOnlyList<HealthRecord> records) =>
         records.Count == 0 ? "nothing recorded" : Rolled(records.Max(r => r.State)).ToString().ToLowerInvariant();

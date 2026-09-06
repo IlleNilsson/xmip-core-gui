@@ -18,7 +18,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
         ["xmip:///edge-01/receive/partner-x-sftp"] = new("xmip:///edge-01/receive/partner-x-sftp",
             HealthState.Done, 95, "connection refused by partner-x (10.0.4.21:22)", Now.AddSeconds(-4)),
         ["xmip:///edge-01/process/approval"] = new("xmip:///edge-01/process/approval",
-            HealthState.Average, 55, "3 Journeys waiting longer than 5 minutes", Now.AddSeconds(-2)),
+            HealthState.Stressed, 55, "3 Journeys waiting longer than 5 minutes", Now.AddSeconds(-2)),
         ["xmip:///edge-01/receive/orders-ftp"] = new("xmip:///edge-01/receive/orders-ftp",
             HealthState.Fine, 0, "", Now.AddSeconds(-2)),
         ["xmip:///edge-01/receive/orders-http"] = new("xmip:///edge-01/receive/orders-http",
@@ -68,7 +68,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
         foreach (string key in _tree.Keys.Where(k => Beneath(k, scope)).ToList())
         {
             HealthRecord was = _tree[key];
-            _tree[key] = was with { State = HealthState.Average, Severity = 30, Evidence = $"paused by {who}" };
+            _tree[key] = was with { State = HealthState.Stressed, Severity = 30, Evidence = $"paused by {who}" };
             paused++;
         }
 
