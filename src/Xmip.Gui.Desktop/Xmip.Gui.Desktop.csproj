@@ -27,7 +27,7 @@
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
-    <ApplicationTitle>Xmip</ApplicationTitle>
+    <ApplicationTitle>Xmip Operations</ApplicationTitle>
     <ApplicationId>se.consid.xmip.gui.desktop</ApplicationId>
     <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
