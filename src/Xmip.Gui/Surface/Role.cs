@@ -31,6 +31,15 @@ public static class Roles
         return role >= Role.Operator;
     }
 
+    /// <summary>
+    /// Whether the role may act on the running estate — pause and resume a
+    /// Location, a host or a node (Operator and up). An Observer only watches.
+    /// </summary>
+    public static bool MayOperate(this Role role)
+    {
+        return role >= Role.Operator;
+    }
+
     /// <summary>The role's own name, for a badge.</summary>
     public static string Label(this Role role)
     {

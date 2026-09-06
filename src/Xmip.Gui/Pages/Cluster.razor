@@ -95,7 +95,7 @@
                 <span class="node">@Node(record.Scope)</span>
                 <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
                 <span class="age">@Age(record.Observed)</span>
-                @if (IsPausable(record.Scope))
+                @if (Role.MayOperate() && IsPausable(record.Scope))
                 {
                     @if (record.Evidence.StartsWith("paused by", StringComparison.Ordinal))
                     {
@@ -130,12 +130,30 @@
         @foreach (string node in Nodes)
         {
             IReadOnlyList<HealthRecord> onNode = All.Where(r => Node(r.Scope) == node).ToList();
+            string nodeScope = "xmip:///" + node;
             <div class="row @WorstClass(onNode)">
                 <span class="dot"></span>
                 <span class="scope">@node</span>
                 <span class="node">@onNode.Count thing(s)</span>
                 <span class="evidence">@(onNode.FirstOrDefault()?.Evidence ?? "—")</span>
                 <span class="age">@WorstLabel(onNode)</span>
+                @* An Operator can pause a whole node or host: it pauses everything
+                   beneath the scope (ADR-0027). An Observer is shown nothing. *@
+                @if (Role.MayOperate())
+                {
+                    @if (IsPaused(onNode))
+                    {
+                        <button class="act" @onclick="() => Resume(nodeScope)">Resume</button>
+                    }
+                    else
+                    {
+                        <button class="act" @onclick="() => Pause(nodeScope)">Pause</button>
+                    }
+                }
+                else
+                {
+                    <span></span>
+                }
             </div>
         }
     }
@@ -156,6 +174,11 @@
 
     [Inject]
     private IOperatorSurface Surface { get; set; } = default!;
+
+    // The role decides whether actions are even offered (ADR-0009): an Observer
+    // watches and is shown no Pause or Resume; an Operator acts.
+    [Inject]
+    private RoleContext Role { get; set; } = default!;
 
     // Read once per render, not once per property access — every read is a
     // call across the boundary.
@@ -307,6 +330,13 @@
     {
         Surface.ResumeScope(scope);
         All = Surface.Health(Scope);
+    }
+
+    // A node or host reads as paused when anything beneath it is — pausing the
+    // scope paused them all, so any one being paused is enough to offer Resume.
+    private static bool IsPaused(IReadOnlyList<HealthRecord> records)
+    {
+        return records.Any(r => r.Evidence.StartsWith("paused by", StringComparison.Ordinal));
     }
 
     // Receive and Send Locations can be paused; a Process runs off a

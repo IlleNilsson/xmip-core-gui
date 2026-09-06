@@ -18,6 +18,12 @@ public sealed class RoleContext(Role role)
         return Role.MayConfigure();
     }
 
+    /// <summary>Whether this surface may pause and resume the running estate.</summary>
+    public bool MayOperate()
+    {
+        return Role.MayOperate();
+    }
+
     /// <summary>
     /// The role named in configuration, or Observer when absent or unrecognised —
     /// the safe default, so a misconfiguration never grants privilege.

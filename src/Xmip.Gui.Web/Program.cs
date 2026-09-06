@@ -42,6 +42,11 @@ builder.Configuration.AddCommandLine(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// The web surface is monitoring only (ADR-0014), so its role is fixed Observer:
+// it watches and never acts. Registered so the shared pages can read the role
+// and hide every action (ADR-0009).
+builder.Services.AddSingleton(new Xmip.Gui.Surface.RoleContext(Xmip.Gui.Surface.Role.Observer));
+
 // One surface for every screen. The real one loads the runtime's native
 // library and reads its operator table; when that cannot happen, a stand-in
 // takes its place and says so on every page. ADR-0027.
