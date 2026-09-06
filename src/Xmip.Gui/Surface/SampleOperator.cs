@@ -11,7 +11,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
 
     // xmip:///<node>/<receive|process|send>/<name>: the node is where it runs,
     // the stage is what it is. The landing page groups by stage. Severity
-    // shades the colour — a red at 95 is worse than one at 70, and the sample
+    // shades the mood — a Done at 95 is worse than one at 70, and the sample
     // shows the spread so the shading is visible without a running node.
     private readonly Dictionary<string, HealthRecord> _tree = new()
     {
@@ -79,7 +79,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
     public string ResumeScope(string scope)
     {
         // The stand-in has nowhere to restore from, so resume clears the pause
-        // to a plain green. The real surface puts back exactly what was there.
+        // to a plain Fine. The real surface puts back exactly what was there.
         int resumed = 0;
 
         foreach (string key in _tree.Keys.Where(k => Beneath(k, scope)).ToList())

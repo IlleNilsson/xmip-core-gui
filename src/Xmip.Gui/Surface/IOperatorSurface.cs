@@ -74,8 +74,8 @@ public enum Counted
 }
 
 /// <summary>One scope's health, how far from healthy, the line that explains
-/// it, and when it was seen. Severity is 0–100: the word says which colour,
-/// the number shades it.</summary>
+/// it, and when it was seen. Severity is 0–100: the mood says which, the number
+/// shades it.</summary>
 public sealed record HealthRecord(
     string Scope, HealthState State, byte Severity, string Evidence, DateTimeOffset Observed);
 
