@@ -1,0 +1,358 @@
+@page "/configure"
+@using Microsoft.Extensions.Configuration
+@using Xmip.Operations.Configuration
+@inject ConfigStore Store
+@inject RuntimeCommands Runtime
+
+<PageTitle>Xmip — Configure</PageTitle>
+
+<header class="bar">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <span class="crumb">configure</span>
+    <a class="crumb-link" href="/">← cluster</a>
+</header>
+
+<section class="cfg-layout">
+    <aside class="configs">
+        <h2>Configurations</h2>
+        @foreach (ConfigStore.Entry entry in _entries)
+        {
+            <button class="config-item @(entry.Path == _path ? "selected" : "")"
+                    @onclick="() => Open(entry.Path)">
+                <span class="config-name">@entry.Name</span>
+                @if (entry.IsMain)
+                {
+                    <span class="badge">main</span>
+                }
+            </button>
+        }
+        <p class="dir">@Store.Directory()</p>
+    </aside>
+
+    @if (_node is not null)
+    {
+        @* The tree: navigate the node, its Processes and its Locations, and edit
+           each. Opens on Execution Style — the Processes — by default. *@
+        <nav class="tree">
+            <button class="tree-node @Sel("node")" @onclick='() => _selection = "node"'>Node</button>
+
+            <div class="tree-branch">
+                <button class="tree-node @Sel("processes")" @onclick='() => _selection = "processes"'>
+                    Execution style
+                </button>
+                @for (int i = 0; i < _node.Processes.Count; i++)
+                {
+                    int index = i;
+                    <button class="tree-leaf @Sel($"process:{index}")"
+                            @onclick='() => Select("process", index)'>
+                        @Name(_node.Processes[index].Name)
+                        <span class="tag">@_node.Processes[index].ExecutionStyle</span>
+                    </button>
+                }
+            </div>
+
+            @foreach ((string key, string title, List<NodeConfiguration.Location> locations) in Branches())
+            {
+                string branch = key;
+                <div class="tree-branch">
+                    <button class="tree-node @Sel(branch)" @onclick="() => _selection = branch">@title</button>
+                    @for (int i = 0; i < locations.Count; i++)
+                    {
+                        int index = i;
+                        <button class="tree-leaf @Sel($"{branch}:{index}")"
+                                @onclick="() => Select(branch, index)">
+                            @Name(locations[index].Name)
+                            <span class="tag">@locations[index].Transport</span>
+                        </button>
+                    }
+                </div>
+            }
+        </nav>
+
+        <div class="cfg">
+            <div class="path">
+                <button class="primary" @onclick="Save">Save</button>
+                <button @onclick="Validate">Validate</button>
+                <button @onclick="StartNode">Start node</button>
+                <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+            </div>
+
+            @if (_selection == "node")
+            {
+                <div class="group">
+                    <h2>Cluster and node</h2>
+                    <div class="fields">
+                        <label>Service name<input @bind="_node.ServiceName" /></label>
+                        <label>Cluster<input @bind="_node.ClusterName" /></label>
+                        <label>Node<input @bind="_node.NodeName" /></label>
+                    </div>
+                </div>
+            }
+            else if (_selection == "processes")
+            {
+                <div class="group">
+                    <div class="group-head">
+                        <h2>Execution style</h2>
+                        <button @onclick="AddProcess">+ add Process</button>
+                    </div>
+                    @if (_node.Processes.Count == 0)
+                    {
+                        <p class="empty">No Xmip Processes yet. Add one to set how its work runs
+                            — Sequential keeps order, Parallel and Concurrent trade it for throughput.</p>
+                    }
+                    else
+                    {
+                        <table class="locs">
+                            <thead>
+                                <tr><th>Process</th><th>Execution style</th><th>On</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (NodeConfiguration.XmipProcess process in _node.Processes)
+                                {
+                                    <tr>
+                                        <td><input @bind="process.Name" /></td>
+                                        <td>
+                                            <select @bind="process.ExecutionStyle">
+                                                @foreach (string style in NodeConfiguration.ExecutionStyles)
+                                                {
+                                                    <option value="@style">@style</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td><input type="checkbox" @bind="process.Start" /></td>
+                                        <td><button class="del" @onclick="() => _node.Processes.Remove(process)">✕</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            }
+            else if (_selection.StartsWith("process:", StringComparison.Ordinal) && CurrentProcess() is { } proc)
+            {
+                <div class="group">
+                    <h2>Process</h2>
+                    <div class="fields">
+                        <label>Name<input @bind="proc.Name" /></label>
+                        <label>Execution style
+                            <select @bind="proc.ExecutionStyle">
+                                @foreach (string style in NodeConfiguration.ExecutionStyles)
+                                {
+                                    <option value="@style">@style</option>
+                                }
+                            </select>
+                        </label>
+                        <label>Start<input type="checkbox" @bind="proc.Start" /></label>
+                    </div>
+                </div>
+            }
+            else if (CurrentLocations() is { } locations)
+            {
+                @if (CurrentLocation() is { } loc)
+                {
+                    <div class="group">
+                        <h2>Location</h2>
+                        <div class="fields">
+                            <label>Name<input @bind="loc.Name" /></label>
+                            <label>Transport
+                                <select @bind="loc.Transport">
+                                    @foreach (string transport in Transports)
+                                    {
+                                        <option value="@transport">@transport</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>Address<input @bind="loc.Address" /></label>
+                            <label>Start<input type="checkbox" @bind="loc.Start" /></label>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="group">
+                        <div class="group-head">
+                            <h2>@BranchTitle()</h2>
+                            <button @onclick="() => locations.Add(new NodeConfiguration.Location())">+ add</button>
+                        </div>
+                        @if (locations.Count == 0)
+                        {
+                            <p class="empty">None configured.</p>
+                        }
+                        else
+                        {
+                            <table class="locs">
+                                <thead>
+                                    <tr><th>Name</th><th>Transport</th><th>Address</th><th>On</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (NodeConfiguration.Location location in locations)
+                                    {
+                                        <tr>
+                                            <td><input @bind="location.Name" /></td>
+                                            <td>
+                                                <select @bind="location.Transport">
+                                                    @foreach (string transport in Transports)
+                                                    {
+                                                        <option value="@transport">@transport</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td><input class="addr" @bind="location.Address" /></td>
+                                            <td><input type="checkbox" @bind="location.Start" /></td>
+                                            <td><button class="del" @onclick="() => locations.Remove(location)">✕</button></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<ConfigStore.Entry> _entries = [];
+    private string _path = "";
+    private NodeConfiguration? _node;
+    private string _selection = "processes";
+    private string _status = "";
+    private bool _ok = true;
+
+    protected override void OnInitialized()
+    {
+        _entries = Store.List();
+        if (_entries.Count > 0)
+        {
+            Open(_entries[0].Path);
+        }
+    }
+
+    private void Open(string path)
+    {
+        _path = path;
+        _selection = "processes";
+        try
+        {
+            _node = NodeConfiguration.Read(_path);
+            _status = File.Exists(_path) ? $"editing {Path.GetFileName(_path)}" : "new configuration";
+            _ok = true;
+        }
+        catch (Exception exception) when (exception is IOException or FormatException)
+        {
+            _node = null;
+            _status = exception.Message;
+            _ok = false;
+        }
+    }
+
+    private void Select(string branch, int index)
+    {
+        _selection = $"{branch}:{index}";
+    }
+
+    private string Sel(string key)
+    {
+        return _selection == key ? "selected" : "";
+    }
+
+    private static string Name(string name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? "(unnamed)" : name;
+    }
+
+    private void AddProcess()
+    {
+        _node?.Processes.Add(new NodeConfiguration.XmipProcess { Name = "process" });
+    }
+
+    private void Save()
+    {
+        if (_node is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _node.Write(_path);
+            _entries = Store.List();
+            _status = $"saved {Path.GetFileName(_path)}";
+            _ok = true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _status = exception.Message;
+            _ok = false;
+        }
+    }
+
+    private void Validate()
+    {
+        _status = Runtime.Validate(_path);
+        _ok = _status.Contains("is valid", StringComparison.Ordinal);
+    }
+
+    private void StartNode()
+    {
+        _status = Runtime.Start(_path);
+        _ok = _status.StartsWith("started", StringComparison.Ordinal);
+    }
+
+    private (string Key, string Title, List<NodeConfiguration.Location> Locations)[] Branches()
+    {
+        return
+        [
+            ("receive", "Receive Locations", _node!.ReceiveLocations),
+            ("send", "Send Locations", _node!.SendLocations),
+        ];
+    }
+
+    private NodeConfiguration.XmipProcess? CurrentProcess()
+    {
+        return _selection.StartsWith("process:", StringComparison.Ordinal)
+            && int.TryParse(_selection.AsSpan(8), out int index)
+            && _node is not null
+            && index < _node.Processes.Count
+                ? _node.Processes[index]
+                : null;
+    }
+
+    private List<NodeConfiguration.Location>? CurrentLocations()
+    {
+        if (_node is null)
+        {
+            return null;
+        }
+
+        if (_selection.StartsWith("receive", StringComparison.Ordinal))
+        {
+            return _node.ReceiveLocations;
+        }
+
+        return _selection.StartsWith("send", StringComparison.Ordinal) ? _node.SendLocations : null;
+    }
+
+    private NodeConfiguration.Location? CurrentLocation()
+    {
+        int colon = _selection.IndexOf(':', StringComparison.Ordinal);
+        if (colon < 0 || !int.TryParse(_selection.AsSpan(colon + 1), out int index))
+        {
+            return null;
+        }
+
+        List<NodeConfiguration.Location>? locations = CurrentLocations();
+        return locations is not null && index < locations.Count ? locations[index] : null;
+    }
+
+    private string BranchTitle()
+    {
+        return _selection.StartsWith("receive", StringComparison.Ordinal)
+            ? "Receive Locations"
+            : "Send Locations";
+    }
+
+    private static readonly string[] Transports =
+        ["file", "tcp", "udp", "http", "smtp", "websocket"];
+}
