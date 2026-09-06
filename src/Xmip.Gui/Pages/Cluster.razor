@@ -45,7 +45,7 @@
             <button class="crumb-btn" @onclick="() => Focus = scope">@label</button>
             <span class="sep">/</span>
         }
-        @if (WorstLeaf is not null && WorstLeaf.State != HealthState.Green)
+        @if (WorstLeaf is not null && WorstLeaf.State != HealthState.Fine)
         {
             <button class="to-error" @onclick="FollowError">follow the error →</button>
         }
@@ -78,7 +78,7 @@
     <h2>@(Selected is null ? "Needs attention" : Selected.Name) <small>@(Selected is null ? "everything not green, worst first" : "every node, worst first")</small></h2>
     @{
         IReadOnlyList<HealthRecord> shown = Selected is null
-            ? All.Where(r => r.State != HealthState.Green).ToList()
+            ? All.Where(r => r.State != HealthState.Fine).ToList()
             : InStage(Selected);
     }
     @if (shown.Count == 0)
@@ -227,8 +227,11 @@
                     .First();
                 bool isLeaf = group.All(r => Parts(r.Scope).Length == depth + 1);
                 string label = Parts("xmip:///" + group.Key).LastOrDefault() ?? group.Key;
+                // A Done does not propagate: a non-leaf branch above a Done shows
+                // Holding — attention, drill in (ADR-0041).
+                HealthState state = isLeaf ? worst.State : Rolled(worst.State);
                 return new Branch(
-                    "xmip:///" + group.Key, label, worst.State, worst.Severity,
+                    "xmip:///" + group.Key, label, state, worst.Severity,
                     isLeaf ? worst.Evidence : "", isLeaf, group.Count());
             })
             .OrderByDescending(b => b.State)
@@ -326,9 +329,10 @@
         double weight = severity / 100.0;
         string shade = state switch
         {
-            HealthState.Green => Mix("#1f9d55", "#146638", weight),
-            HealthState.Yellow => Mix("#e9c46a", "#c0791f", weight),
-            HealthState.Red => Mix("#e06666", "#8f1d1d", weight),
+            HealthState.Fine => Mix("#1f9d55", "#146638", weight),
+            HealthState.Average => Mix("#e9c46a", "#c0791f", weight),
+            HealthState.Holding => Mix("#ed8936", "#b7521a", weight),
+            HealthState.Done => Mix("#e06666", "#8f1d1d", weight),
             _ => "#6b7280",
         };
         return $"background:{shade}";
@@ -340,7 +344,7 @@
             .OrderByDescending(r => r.State)
             .ThenByDescending(r => r.Severity)
             .FirstOrDefault();
-        return worst is null ? "" : DotStyle(worst.Severity, worst.State);
+        return worst is null ? "" : DotStyle(worst.Severity, Rolled(worst.State));
     }
 
     private static string Mix(string light, string dark, double weight)
@@ -384,11 +388,16 @@
     // observability-model.md section 6: the worst state beneath is the state
     // shown. Nothing recorded is not green — it answered,
     // and had nothing to say.
+    // A Done does not propagate (ADR-0041): an aggregate above a Done leaf shows
+    // Holding — attention, drill in. Fine up the tree still means all fine below.
+    private static HealthState Rolled(HealthState worst) =>
+        worst == HealthState.Done ? HealthState.Holding : worst;
+
     private static string WorstLabel(IReadOnlyList<HealthRecord> records) =>
-        records.Count == 0 ? "nothing recorded" : records.Max(r => r.State).ToString().ToLowerInvariant();
+        records.Count == 0 ? "nothing recorded" : Rolled(records.Max(r => r.State)).ToString().ToLowerInvariant();
 
     private static string WorstClass(IReadOnlyList<HealthRecord> records) =>
-        records.Count == 0 ? "none" : records.Max(r => r.State).ToString().ToLowerInvariant();
+        records.Count == 0 ? "none" : Rolled(records.Max(r => r.State)).ToString().ToLowerInvariant();
 
     private static string Format(MeasurementRecord? measured)
     {

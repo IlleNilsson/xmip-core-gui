@@ -16,17 +16,17 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
     private readonly Dictionary<string, HealthRecord> _tree = new()
     {
         ["xmip:///edge-01/receive/partner-x-sftp"] = new("xmip:///edge-01/receive/partner-x-sftp",
-            HealthState.Red, 95, "connection refused by partner-x (10.0.4.21:22)", Now.AddSeconds(-4)),
+            HealthState.Done, 95, "connection refused by partner-x (10.0.4.21:22)", Now.AddSeconds(-4)),
         ["xmip:///edge-01/process/approval"] = new("xmip:///edge-01/process/approval",
-            HealthState.Yellow, 55, "3 Journeys waiting longer than 5 minutes", Now.AddSeconds(-2)),
+            HealthState.Average, 55, "3 Journeys waiting longer than 5 minutes", Now.AddSeconds(-2)),
         ["xmip:///edge-01/receive/orders-ftp"] = new("xmip:///edge-01/receive/orders-ftp",
-            HealthState.Green, 0, "", Now.AddSeconds(-2)),
+            HealthState.Fine, 0, "", Now.AddSeconds(-2)),
         ["xmip:///edge-01/receive/orders-http"] = new("xmip:///edge-01/receive/orders-http",
-            HealthState.Green, 0, "", Now.AddSeconds(-1)),
+            HealthState.Fine, 0, "", Now.AddSeconds(-1)),
         ["xmip:///edge-01/send/billing"] = new("xmip:///edge-01/send/billing",
-            HealthState.Green, 0, "", Now.AddSeconds(-1)),
+            HealthState.Fine, 0, "", Now.AddSeconds(-1)),
         ["xmip:///edge-02/send/warehouse"] = new("xmip:///edge-02/send/warehouse",
-            HealthState.Red, 70, "no answer in 10 s", Now.AddSeconds(-10)),
+            HealthState.Done, 70, "no answer in 10 s", Now.AddSeconds(-10)),
     };
 
     /// <inheritdoc />
@@ -68,7 +68,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
         foreach (string key in _tree.Keys.Where(k => Beneath(k, scope)).ToList())
         {
             HealthRecord was = _tree[key];
-            _tree[key] = was with { State = HealthState.Yellow, Severity = 30, Evidence = $"paused by {who}" };
+            _tree[key] = was with { State = HealthState.Average, Severity = 30, Evidence = $"paused by {who}" };
             paused++;
         }
 
@@ -86,7 +86,7 @@ public sealed class SampleOperator(string reason) : IOperatorSurface
         {
             if (_tree[key].Evidence.StartsWith("paused by", StringComparison.Ordinal))
             {
-                _tree[key] = _tree[key] with { State = HealthState.Green, Severity = 0, Evidence = "" };
+                _tree[key] = _tree[key] with { State = HealthState.Fine, Severity = 0, Evidence = "" };
                 resumed++;
             }
         }

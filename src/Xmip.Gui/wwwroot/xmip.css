@@ -6,8 +6,11 @@
    red and the operator needs to know where. */
 
 :root {
+    /* Health is a mood; these are the colours a surface paints each mood in.
+       fine=green, average=yellow, holding=orange, done=red (ADR-0041). */
     --green: #1f9d55;
     --yellow: #d69e2e;
+    --orange: #dd6b20;
     --red: #c53030;
     --ink: #1a202c;
     --muted: #718096;
@@ -107,14 +110,16 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .row .age { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
 .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; flex: none; }
-.green .dot { background: var(--green); }
-.yellow .dot { background: var(--yellow); }
-.red .dot { background: var(--red); }
+.fine .dot { background: var(--green); }
+.average .dot { background: var(--yellow); }
+.holding .dot { background: var(--orange); }
+.done .dot { background: var(--red); }
 .none .dot { background: var(--line); border: 1px solid var(--muted); }
 
-.green .state { color: var(--green); }
-.yellow .state { color: var(--yellow); }
-.red .state { color: var(--red); }
+.fine .state { color: var(--green); }
+.average .state { color: var(--yellow); }
+.holding .state { color: var(--orange); }
+.done .state { color: var(--red); }
 .none .state { color: var(--muted); }
 
 /* Pause and resume: the operator acting, not just watching. Small, on the row,
@@ -160,8 +165,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .branch .label { font-weight: 600; }
 .branch .worst { color: var(--muted); font-size: 0.85rem; }
 .branch .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.branch.red .worst, .branch.red .label { color: var(--red); }
-.branch.yellow .worst { color: var(--yellow); }
+.branch.done .worst, .branch.done .label { color: var(--red); }
+.branch.holding .worst { color: var(--orange); }
+.branch.average .worst { color: var(--yellow); }
 .branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
 
 /* Desktop navigation and the configuration editor (desktop only). */
