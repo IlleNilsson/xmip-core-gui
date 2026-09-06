@@ -42,10 +42,16 @@ builder.Configuration.AddCommandLine(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// The web surface is monitoring only (ADR-0014), so its role is fixed Observer:
-// it watches and never acts. Registered so the shared pages can read the role
-// and hide every action (ADR-0009).
-builder.Services.AddSingleton(new Xmip.Gui.Surface.RoleContext(Xmip.Gui.Surface.Role.Observer));
+// The role is the person's, not the surface's (ADR-0009): the web reads the same
+// assigned role as the desktop — from config or XMIP_ROLE — and shows it, so one
+// person sees one role across every surface. It is assigned, never chosen here,
+// and defaults to Observer so a missing value grants nothing. What the web then
+// offers is the surface's own limit (monitoring, ADR-0014), separate from who you
+// are.
+string? assignedRole =
+    builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
+builder.Services.AddSingleton(
+    new Xmip.Gui.Surface.RoleContext(Xmip.Gui.Surface.RoleContext.Parse(assignedRole)));
 
 // One surface for every screen. The real one loads the runtime's native
 // library and reads its operator table; when that cannot happen, a stand-in
