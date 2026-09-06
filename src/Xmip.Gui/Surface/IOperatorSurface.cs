@@ -31,17 +31,23 @@ public interface IOperatorSurface
     public string ResumeScope(string scope);
 }
 
-/// <summary>observability-model.md section 6, plus the surface's own word.</summary>
+/// <summary>
+/// The mood of a scope — observability-model.md section 6. A mood, not a colour;
+/// the surface paints it. Four moods, worsening order (ADR-0041).
+/// </summary>
 public enum HealthState
 {
     /// <summary>Healthy and active.</summary>
-    Green = 0,
+    Fine = 0,
 
-    /// <summary>Degraded, or correctable before it becomes red.</summary>
-    Yellow = 1,
+    /// <summary>Degraded, or correctable.</summary>
+    Average = 1,
+
+    /// <summary>The rollup mood: something below is Done — attention, drill in.</summary>
+    Holding = 2,
 
     /// <summary>Failing.</summary>
-    Red = 2,
+    Done = 3,
 }
 
 /// <summary>What a measurement counts. Never a bare number.</summary>

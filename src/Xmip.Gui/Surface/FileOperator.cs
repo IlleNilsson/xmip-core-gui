@@ -122,10 +122,11 @@ public sealed class FileOperator(string path) : IOperatorSurface
     {
         return state switch
         {
-            "green" => HealthState.Green,
-            "yellow" => HealthState.Yellow,
-            "red" => HealthState.Red,
-            _ => HealthState.Yellow,
+            "fine" => HealthState.Fine,
+            "average" => HealthState.Average,
+            "holding" => HealthState.Holding,
+            "done" => HealthState.Done,
+            _ => HealthState.Average,
         };
     }
 
