@@ -1,10 +1,26 @@
 @inherits LayoutComponentBase
 
 @* The desktop does both, so it navigates: monitoring (Cluster) and, unlike the
-   web, configuration (ADR-0014). *@
+   web, configuration (ADR-0014). What it offers follows the role (ADR-0009):
+   an Observer watches — monitoring only; an Operator also configures. The role
+   is chosen here rather than proven, until a real identity gates it
+   (ADR-0022/ADR-0027); the surface shows the concept and shapes what is on offer. *@
 <nav class="topnav">
     <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
-    <NavLink class="topnav-link" href="/configure">Configure</NavLink>
+    @if (_role.MayConfigure())
+    {
+        <NavLink class="topnav-link" href="/configure">Configure</NavLink>
+    }
+
+    <div class="role">
+        <span class="role-label">role</span>
+        @foreach (var role in Roles)
+        {
+            <button class="role-pick @(role == _role ? "active" : "")"
+                    @onclick="() => SetRole(role)"
+                    title="@Describe(role)">@role.Label()</button>
+        }
+    </div>
 </nav>
 
 @Body
@@ -14,3 +30,37 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    // Least-privilege first. Default Observer: the surface opens watching, and a
+    // person raises their role to act — the safe direction (ADR-0009).
+    private Role _role = Role.Observer;
+
+    private static readonly Role[] Roles = [Role.Observer, Role.Operator, Role.Developer];
+
+    private void SetRole(Role role)
+    {
+        _role = role;
+
+        // Dropping below Operator while on Configure would strand an Observer on
+        // a page their role does not offer, so send them back to Monitor.
+        if (!_role.MayConfigure())
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private static string Describe(Role role)
+    {
+        return role switch
+        {
+            Role.Observer => "watches — monitoring only",
+            Role.Operator => "also configures",
+            Role.Developer => "also builds",
+            _ => "",
+        };
+    }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+}

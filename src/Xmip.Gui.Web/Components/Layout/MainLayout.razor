@@ -1,5 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
+@* The web surface is monitoring only (ADR-0014), so its role is always Observer
+   — it watches and changes nothing. The badge shows the concept (ADR-0009);
+   configuration lives on the desktop, for an Operator. *@
+<nav class="topnav">
+    <span class="topnav-link active">Monitor</span>
+    <div class="role">
+        <span class="role-label">role</span>
+        <span class="role-pick active" title="watches — monitoring only">Observer</span>
+    </div>
+</nav>
+
 @Body
 
 <div id="blazor-error-ui" data-nosnippet>

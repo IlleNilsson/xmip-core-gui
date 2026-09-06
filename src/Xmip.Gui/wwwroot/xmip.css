@@ -187,6 +187,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .topnav-link:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
 .topnav-link.active { background: var(--green); color: var(--paper); }
+
+/* The role concept (ADR-0009): who is at the keyboard shapes what is offered.
+   Observer watches; Operator also configures; Developer also builds. */
+.role { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+.role-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.role-pick {
+    color: #cbd5e0; background: none; border: 1px solid transparent;
+    font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    padding: 0.25rem 0.7rem; border-radius: 6px;
+}
+.role-pick:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
+.role-pick.active { background: var(--blue); color: var(--paper); cursor: default; }
 .bar .crumb-link { margin-left: auto; color: var(--muted); text-decoration: none; }
 .bar .crumb-link:hover { color: var(--ink); }
 
