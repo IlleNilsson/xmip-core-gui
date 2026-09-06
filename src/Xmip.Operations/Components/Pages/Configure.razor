@@ -3,6 +3,8 @@
 @using Xmip.Operations.Configuration
 @inject ConfigStore Store
 @inject RuntimeCommands Runtime
+@inject RoleContext Role
+@inject NavigationManager Nav
 
 <PageTitle>Xmip — Configure</PageTitle>
 
@@ -222,6 +224,15 @@
 
     protected override void OnInitialized()
     {
+        // Configuration is the Operator's, not the Observer's (ADR-0009). An
+        // Observer who reaches this URL directly is sent back to Monitor — the
+        // role is assigned, so this is a guard, not a choice to reconsider.
+        if (!Role.MayConfigure())
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+
         _entries = Store.List();
         if (_entries.Count > 0)
         {
