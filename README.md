@@ -27,7 +27,7 @@ Two hosts, one library. ADR-0014.
 
 **Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
 
-**Desktop** — `dotnet run --project src/Xmip.Gui.Desktop -f net11.0-windows10.0.19041.0`.
+**Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
 A native window; needs the maui-windows workload. Same screen, same operator
 boundary, so the two cannot disagree.
 
