@@ -1,13 +1,15 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using Xmip.Gui.Surface
+@inject RoleContext Role
 
-@* The web surface is monitoring only (ADR-0014), so its role is always Observer
-   — it watches and changes nothing. The badge shows the concept (ADR-0009);
-   configuration lives on the desktop, for an Operator. *@
+@* The web shows the person's assigned role (ADR-0009), the same role they are on
+   any surface — the role is theirs, not the surface's. What the web offers is
+   monitoring (ADR-0014), which is the surface's own limit, not the role's. *@
 <nav class="topnav">
     <span class="topnav-link active">Monitor</span>
     <div class="role">
         <span class="role-label">role</span>
-        <span class="role-pick active" title="watches — monitoring only">Observer</span>
+        <span class="role-pick active" title="@Describe(Role.Role)">@Role.Role.Label()</span>
     </div>
 </nav>
 
@@ -18,3 +20,16 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private static string Describe(Xmip.Gui.Surface.Role role)
+    {
+        return role switch
+        {
+            Xmip.Gui.Surface.Role.Observer => "watches",
+            Xmip.Gui.Surface.Role.Operator => "also configures",
+            Xmip.Gui.Surface.Role.Developer => "also builds",
+            _ => "",
+        };
+    }
+}
