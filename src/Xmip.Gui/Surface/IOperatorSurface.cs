@@ -41,20 +41,23 @@ public enum HealthState
     /// <summary>Results flowing, at ease.</summary>
     Fine = 0,
 
+    /// <summary>A deliberate hold — an operator is working on it.</summary>
+    Paused = 1,
+
     /// <summary>Handling the load.</summary>
-    Working = 1,
+    Working = 2,
 
     /// <summary>Strained — change the load.</summary>
-    Stressed = 2,
+    Stressed = 3,
 
     /// <summary>Spent — replace the hardware.</summary>
-    Exhausted = 3,
+    Exhausted = 4,
 
     /// <summary>Blocked or failed — the pain (a cert, a password, a folder).</summary>
-    Done = 4,
+    Done = 5,
 
     /// <summary>Rollup only: a parent with something not-Fine beneath it.</summary>
-    Holding = 5,
+    Holding = 6,
 }
 
 /// <summary>What a measurement counts. Never a bare number.</summary>

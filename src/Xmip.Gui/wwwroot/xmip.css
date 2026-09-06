@@ -7,9 +7,10 @@
 
 :root {
     /* Health is a mood; these are the colours a surface paints each mood in
-       (ADR-0041): fine=green, working=blue, stressed=yellow, exhausted=burnt,
-       done=red, holding=orange (the rollup). */
+       (ADR-0041): fine=green, paused=slate, working=blue, stressed=yellow,
+       exhausted=burnt, done=red, holding=orange (the rollup). */
     --green: #1f9d55;
+    --slate: #718096;
     --blue: #3182ce;
     --yellow: #d69e2e;
     --burnt: #c05621;
@@ -114,6 +115,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 
 .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; flex: none; }
 .fine .dot { background: var(--green); }
+.paused .dot { background: var(--slate); }
 .working .dot { background: var(--blue); }
 .stressed .dot { background: var(--yellow); }
 .exhausted .dot { background: var(--burnt); }
@@ -122,6 +124,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .none .dot { background: var(--line); border: 1px solid var(--muted); }
 
 .fine .state { color: var(--green); }
+.paused .state { color: var(--slate); }
 .working .state { color: var(--blue); }
 .stressed .state { color: var(--yellow); }
 .exhausted .state { color: var(--burnt); }
@@ -176,6 +179,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .branch.holding .worst { color: var(--orange); }
 .branch.exhausted .worst { color: var(--burnt); }
 .branch.stressed .worst { color: var(--yellow); }
+.branch.paused .worst { color: var(--slate); }
 .branch.working .worst { color: var(--blue); }
 .branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
 
