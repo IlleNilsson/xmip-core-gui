@@ -32,22 +32,29 @@ public interface IOperatorSurface
 }
 
 /// <summary>
-/// The mood of a scope — observability-model.md section 6. A mood, not a colour;
-/// the surface paints it. Four moods, worsening order (ADR-0041).
+/// The mood of a scope — observability-model.md section 6. A mood, not a colour
+/// (the surface paints it): what a human gets out of a resource under load. Five
+/// leaf moods, worsening, then Holding, the rollup (ADR-0041).
 /// </summary>
 public enum HealthState
 {
-    /// <summary>Healthy and active.</summary>
+    /// <summary>Results flowing, at ease.</summary>
     Fine = 0,
 
-    /// <summary>Degraded, or correctable.</summary>
-    Average = 1,
+    /// <summary>Handling the load.</summary>
+    Working = 1,
 
-    /// <summary>The rollup mood: something below is Done — attention, drill in.</summary>
-    Holding = 2,
+    /// <summary>Strained — change the load.</summary>
+    Stressed = 2,
 
-    /// <summary>Failing.</summary>
-    Done = 3,
+    /// <summary>Spent — replace the hardware.</summary>
+    Exhausted = 3,
+
+    /// <summary>Blocked or failed — the pain (a cert, a password, a folder).</summary>
+    Done = 4,
+
+    /// <summary>Rollup only: a parent with something not-Fine beneath it.</summary>
+    Holding = 5,
 }
 
 /// <summary>What a measurement counts. Never a bare number.</summary>
