@@ -348,9 +348,10 @@
         return stage is "receive" or "send";
     }
 
-    // The dot's colour is the state; its depth is the severity. A light yellow
-    // at 40 and a deep amber at 85 are both "yellow", and the operator sees
-    // which without reading the number.
+    // The dot's colour renders the mood; its depth is the severity. A light
+    // Stressed at 40 and a deep Stressed at 85 are the same mood shaded, and the
+    // operator sees which without reading the number. (Colour is the GUI's, the
+    // mood is the model's — ADR-0041.)
     private static string DotStyle(byte severity, HealthState state)
     {
         // 0 keeps the flat state colour; higher darkens toward the edge of the
@@ -417,8 +418,8 @@
         return parts.Length >= 3 ? string.Join('/', parts.Skip(2)) : (parts.Length == 2 ? parts[1] : scope);
     }
 
-    // observability-model.md section 6: the worst state beneath is the state
-    // shown. Nothing recorded is not green — it answered,
+    // observability-model.md section 6: the worst mood beneath is the mood
+    // shown. Nothing recorded is not Fine — it answered,
     // and had nothing to say.
     // A Done does not propagate (ADR-0041): an aggregate above a Done leaf shows
     // Holding — attention, drill in. Fine up the tree still means all fine below.
