@@ -123,6 +123,7 @@ public sealed class FileOperator(string path) : IOperatorSurface
         return state switch
         {
             "fine" => HealthState.Fine,
+            "paused" => HealthState.Paused,
             "working" => HealthState.Working,
             "stressed" => HealthState.Stressed,
             "exhausted" => HealthState.Exhausted,

@@ -361,6 +361,7 @@
         string shade = state switch
         {
             HealthState.Fine => Mix("#1f9d55", "#146638", weight),
+            HealthState.Paused => Mix("#718096", "#4a5568", weight),
             HealthState.Working => Mix("#3182ce", "#1f4f80", weight),
             HealthState.Stressed => Mix("#e9c46a", "#c0791f", weight),
             HealthState.Exhausted => Mix("#dd6b20", "#9c4210", weight),
