@@ -13,9 +13,10 @@
     <RootNamespace>Xmip.Gui</RootNamespace>
     <AssemblyName>Xmip.Gui</AssemblyName>
 
-    <!-- Surface/NativeOperator.cs P/Invokes xmip_operate.h: function pointers
-         and raw structs, the whole reason the surface exists. -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Nothing here crosses the C ABI any more: Surface/NativeOperator.cs is
+         an adapter over Xmip.Abi, which holds the function pointers and raw
+         structs for every surface. unsafe stays off, as Directory.Build.props
+         has it. -->
 
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -23,6 +24,15 @@
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The C ABI, bound once. Xmip.Abi in xmip-core-abi declares the two
+         headers for every surface — this library, the cli and the PowerShell
+         module — so what a screen reads and what a cmdlet emits is one shape
+         (ADR-0014, amendment of 2026-08-26). A sibling in the estate, not
+         vendored: the path is the estate's layout, four levels up. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Abi\Xmip.Abi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

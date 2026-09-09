@@ -18,6 +18,10 @@ infrastructure and sit at the bottom, for when a stage is red and the question
 becomes where. Stated by the owner, 2026-09-05.
 It loads `xmip_core_runtime` and reads its table; when it cannot, a stand-in
 answers and every page says SAMPLE in red. Started 2026-09-04.
+The table is read through `Xmip.Abi` in xmip-core-abi (`dotnet/Xmip.Abi`), the
+one .NET binding over `xmip_operate.h` shared with the cli and the PowerShell
+module; `Surface/NativeOperator.cs` is an adapter over it and declares no
+struct of its own.
 
 The market survey calls this gap wider than any open runtime feature — every
 competitor leads with a visual designer. One screen is not a designer. It is

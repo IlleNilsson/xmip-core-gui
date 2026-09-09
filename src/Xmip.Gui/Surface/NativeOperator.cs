@@ -1,39 +1,26 @@
-using System.Runtime.InteropServices;
-using System.Text;
+using Xmip.Abi.Module;
+using Xmip.Abi.Operate;
 
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// The operator boundary as <c>include/xmip_operate.h</c> declares it, crossed
-/// by P/Invoke. ADR-0012 clause 1 applies here too: the header is normative
-/// and this is not; where they differ, the header is right and this is a
-/// defect.
+/// The screens' view of a loaded runtime: <see cref="IOperatorSurface"/> over
+/// <see cref="Operator"/>, the binding in xmip-core-abi. Nothing here crosses
+/// the C ABI itself — the binding does that once, for every surface (ADR-0014,
+/// amendment of 2026-08-26) — and what is left is turning a status into the
+/// words an operator reads on screen.
 /// </summary>
-public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
+public sealed class NativeOperator : IOperatorSurface, IDisposable
 {
-    private const uint Version = 1u;
-    private const string Entrypoint = "xmip_operate_v1";
+    private readonly Operator _runtime;
 
-    private readonly nint _library;
-    private readonly Operate _table;
-    private bool _disposed;
-
-    // The header says entries are valid until the next call on the table, and
-    // a Blazor Server app calls from a prerender thread and a circuit thread.
-    // Two callers at once would have one reading pointers the other has just
-    // replaced. One call at a time, and every string is copied out before the
-    // lock is released.
-    private readonly Lock _gate = new();
+    private NativeOperator(Operator runtime)
+    {
+        _runtime = runtime;
+    }
 
     /// <inheritdoc />
-    public string Source { get; }
-
-    private NativeOperator(nint library, Operate table, string path)
-    {
-        _library = library;
-        _table = table;
-        Source = path;
-    }
+    public string Source => _runtime.Source;
 
     /// <summary>
     /// Load the runtime's native library and take its operator table.
@@ -42,50 +29,9 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     /// </summary>
     public static NativeOperator? Load(string path, out string reason)
     {
-        if (!File.Exists(path))
-        {
-            reason = $"no runtime library at {path}";
-            return null;
-        }
+        Operator? runtime = Operator.Load(path, out reason);
 
-        // Load a copy, never the build output itself. A loaded library is
-        // locked for as long as this process lives, and the path configured in
-        // development is the runtime's own target/debug — so every GUI left
-        // running made the next `cargo build` fail with a locked .dll, and the
-        // fix was always "stop the GUI first". Copying costs one file write and
-        // removes the hazard for good.
-        string copy = Path.Combine(
-            Path.GetTempPath(),
-            $"xmip-gui-{Guid.NewGuid():n}-{Path.GetFileName(path)}");
-        File.Copy(path, copy);
-
-        if (!NativeLibrary.TryLoad(copy, out nint library))
-        {
-            reason = $"{path} could not be loaded";
-            return null;
-        }
-
-        if (!NativeLibrary.TryGetExport(library, Entrypoint, out nint symbol))
-        {
-            NativeLibrary.Free(library);
-            reason = $"{path} does not export {Entrypoint}";
-            return null;
-        }
-
-        delegate* unmanaged[Cdecl]<uint, Operate*, int> entry =
-            (delegate* unmanaged[Cdecl]<uint, Operate*, int>)symbol;
-        Operate table;
-        int status = entry(Version, &table);
-
-        if (status != 0)
-        {
-            NativeLibrary.Free(library);
-            reason = $"{Entrypoint} refused version {Version} with status {status}";
-            return null;
-        }
-
-        reason = string.Empty;
-        return new NativeOperator(library, table, path);
+        return runtime is null ? null : new NativeOperator(runtime);
     }
 
     /// <summary>
@@ -95,234 +41,85 @@ public sealed unsafe class NativeOperator : IOperatorSurface, IDisposable
     /// </summary>
     public string Start(string configurationPath)
     {
-        if (!NativeLibrary.TryGetExport(_library, "xmip_start_v1", out nint symbol))
+        XmipStatus status = _runtime.Start(configurationPath);
+
+        return status switch
         {
-            return "this runtime does not export xmip_start_v1";
-        }
-
-        delegate* unmanaged[Cdecl]<XmipStr, int> start =
-            (delegate* unmanaged[Cdecl]<XmipStr, int>)symbol;
-        byte[] bytes = Encoding.UTF8.GetBytes(configurationPath);
-
-        fixed (byte* text = bytes)
-        {
-            int status = start(new XmipStr(text, (nuint)bytes.Length));
-
-            return status == 0
-                ? $"started {configurationPath}"
-                : $"{configurationPath} refused with status {status}; the health tree says why";
-        }
+            XmipStatus.Ok => $"started {configurationPath}",
+            XmipStatus.Unsupported =>
+                $"this runtime does not export {OperateAbi.StartEntrypoint}",
+            _ => $"{configurationPath} refused: {status.Explain()}; the health tree says why",
+        };
     }
 
     /// <summary>
-    /// Validate a node's configuration file without starting it: read it, build
-    /// the execution tree, check it. A command a browser cannot run — it loads
-    /// the native runtime. Returns what the runtime said; the health tree carries
-    /// the detail when it is invalid.
+    /// Validate a node's configuration file without starting it. The file's
+    /// text crosses, not its path — the runtime checks a proposed document and
+    /// publishes nothing (ADR-0027 clause 9), so the answer carries the
+    /// problems itself. A command a browser cannot run: it reads a local file
+    /// and loads the native runtime.
     /// </summary>
     public string Validate(string configurationPath)
     {
-        if (!NativeLibrary.TryGetExport(_library, "xmip_validate_v1", out nint symbol))
+        if (!File.Exists(configurationPath))
         {
-            return "this runtime does not export xmip_validate_v1";
+            return $"no configuration at {configurationPath}";
         }
 
-        delegate* unmanaged[Cdecl]<XmipStr, int> validate =
-            (delegate* unmanaged[Cdecl]<XmipStr, int>)symbol;
-        byte[] bytes = Encoding.UTF8.GetBytes(configurationPath);
+        ValidationRecord answer = _runtime.Validate(File.ReadAllText(configurationPath));
 
-        fixed (byte* text = bytes)
+        if (answer.IsValid)
         {
-            int status = validate(new XmipStr(text, (nuint)bytes.Length));
-
-            return status == 0
-                ? $"{configurationPath} is valid"
-                : $"{configurationPath} is invalid (status {status}); the health tree says why";
+            return $"{configurationPath} is valid";
         }
+
+        if (answer.Status == XmipStatus.Unsupported)
+        {
+            return $"this runtime does not export {OperateAbi.ValidateEntrypoint}";
+        }
+
+        string why = answer.Problems.Count == 0
+            ? answer.Status.Explain()
+            : string.Join("; ", answer.Problems);
+
+        return $"{configurationPath} is invalid: {why}";
     }
 
     /// <inheritdoc />
     public IReadOnlyList<HealthRecord> Health(string scope)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(scope);
-        List<HealthRecord> found = [];
-
-        using Lock.Scope held = _gate.EnterScope();
-
-        fixed (byte* text = bytes)
-        {
-            XmipStr xmipScope = new(text, (nuint)bytes.Length);
-            nuint needed = 0;
-
-            // Ask for the count first, then for exactly that many. The header
-            // promises the true count in out_len however small the buffer.
-            int probe = _table.Health(_table.Ctx, xmipScope, null, 0, &needed);
-
-            if (probe != 0 || needed == 0)
-            {
-                return found;
-            }
-
-            HealthEntry[] entries = new HealthEntry[needed];
-
-            fixed (HealthEntry* buffer = entries)
-            {
-                _ = _table.Health(_table.Ctx, xmipScope, buffer, needed, &needed);
-            }
-
-            foreach (HealthEntry entry in entries)
-            {
-                found.Add(new HealthRecord(
-                    entry.Scope.Read(),
-                    (HealthState)entry.Health,
-                    entry.Severity,
-                    entry.Evidence.Read(),
-                    FromNanos(entry.ObservedUnixNanos)));
-            }
-        }
-
-        return found;
+        return _runtime.Health(scope);
     }
 
     /// <inheritdoc />
     public MeasurementRecord? Measure(string scope, Counted counted)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(scope);
-
-        using Lock.Scope held = _gate.EnterScope();
-
-        fixed (byte* text = bytes)
-        {
-            XmipStr xmipScope = new(text, (nuint)bytes.Length);
-            Measurement entry;
-            nuint len = 0;
-
-            int status = _table.Measure(_table.Ctx, xmipScope, (int)counted, &entry, 1, &len);
-
-            return status != 0 || len == 0
-                ? null
-                : new MeasurementRecord(
-                    entry.Scope.Read(),
-                    (Counted)entry.Counted,
-                    entry.Value,
-                    FromNanos(entry.WindowStartUnixNanos),
-                    FromNanos(entry.WindowEndUnixNanos),
-                    FromNanos(entry.ObservedUnixNanos));
-        }
+        return _runtime.Measure(scope, counted);
     }
 
     /// <inheritdoc />
     public string PauseScope(string scope, string who)
     {
-        byte[] scopeBytes = Encoding.UTF8.GetBytes(scope);
-        byte[] whoBytes = Encoding.UTF8.GetBytes(who);
+        XmipStatus status = _runtime.PauseScope(scope, who);
 
-        using Lock.Scope held = _gate.EnterScope();
-
-        fixed (byte* scopePtr = scopeBytes)
-        fixed (byte* whoPtr = whoBytes)
-        {
-            int status = _table.Pause(
-                _table.Ctx,
-                new XmipStr(scopePtr, (nuint)scopeBytes.Length),
-                new XmipStr(whoPtr, (nuint)whoBytes.Length));
-
-            return status == 0
-                ? $"paused {scope}"
-                : $"nothing to pause at {scope} (status {status})";
-        }
+        return status == XmipStatus.Ok
+            ? $"paused {scope}"
+            : $"nothing to pause at {scope} ({status.Explain()})";
     }
 
     /// <inheritdoc />
     public string ResumeScope(string scope)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(scope);
+        XmipStatus status = _runtime.ResumeScope(scope);
 
-        using Lock.Scope held = _gate.EnterScope();
-
-        fixed (byte* text = bytes)
-        {
-            int status = _table.Resume(_table.Ctx, new XmipStr(text, (nuint)bytes.Length));
-
-            return status == 0
-                ? $"resumed {scope}"
-                : $"nothing to resume at {scope} (status {status})";
-        }
-    }
-
-    private static DateTimeOffset FromNanos(long nanos)
-    {
-        return DateTimeOffset.UnixEpoch.AddTicks(nanos / 100);
+        return status == XmipStatus.Ok
+            ? $"resumed {scope}"
+            : $"nothing to resume at {scope} ({status.Explain()})";
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        if (_table.Destroy is not null)
-        {
-            _table.Destroy(_table.Ctx);
-        }
-
-        NativeLibrary.Free(_library);
-    }
-
-    // -- The header's shapes. Section numbers refer to xmip_operate.h. -----
-
-    /// <summary>Section 2 of xmip_module.h: a borrowed UTF-8 string.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private readonly struct XmipStr(byte* ptr, nuint len)
-    {
-        public readonly byte* Ptr = ptr;
-        public readonly nuint Len = len;
-
-        public string Read()
-        {
-            return Ptr is null || Len == 0
-                ? string.Empty
-                : Encoding.UTF8.GetString(Ptr, checked((int)Len));
-        }
-    }
-
-    /// <summary>Section 3.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private struct HealthEntry
-    {
-        public XmipStr Scope;
-        public int Health;
-        public byte Severity;
-        public XmipStr Evidence;
-        public long ObservedUnixNanos;
-    }
-
-    /// <summary>Section 4.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Measurement
-    {
-        public XmipStr Scope;
-        public int Counted;
-        public ulong Value;
-        public long WindowStartUnixNanos;
-        public long WindowEndUnixNanos;
-        public long ObservedUnixNanos;
-    }
-
-    /// <summary>Section 5. The table the runtime fills.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Operate
-    {
-        public uint AbiVersion;
-        public void* Ctx;
-        public delegate* unmanaged[Cdecl]<void*, XmipStr, HealthEntry*, nuint, nuint*, int> Health;
-        public delegate* unmanaged[Cdecl]<void*, XmipStr, int, Measurement*, nuint, nuint*, int> Measure;
-        public delegate* unmanaged[Cdecl]<void*, XmipStr, XmipStr, int> Pause;
-        public delegate* unmanaged[Cdecl]<void*, XmipStr, int> Resume;
-        public delegate* unmanaged[Cdecl]<void*, void> Destroy;
+        _runtime.Dispose();
     }
 }

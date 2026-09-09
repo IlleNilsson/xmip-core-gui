@@ -22,10 +22,14 @@
         "resolved": "2.3.0",
         "contentHash": "kA3P/rsBD4HUio0Q67GUgYuWdfoV273HhQJmIRfJymKiZKEi1+xgjXTRW0OtcdEJqL4vTzDvKxbOMYR4tjBCPw=="
       },
+      "xmip.abi": {
+        "type": "Project"
+      },
       "xmip.gui": {
         "type": "Project",
         "dependencies": {
-          "Tomlyn.Extensions.Configuration": "[2.0.0, )"
+          "Tomlyn.Extensions.Configuration": "[2.0.0, )",
+          "Xmip.Abi": "[1.0.0, )"
         }
       }
     }
