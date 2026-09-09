@@ -21,8 +21,8 @@
     <Nullable>enable</Nullable>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
 
-    <!-- Crosses the C ABI through Xmip.Gui's NativeOperator. -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Reaches the C ABI through Xmip.Gui's NativeOperator, an adapter over
+         Xmip.Abi in xmip-core-abi. Nothing here is unsafe. -->
 
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
