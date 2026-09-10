@@ -20,6 +20,9 @@ public sealed class NodeConfiguration
     public string ClusterName { get; set; } = "";
     public string NodeName { get; set; } = "";
 
+    /// <summary>Whether the node may assume the internet (ADR-0045). Off unless said.</summary>
+    public bool Online { get; set; }
+
     /// <summary>Modules are read and preserved verbatim on save so editing never
     /// drops them; their manifests are richer than the editor models.</summary>
     public string PreservedModules { get; set; } = "";
@@ -72,6 +75,7 @@ public sealed class NodeConfiguration
         config.ServiceName = toml["service:name"] ?? "";
         config.ClusterName = toml["service:cluster_name"] ?? "";
         config.NodeName = toml["service:node_name"] ?? "";
+        config.Online = string.Equals(toml["service:online"], "true", StringComparison.OrdinalIgnoreCase);
 
         ReadLocations(toml, "receive_locations", config.ReceiveLocations);
         ReadLocations(toml, "send_locations", config.SendLocations);
@@ -92,6 +96,8 @@ public sealed class NodeConfiguration
         AppendString(toml, "name", ServiceName);
         AppendString(toml, "cluster_name", ClusterName);
         AppendString(toml, "node_name", NodeName);
+        // ADR-0045: offline unless the operator says otherwise.
+        toml.AppendLine($"online = {(Online ? "true" : "false")}");
         toml.AppendLine();
 
         if (!string.IsNullOrWhiteSpace(PreservedModules))
