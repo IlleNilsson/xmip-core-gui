@@ -1,0 +1,3 @@
+[submodule "xmip-core-gui-vscode"]
+	path = vscode
+	url = https://github.com/IlleNilsson/xmip-core-gui-vscode.git

@@ -29,6 +29,13 @@ the first thing an operator can look at.
 
 Two hosts, one library. ADR-0014.
 
+**The configuration tool has two faces** (ADR-0014, amendment 2026-09-10):
+operators run the MAUI executable; developers edit the same node configuration
+in VS Code. The extension is the nested technology repository
+`vscode/` (xmip-core-gui-vscode): a Rust language server, `xmip-lsp`, over the
+same `xmip_validate_v1`, with a TypeScript shell — the one place in the estate
+that has any.
+
 **Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
