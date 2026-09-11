@@ -3,12 +3,28 @@
 #
 # Paths are resolved against the repository root during development (see
 # MauiProgram.cs); a packaged app resolves them against its own directory.
-# Set them to the runtime library and the node you want to watch.
 
 [Xmip]
-# The runtime's native library, exporting xmip_operate_v1 and xmip_start_v1.
-# Empty, or missing, and the GUI shows sample data and says so.
+# Which surface the board reads (ADR-0052 clause 3): "native", the runtime's
+# library loaded in this process, or "snapshot", a file a node or the
+# Playground publishes. Chosen here and never guessed from a file in a temp
+# directory. The same keys as the web host's xmip.gui.toml.
+Surface = "native"
+
+# The runtime's native library, exporting xmip_operate_v1, xmip_start_v1 and
+# xmip_validate_v1. Found by one rule for every surface: this key, else
+# XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
-# The node to start and watch. Remove the line to start nothing.
-NodeConfiguration = "module/operations/gui/samples/edge-01.xmip.toml"
+# The node to start and watch when the surface is native — the desktop
+# configures, and starting a node is the one thing a browser cannot do
+# (ADR-0014, amendment of 2026-09-05). Remove the line to start nothing.
+NodeConfiguration = "module/operation/gui/samples/edge-01.xmip.toml"
+
+# The file to read when Surface = "snapshot". A path with no file behind it
+# is said so on the page, not silently replaced.
+# Snapshot = "C:/Users/you/AppData/Local/Temp/playground-snapshot.toml"
+
+# The role this desktop runs as (ADR-0009): observer, operator or developer.
+# Assigned here or in XMIP_ROLE, never chosen in the UI; absent, Observer.
+# Role = "operator"

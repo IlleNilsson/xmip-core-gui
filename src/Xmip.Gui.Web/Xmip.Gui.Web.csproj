@@ -11,24 +11,24 @@
     <AssemblyName>Xmip.Gui.Web</AssemblyName>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
 
-    <!-- The web host reaches xmip_operate.h through Xmip.Gui's NativeOperator,
-         which is an adapter over Xmip.Abi in xmip-core-abi — the one place
-         the function pointers and raw structs live. Nothing here is unsafe. -->
+    <!-- The web host reaches xmip_operate.h through Xmip.Surface's
+         NativeOperator, an adapter over Xmip.Abi in xmip-core-abi — the one
+         place the function pointers and raw structs live. Nothing here is
+         unsafe. -->
 
     <!-- Razor-generated code does not carry XML documentation and the template
-         turns CS1591 into an error for everything. Documented public surface
-         still matters for the operator classes; the components are pages. -->
+         turns CS1591 into an error for everything. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The screens and the surface. One library, two hosts — ADR-0014. -->
+    <!-- The screens. One library, two hosts — ADR-0014. -->
     <ProjectReference Include="..\Xmip.Gui\Xmip.Gui.csproj" />
 
-    <!-- TOML configuration for the .NET host. Xmip configures nothing in JSON,
-         so the template's appsettings files are gone and this reads
-         xmip.gui.toml instead. -->
-    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
+    <!-- The surface, its choice and the TOML reader (ADR-0052). Xmip
+         configures nothing in JSON, so the template's appsettings files are
+         gone and xmip.gui.toml is read through Xmip.Surface instead. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,12 +16,19 @@ the cluster and its message path** — Receive, Process, Send, each with its
 health and what it moved — because that is what an operator runs. Nodes are
 infrastructure and sit at the bottom, for when a stage is red and the question
 becomes where. Stated by the owner, 2026-09-05.
-It loads `xmip_core_runtime` and reads its table; when it cannot, a stand-in
-answers and every page says SAMPLE in red. Started 2026-09-04.
-The table is read through `Xmip.Abi` in xmip-core-abi (`dotnet/Xmip.Abi`), the
-one .NET binding over `xmip_operate.h` shared with the cli and the PowerShell
-module; `Surface/NativeOperator.cs` is an adapter over it and declares no
-struct of its own.
+Started 2026-09-04.
+
+**The screens are all this repository holds** (ADR-0052). The surface they
+read, the scope tree and its rollup, the worst leaf beneath a scope, runtime
+discovery and the English live in `Xmip.Surface` beside the binding in
+xmip-core-abi (`dotnet/Xmip.Surface`), shared with the cli and the PowerShell
+module; `Xmip.Gui` keeps the Razor and the role. There is no sample surface: a
+host reads the runtime's own table (`NativeOperator` over `Xmip.Abi`) or a
+snapshot a node published (`SnapshotOperator`), and which one is stated in its
+`xmip.gui.toml`, never guessed. A scope that is Holding says why beside the
+word — the worst leaf beneath it and that leaf's evidence — at the banner, the
+stage tile, the node row and every branch of the drill-down; there is no
+*follow the error* button, the operator drills or reads the audit.
 
 The market survey calls this gap wider than any open runtime feature — every
 competitor leads with a visual designer. One screen is not a designer. It is
@@ -37,12 +44,21 @@ same `xmip_validate_v1`, with a TypeScript shell — the one place in the estate
 that has any.
 
 **Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
+The web GUI monitors and does nothing else (ADR-0014, amendment 2026-09-05):
+it starts no node, offers no Pause or Resume, and its role is Observer, not
+configurable.
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
-A native window; needs the maui-windows workload. Same screen, same operator
-boundary, so the two cannot disagree.
+A native window; needs the maui-windows workload; Windows is the only
+platform it carries. Same screen, same operator boundary, so the two cannot
+disagree — and the desktop configures: it starts the node its configuration
+names, and its Configure page validates and starts through the runtime.
 
-Configuration is `src/Xmip.Gui.Web/xmip.gui.toml`: where the runtime library
-is, which node to start, the port, logging. TOML, because Xmip configures
-nothing in JSON anywhere — the host's default `appsettings.json` sources are
-removed in `Program.cs` and a TOML provider takes their place.
+Configuration is each host's `xmip.gui.toml`, with the same keys under
+`[Xmip]`: `Surface = "native" | "snapshot"`, `RuntimeLibrary` (else
+`XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>` when
+the surface is a snapshot — a path with no file behind it is said so on the
+page — and, on the desktop only, `NodeConfiguration` and `Role`. TOML,
+because Xmip configures nothing in JSON anywhere — the web host's default
+`appsettings.json` sources are removed in `Program.cs` and the TOML reader in
+`Xmip.Surface` takes their place.

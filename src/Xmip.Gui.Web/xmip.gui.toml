@@ -3,15 +3,27 @@
 # configuration anywhere, and the ASP.NET defaults that would have added one
 # are removed in Program.cs.
 #
-# Paths are relative to this file's directory.
+# Paths are relative to this file's directory: the project directory under
+# `dotnet run`, the application's own directory once published.
 
 [Xmip]
-# The runtime's native library, exporting xmip_operate_v1 and xmip_start_v1.
+# Which surface the page reads (ADR-0052 clause 3): "native", the runtime's
+# library loaded in this process, or "snapshot", a file a node or the
+# Playground publishes. Chosen here and never guessed from a file in a temp
+# directory. The web GUI monitors: it starts no node and offers no Pause or
+# Resume (ADR-0014, amendment of 2026-09-05), and its role is Observer.
+Surface = "native"
+
+# The runtime's native library, exporting xmip_operate_v1. Found by one rule
+# for every surface: this key, else XMIP_RUNTIME_LIBRARY, else the library
+# beside the executable.
 RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 
-# The node to start when the GUI starts. Remove the line to start nothing; the
-# runtime then says so on the page.
-NodeConfiguration = "../../samples/edge-01.xmip.toml"
+# The file to read when Surface = "snapshot". The Playground writes
+# playground-snapshot.toml to XMIP_PLAYGROUND_SNAPSHOT, or to the temp
+# directory when that is unset; name the same file here. A path with no file
+# behind it is said so on the page, not silently replaced.
+# Snapshot = "C:/Users/you/AppData/Local/Temp/playground-snapshot.toml"
 
 [Kestrel.Endpoints.Http]
 Url = "http://localhost:5087"

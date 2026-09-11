@@ -17,7 +17,8 @@
     @* Interactive on the server: this host's decision, not the shared pages'.
        A MAUI host renders the same pages with no render mode at all. *@
     <Routes @rendermode="InteractiveServer" />
-    <ReconnectModal />
+    @* No ReconnectModal: the template's copy of the reconnection dialog is
+       gone and blazor.web.js shows its own when the circuit drops. *@
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 
