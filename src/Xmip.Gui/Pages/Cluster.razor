@@ -27,12 +27,15 @@
     {
         IReadOnlyList<HealthRecord> inStage = InStage(stage);
         MeasurementRecord? moved = Surface.Measure(ScopeTree.Root, stage.Counted);
+        string items = inStage.Count == 0
+            ? "none configured"
+            : $"{inStage.Count} configured · {English.Rollup(inStage)}";
         <button class="stage @Class(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
             <span class="name"><span class="dot"></span>@stage.Name</span>
             <span class="value">@English.Count(moved)</span>
             <span class="kind">@stage.Counted.ToString().ToLowerInvariant(), last minute</span>
-            <span class="items">@(inStage.Count == 0 ? "none configured" : $"{inStage.Count} configured · {English.Rollup(inStage)}")</span>
+            <span class="items">@items</span>
             <Why Leaf="ScopeTree.Worst(inStage)" />
         </button>
     }
@@ -63,10 +66,14 @@
         <div class="branches">
             @foreach (Branch branch in branches)
             {
-                <button class="branch @English.Mood(branch.State)" @onclick="() => Focus = branch.Scope">
+                string worst = branch.IsLeaf
+                    ? English.Mood(branch.State)
+                    : $"{branch.Count} beneath · {English.Mood(branch.State)}";
+                <button class="branch @English.Mood(branch.State)"
+                        @onclick="() => Focus = branch.Scope">
                     <span class="dot" title="severity @branch.Worst.Severity"></span>
                     <span class="label">@branch.Label</span>
-                    <span class="worst">@(branch.IsLeaf ? English.Mood(branch.State) : $"{branch.Count} beneath · {English.Mood(branch.State)}")</span>
+                    <span class="worst">@worst</span>
                     @if (branch.IsLeaf)
                     {
                         <span class="evidence">@branch.Worst.Evidence</span>
@@ -82,7 +89,7 @@
 </section>
 
 <section class="list">
-    <h2>@(Selected is null ? "Needs attention" : Selected.Name) <small>@(Selected is null ? "everything not fine, worst first" : "every node, worst first")</small></h2>
+    <h2>@Heading <small>@Subheading</small></h2>
     @{
         IReadOnlyList<HealthRecord> shown = Selected is null
             ? All.Where(r => r.State != HealthState.Fine).ToList()
@@ -90,7 +97,7 @@
     }
     @if (shown.Count == 0)
     {
-        <p class="empty">@(Selected is null ? "Nothing needs attention." : $"No {Selected.Name.ToLowerInvariant()} configured on any node.")</p>
+        <p class="empty">@NothingShown</p>
     }
     else
     {
@@ -100,7 +107,7 @@
                 <span class="dot" title="severity @record.Severity"></span>
                 <span class="scope">@ScopeTree.Name(record.Scope)</span>
                 <span class="node">@ScopeTree.Node(record.Scope)</span>
-                <span class="evidence">@(string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence)</span>
+                <span class="evidence">@Evidence(record)</span>
                 <span class="age">@English.Age(record.Observed)</span>
                 @* Paused is a mood (ADR-0041): the record says so itself. *@
                 @if (Role.MayOperate() && IsPausable(record.Scope))
@@ -133,14 +140,13 @@
     {
         @foreach (string node in Nodes)
         {
-            IReadOnlyList<HealthRecord> onNode = All.Where(r => ScopeTree.Node(r.Scope) == node).ToList();
-            HealthRecord? worst = ScopeTree.Worst(onNode);
+            IReadOnlyList<HealthRecord> onNode = OnNode(node);
             string nodeScope = ScopeTree.Root + node;
             <div class="row @Class(onNode)">
                 <span class="dot"></span>
                 <span class="scope">@node</span>
                 <span class="node">@onNode.Count thing(s)</span>
-                <span class="evidence">@(worst is null || string.IsNullOrEmpty(worst.Evidence) ? "—" : $"{ScopeTree.Name(worst.Scope)}: {worst.Evidence}")</span>
+                <span class="evidence">@WorstEvidence(onNode)</span>
                 <span class="age">@English.Rollup(onNode)</span>
                 @* An Operator can pause a whole node: it pauses everything
                    beneath the scope (ADR-0027). An Observer is shown nothing. *@
@@ -243,10 +249,41 @@
     }
 
     private IReadOnlyList<string> Nodes =>
-        All.Select(r => ScopeTree.Node(r.Scope)).Where(n => n.Length > 0).Distinct().Order().ToList();
+        All.Select(r => ScopeTree.Node(r.Scope))
+            .Where(n => n.Length > 0)
+            .Distinct()
+            .Order()
+            .ToList();
 
     private IReadOnlyList<HealthRecord> InStage(Stage stage) =>
         All.Where(r => ScopeTree.Segment(r.Scope, 1) == stage.Segment).ToList();
+
+    private IReadOnlyList<HealthRecord> OnNode(string node) =>
+        All.Where(r => ScopeTree.Node(r.Scope) == node).ToList();
+
+    private string Heading => Selected is null ? "Needs attention" : Selected.Name;
+
+    private string Subheading =>
+        Selected is null ? "everything not fine, worst first" : "every node, worst first";
+
+    private string NothingShown =>
+        Selected is null
+            ? "Nothing needs attention."
+            : $"No {Selected.Name.ToLowerInvariant()} configured on any node.";
+
+    // A leaf shows its own evidence, as it does; a node row shows the worst
+    // leaf's beneath it, named, not the first record's (ADR-0052 clause 2).
+    private static string Evidence(HealthRecord record) =>
+        string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence;
+
+    private static string WorstEvidence(IReadOnlyList<HealthRecord> records)
+    {
+        HealthRecord? worst = ScopeTree.Worst(records);
+
+        return worst is null || string.IsNullOrEmpty(worst.Evidence)
+            ? "—"
+            : $"{ScopeTree.Name(worst.Scope)}: {worst.Evidence}";
+    }
 
     // The class carries the mood and the stylesheet paints it (ADR-0041): the
     // rollup word for a set of leaves, or "none" when nothing is recorded.

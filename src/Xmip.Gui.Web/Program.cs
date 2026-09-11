@@ -1,7 +1,7 @@
-using Tomlyn.Extensions.Configuration;
+using Xmip.Gui.Surface;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
-using Xmip.Gui.Surface;
+using Xmip.Surface;
 
 // Development unless the environment says otherwise. launchSettings.json used
 // to set this and it is gone with the rest of the JSON; without it the host
@@ -18,9 +18,10 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationO
 
 // TOML, and only TOML. The host would read appsettings.json and its
 // environment variant by default; Xmip configures nothing in JSON anywhere,
-// so those sources go and xmip.gui.toml takes their place. Command line and
-// environment variables stay, because an operator overriding one key at
-// launch is not a configuration file.
+// so those sources go and xmip.gui.toml takes their place, through the one
+// reader every surface uses. Command line and environment variables stay,
+// because an operator overriding one key at launch is not a configuration
+// file.
 // Later sources win. The TOML file goes after the removed JSON ones, and the
 // environment and command line are added again after it, so that
 // `--Kestrel:Endpoints:Http:Url=...` at launch still overrides the file.
@@ -35,67 +36,33 @@ foreach (IConfigurationSource source in builder.Configuration.Sources.ToArray())
     }
 }
 
-builder.Configuration.AddTomlFile("xmip.gui.toml", optional: false, reloadOnChange: true);
+TomlDocument.Add(builder.Configuration, "xmip.gui.toml", optional: false);
 builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddCommandLine(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// The role is the person's, not the surface's (ADR-0009): the web reads the same
-// assigned role as the desktop — from config or XMIP_ROLE — and shows it, so one
-// person sees one role across every surface. It is assigned, never chosen here,
-// and defaults to Observer so a missing value grants nothing. What the web then
-// offers is the surface's own limit (monitoring, ADR-0014), separate from who you
-// are.
-string? assignedRole =
-    builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
-builder.Services.AddSingleton(
-    new Xmip.Gui.Surface.RoleContext(Xmip.Gui.Surface.RoleContext.Parse(assignedRole)));
+// The web GUI monitors and does nothing else (ADR-0014, amendment of
+// 2026-09-05; ADR-0052 clause 3): its role is Observer, and that is not
+// configurable — no key, no environment variable. What a person may do on
+// the desktop is the desktop's to decide.
+builder.Services.AddSingleton(new RoleContext(Role.Observer));
 
-// One surface for every screen. The real one loads the runtime's native
-// library and reads its operator table; when that cannot happen, a stand-in
-// takes its place and says so on every page. ADR-0027.
+// One surface for every screen, chosen in xmip.gui.toml and never guessed
+// (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
+// path. This host loads no node and starts nothing — a node is started from
+// the desktop or the CLI. Relative paths in the file resolve against the
+// content root, which is where the file itself is: the project directory
+// under `dotnet run`, the application's own directory once published.
 builder.Services.AddSingleton<IOperatorSurface>(services =>
 {
-    // The Xmip Playground, if it is rolling. Its snapshot file is the live
-    // matrix an operator watches over time; when it is present, show it. The
-    // path is configurable and defaults to the one the playground writes to.
-    string snapshot = builder.Configuration["Xmip:PlaygroundSnapshot"] ?? FileOperator.DefaultPath;
+    IOperatorSurface surface = SurfaceChoice.Open(
+        services.GetRequiredService<IConfiguration>(), builder.Environment.ContentRootPath);
 
-    if (File.Exists(snapshot))
-    {
-        services.GetRequiredService<ILogger<Program>>().ShowingPlayground(snapshot);
+    services.GetRequiredService<ILogger<Program>>().ReadingSurface(surface.Source);
 
-        return new FileOperator(snapshot);
-    }
-
-    string? configured = builder.Configuration["Xmip:RuntimeLibrary"];
-    string path = string.IsNullOrWhiteSpace(configured)
-        ? Path.Combine(AppContext.BaseDirectory, "xmip_core_runtime.dll")
-        : configured;
-
-    NativeOperator? native = NativeOperator.Load(path, out string reason);
-
-    if (native is not null)
-    {
-        // A node to start, if one is configured. Without it the runtime says
-        // so itself, on the page, and says what to do.
-        string? node = builder.Configuration["Xmip:NodeConfiguration"];
-
-        if (!string.IsNullOrWhiteSpace(node))
-        {
-            string outcome = native.Start(node);
-
-            services.GetRequiredService<ILogger<Program>>().NodeStarted(outcome);
-        }
-
-        return native;
-    }
-
-    services.GetRequiredService<ILogger<Program>>().ShowingSample(reason);
-
-    return new SampleOperator(reason);
+    return surface;
 });
 
 WebApplication app = builder.Build();
@@ -115,7 +82,7 @@ app.MapStaticAssets();
 // finds the page and the endpoint alone serves it, and either without the
 // other is a 404 that looks like a missing route (2026-09-05).
 app.MapRazorComponents<App>()
-    .AddAdditionalAssemblies(typeof(IOperatorSurface).Assembly)
+    .AddAdditionalAssemblies(typeof(Xmip.Gui.Pages.Cluster).Assembly)
     .AddInteractiveServerRenderMode();
 
 app.Run();

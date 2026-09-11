@@ -2,9 +2,9 @@
 @using Xmip.Gui.Surface
 @inject RoleContext Role
 
-@* The web shows the person's assigned role (ADR-0009), the same role they are on
-   any surface — the role is theirs, not the surface's. What the web offers is
-   monitoring (ADR-0014), which is the surface's own limit, not the role's. *@
+@* The web GUI monitors and does nothing else (ADR-0014, amendment of
+   2026-09-05; ADR-0052 clause 3): its role is Observer and that is not
+   configurable, so the badge says so and never changes. *@
 <nav class="topnav">
     <span class="topnav-link active">Monitor</span>
     <div class="role">

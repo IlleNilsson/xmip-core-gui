@@ -1,7 +1,8 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Tomlyn.Extensions.Configuration;
 using Xmip.Gui.Surface;
+using Xmip.Operations.Configuration;
+using Xmip.Surface;
 
 namespace Xmip.Operations;
 
@@ -19,22 +20,13 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
 
-        // The role is assigned, never chosen in the UI (ADR-0009): a person
-        // cannot promote themselves. It comes from the config file or the
-        // XMIP_ROLE environment variable and defaults to Observer, so a missing
-        // or wrong value grants nothing. A real identity supersedes this later
-        // (ADR-0022/ADR-0027).
-        string? assignedRole =
-            builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
-        builder.Services.AddSingleton(_ => new RoleContext(RoleContext.Parse(assignedRole)));
-
-        builder.Services.AddSingleton<Xmip.Operations.Configuration.ConfigStore>();
-        builder.Services.AddSingleton<Xmip.Operations.Configuration.RuntimeCommands>();
-
         // TOML beside the executable, like the web host — Xmip configures
-        // nothing in JSON. The file is deployed as content next to the app.
-        string here = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? AppContext.BaseDirectory;
-        builder.Configuration.AddTomlFile(Path.Combine(here, "xmip.gui.toml"), optional: true, reloadOnChange: true);
+        // nothing in JSON — through the one reader every surface uses. The
+        // file is deployed as content next to the app.
+        string here = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            ?? AppContext.BaseDirectory;
+        TomlDocument.Add(
+            builder.Configuration, Path.Combine(here, "xmip.gui.toml"), optional: true);
 
         // Relative paths in the config resolve against the repository root in a
         // development build, and against the app's own directory once packaged.
@@ -42,39 +34,41 @@ public static class MauiProgram
         // the runtime's target/debug needs the repo root, not the exe's folder.
         string basePath = RepositoryRoot(here) ?? here;
 
-        // The one surface every screen reads. Same NativeOperator as the web
-        // host: load the runtime's library, read its table; a stand-in answers
-        // when it cannot, and says so.
-        builder.Services.AddSingleton<IOperatorSurface>(_ =>
+        // The role is assigned, never chosen in the UI (ADR-0009): a person
+        // cannot promote themselves. It comes from the config file or the
+        // XMIP_ROLE environment variable and defaults to Observer, so a missing
+        // or wrong value grants nothing. A real identity supersedes this later
+        // (ADR-0022/ADR-0027).
+        string? assignedRole =
+            builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
+        builder.Services.AddSingleton(new RoleContext(RoleContext.Parse(assignedRole)));
+
+        builder.Services.AddSingleton<ConfigStore>();
+
+        // The one surface every screen reads, chosen in xmip.gui.toml and never
+        // guessed (ADR-0052 clause 3): the same selection as the web host, from
+        // the same keys. The desktop configures (ADR-0014, amendment of
+        // 2026-09-05), so when the surface is the runtime and a node is named,
+        // it starts that node — the one thing a browser cannot do.
+        builder.Services.AddSingleton<IOperatorSurface>(services =>
         {
-            // The Xmip Playground, if it is rolling: its snapshot is the live
-            // matrix to watch over time. Shown when present, before any runtime.
-            string snapshot = builder.Configuration["Xmip:PlaygroundSnapshot"] ?? FileOperator.DefaultPath;
+            IOperatorSurface surface = SurfaceChoice.Open(builder.Configuration, basePath);
+            string? node = builder.Configuration["Xmip:NodeConfiguration"];
 
-            if (File.Exists(snapshot))
+            if (surface is NativeOperator native && !string.IsNullOrWhiteSpace(node))
             {
-                return new FileOperator(snapshot);
+                _ = native.Start(TomlDocument.Resolve(node, basePath));
             }
 
-            string configured = builder.Configuration["Xmip:RuntimeLibrary"] ?? "xmip_core_runtime.dll";
-            string path = Resolve(configured, basePath);
-
-            NativeOperator? native = NativeOperator.Load(path, out string reason);
-
-            if (native is not null)
-            {
-                string? node = builder.Configuration["Xmip:NodeConfiguration"];
-
-                if (!string.IsNullOrWhiteSpace(node))
-                {
-                    native.Start(Resolve(node, basePath));
-                }
-
-                return native;
-            }
-
-            return new SampleOperator(reason);
+            return surface;
         });
+
+        // Validate and Start on the Configure page go through the runtime the
+        // board reads when that is the native one; over a snapshot, the
+        // runtime is found by the one rule and loaded for the commands alone.
+        builder.Services.AddSingleton(services => new RuntimeCommands(
+            services.GetRequiredService<IOperatorSurface>(),
+            RuntimeLibrary.Find(builder.Configuration, basePath)));
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
@@ -82,13 +76,6 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
-    }
-
-    /// <summary>An absolute path is taken as is; a relative one is joined to
-    /// <paramref name="basePath"/>.</summary>
-    private static string Resolve(string path, string basePath)
-    {
-        return Path.IsPathRooted(path) ? path : Path.Combine(basePath, path);
     }
 
     /// <summary>The repository root above a bin directory, found by walking up

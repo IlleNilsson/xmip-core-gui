@@ -6,9 +6,10 @@
     Xmip.Gui screens over the same operator boundary, so the desktop and the
     web cannot disagree.
 
-    Windows only for now. The template offers Android, iOS and macOS too; a
-    Windows operator workstation is what deployment-model.md targets first, and
-    the other platforms are a build away when they are wanted.
+    Windows only for now: a Windows operator workstation is what
+    deployment-model.md targets first. The template's Android, iOS and
+    MacCatalyst folders are gone (ADR-0052 clause 6); another platform is a
+    target framework and a Platforms folder away when it is wanted.
   -->
 
   <PropertyGroup>
@@ -21,8 +22,8 @@
     <Nullable>enable</Nullable>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
 
-    <!-- Reaches the C ABI through Xmip.Gui's NativeOperator, an adapter over
-         Xmip.Abi in xmip-core-abi. Nothing here is unsafe. -->
+    <!-- Reaches the C ABI through Xmip.Surface's NativeOperator, an adapter
+         over Xmip.Abi in xmip-core-abi. Nothing here is unsafe. -->
 
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -44,15 +45,15 @@
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
     <MauiImage Include="Resources\Images\*" />
     <MauiFont Include="Resources\Fonts\*" />
-    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The screens and the surface. One library, two hosts — ADR-0014. -->
+    <!-- The screens. One library, two hosts — ADR-0014. -->
     <ProjectReference Include="..\Xmip.Gui\Xmip.Gui.csproj" />
 
-    <!-- Configuration is TOML, like the web host and everything Xmip. -->
-    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
+    <!-- The surface, its choice, runtime discovery and the TOML reader
+         (ADR-0052): the same selection as the web host, from the same keys. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

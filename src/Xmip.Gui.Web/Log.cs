@@ -7,16 +7,7 @@ namespace Xmip.Gui.Web;
 /// </summary>
 internal static partial class Log
 {
-    /// <summary>The runtime library could not be loaded, so a stand-in is
-    /// answering. Warning, because every page says so too.</summary>
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Showing sample data: {Reason}")]
-    public static partial void ShowingSample(this ILogger logger, string reason);
-
-    /// <summary>What the runtime said when asked to start the configured node.</summary>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Node: {Outcome}")]
-    public static partial void NodeStarted(this ILogger logger, string outcome);
-
-    /// <summary>The Xmip Playground is rolling and its snapshot is being shown.</summary>
-    [LoggerMessage(Level = LogLevel.Information, Message = "Showing playground snapshot: {Path}")]
-    public static partial void ShowingPlayground(this ILogger logger, string path);
+    /// <summary>Which surface the page reads, as the page itself says it.</summary>
+    [LoggerMessage(Level = LogLevel.Information, Message = "Reading {Source}")]
+    public static partial void ReadingSurface(this ILogger logger, string source);
 }
