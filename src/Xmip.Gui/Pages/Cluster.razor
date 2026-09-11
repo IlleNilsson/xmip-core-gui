@@ -26,15 +26,15 @@
     @foreach (Stage stage in Stages)
     {
         IReadOnlyList<HealthRecord> inStage = InStage(stage);
-        MeasurementRecord? moved = Surface.Measure(ScopeTree.Root, stage.Counted);
+        Seen seen = Flow(stage.Counted);
         string items = inStage.Count == 0
             ? "none configured"
             : $"{inStage.Count} configured · {English.Rollup(inStage)}";
         <button class="stage @Class(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
             <span class="name"><span class="dot"></span>@stage.Name</span>
-            <span class="value">@English.Count(moved)</span>
-            <span class="kind">@stage.Counted.ToString().ToLowerInvariant(), last minute</span>
+            <span class="value">@English.Count(seen.Measured)</span>
+            <span class="kind">@stage.Counted.ToString().ToLowerInvariant() · @English.Flow(seen.Delta, seen.Over)</span>
             <span class="items">@items</span>
             <Why Leaf="ScopeTree.Worst(inStage)" />
         </button>
@@ -199,6 +199,33 @@
 
     private System.Threading.Timer? _refresh;
 
+    /// <summary>A count as the board last saw it change: the value, when, by how
+    /// much and over how long — the flow an operator watches, not a total.</summary>
+    private sealed record Seen(MeasurementRecord? Measured, DateTimeOffset At, ulong Delta, TimeSpan Over);
+
+    private readonly Dictionary<Counted, Seen> _flow = [];
+
+    private Seen Flow(Counted counted)
+    {
+        MeasurementRecord? measured = Surface.Measure(ScopeTree.Root, counted);
+        ulong value = measured?.Value ?? 0;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        if (!_flow.TryGetValue(counted, out Seen? seen))
+        {
+            seen = new Seen(measured, now, 0, TimeSpan.Zero);
+            _flow[counted] = seen;
+        }
+        else if (value != (seen.Measured?.Value ?? 0))
+        {
+            ulong before = seen.Measured?.Value ?? 0;
+            seen = new Seen(measured, now, value >= before ? value - before : 0, now - seen.At);
+            _flow[counted] = seen;
+        }
+
+        return seen;
+    }
+
     protected override void OnParametersSet()
     {
         All = Surface.Health(ScopeTree.Root);
@@ -245,7 +272,7 @@
     // Process itself.
     private static bool IsPausable(string scope)
     {
-        return ScopeTree.Segment(scope, 1) is "receive" or "send";
+        return ScopeTree.Stage(scope) is "receive" or "send";
     }
 
     private IReadOnlyList<string> Nodes =>
@@ -256,7 +283,7 @@
             .ToList();
 
     private IReadOnlyList<HealthRecord> InStage(Stage stage) =>
-        All.Where(r => ScopeTree.Segment(r.Scope, 1) == stage.Segment).ToList();
+        All.Where(r => ScopeTree.Stage(r.Scope) == stage.Segment).ToList();
 
     private IReadOnlyList<HealthRecord> OnNode(string node) =>
         All.Where(r => ScopeTree.Node(r.Scope) == node).ToList();
