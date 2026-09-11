@@ -5,18 +5,20 @@
     MAUI on the desktop — so what the desktop shows and what the web shows
     cannot disagree, because there is only one implementation to disagree with.
 
-    Screens, and the surface they read through. Nothing here knows which host
-    it is in. Target framework and the rest come from Directory.Build.props.
+    The Razor and nothing else (ADR-0052): the screens, and the role that
+    shapes what they offer. The surface they read, the scope tree, the
+    rollup and the English are Xmip.Surface's, shared with the cli and the
+    PowerShell module. Nothing here knows which host it is in. Target
+    framework and the rest come from Directory.Build.props.
   -->
 
   <PropertyGroup>
     <RootNamespace>Xmip.Gui</RootNamespace>
     <AssemblyName>Xmip.Gui</AssemblyName>
 
-    <!-- Nothing here crosses the C ABI any more: Surface/NativeOperator.cs is
-         an adapter over Xmip.Abi, which holds the function pointers and raw
-         structs for every surface. unsafe stays off, as Directory.Build.props
-         has it. -->
+    <!-- Nothing here crosses the C ABI: Xmip.Abi holds the function pointers
+         and raw structs for every surface, and Xmip.Surface the adapter over
+         it. unsafe stays off, as Directory.Build.props has it. -->
 
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -27,21 +29,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The C ABI, bound once. Xmip.Abi in xmip-core-abi declares the two
-         headers for every surface — this library, the cli and the PowerShell
-         module — so what a screen reads and what a cmdlet emits is one shape
-         (ADR-0014, amendment of 2026-08-26). A sibling in the estate, not
-         vendored: the path is the estate's layout, four levels up. -->
-    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Abi\Xmip.Abi.csproj" />
+    <!-- What every .NET surface shares, beside the binding in xmip-core-abi
+         (ADR-0052 clause 1). A sibling in the estate, not vendored: the path
+         is the estate's layout, four levels up. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0-preview.7.*" />
-    <!-- The file surface reads the playground's TOML snapshot and history. On
-         disk the estate is TOML; JSON is reserved for memory and the wire. The
-         same TOML reader the hosts use for configuration reads it here. -->
-    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.7.*" />
   </ItemGroup>
 
 </Project>
