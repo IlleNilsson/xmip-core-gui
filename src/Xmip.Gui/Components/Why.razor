@@ -1,0 +1,22 @@
+@* Why a scope is Holding, beside the word (ADR-0052 clause 2): the worst leaf
+   beneath it, that leaf's evidence, and how old the evidence is. Renders
+   nothing when there is no leaf or the worst one is Fine — Fine needs no
+   explanation. *@
+@if (Leaf is not null && Leaf.State != HealthState.Fine)
+{
+    <span class="why @English.Mood(Leaf.State)">
+        <span class="leaf">@ScopeTree.Name(Leaf.Scope)</span>
+        <span class="mood">@English.Mood(Leaf.State)</span>
+        @if (!string.IsNullOrEmpty(Leaf.Evidence))
+        {
+            <span class="evidence">@Leaf.Evidence</span>
+        }
+        <span class="age">@English.Age(Leaf.Observed)</span>
+    </span>
+}
+
+@code {
+    /// <summary>The worst leaf beneath the scope, or null when it has none.</summary>
+    [Parameter]
+    public HealthRecord? Leaf { get; set; }
+}

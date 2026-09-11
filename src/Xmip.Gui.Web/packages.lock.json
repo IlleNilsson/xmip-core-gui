@@ -28,6 +28,12 @@
       "xmip.gui": {
         "type": "Project",
         "dependencies": {
+          "Xmip.Surface": "[1.0.0, )"
+        }
+      },
+      "xmip.surface": {
+        "type": "Project",
+        "dependencies": {
           "Tomlyn.Extensions.Configuration": "[2.0.0, )",
           "Xmip.Abi": "[1.0.0, )"
         }
