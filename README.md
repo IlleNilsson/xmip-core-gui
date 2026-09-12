@@ -30,9 +30,17 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-The market survey calls this gap wider than any open runtime feature — every
-competitor leads with a visual designer. One screen is not a designer. It is
-the first thing an operator can look at.
+The monitor has two complementary views. The cluster board follows Xmip's
+Receive → Process → Send path. The communication topology aggregates configured
+and observed relationships between infrastructure endpoints, then drills through
+services, processes, interfaces, ports, protocols and locations. Its animated
+movement represents application semantics — request/response, send/receive,
+publish/consume, streaming, fire-and-forget, sessions and retries — rather than
+decorative packets or an assumed bidirectional flow.
+
+The market survey calls the visual gap wider than any open runtime feature —
+every competitor leads with a visual designer. Monitoring is not yet a designer,
+but it now shows both what Xmip moves and which systems participate.
 
 Two hosts, one library. ADR-0014.
 
