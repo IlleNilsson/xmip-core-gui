@@ -36,7 +36,10 @@ and observed relationships between infrastructure endpoints, then drills through
 services, processes, interfaces, ports, protocols and locations. Its animated
 movement represents application semantics — request/response, send/receive,
 publish/consume, streaming, fire-and-forget, sessions and retries — rather than
-decorative packets or an assumed bidirectional flow.
+decorative packets or an assumed bidirectional flow. The snapshot surface
+publishes this model now. The native operator boundary does not publish
+topology yet, so the view states that plainly instead of deriving application
+meaning from health records or sockets.
 
 The market survey calls the visual gap wider than any open runtime feature —
 every competitor leads with a visual designer. Monitoring is not yet a designer,
