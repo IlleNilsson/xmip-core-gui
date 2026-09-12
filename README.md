@@ -39,7 +39,10 @@ publish/consume, streaming, fire-and-forget, sessions and retries — rather tha
 decorative packets or an assumed bidirectional flow. The snapshot surface
 publishes this model now. The native operator boundary does not publish
 topology yet, so the view states that plainly instead of deriving application
-meaning from health records or sockets.
+meaning from health records or sockets. Both views subscribe to the shared
+operator change stream rather than running independent refresh timers. Blazor
+carries resulting renders to the web client through its existing SignalR
+circuit; the desktop uses the same Razor components and notifications.
 
 The market survey calls the visual gap wider than any open runtime feature —
 every competitor leads with a visual designer. Monitoring is not yet a designer,
