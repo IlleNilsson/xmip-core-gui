@@ -48,8 +48,8 @@ The market survey calls the visual gap wider than any open runtime feature —
 every competitor leads with a visual designer. Monitoring is not yet a designer,
 but it now shows both what Xmip moves and which systems participate.
 
-The look is the logo's own green — the lime the owner calls Kawasaki green
-(2026-09-12). It is the accent for whatever is chosen, active or primary: the
+The look is the logo's own green, the lime, `#75c93b` (the owner, 2026-09-12).
+It is the accent for whatever is chosen, active or primary: the
 view in the top bar, a selected stage, a hovered row, a primary button, the
 lines and the movement in the topology. It is never a mood; the moods keep the
 colours ADR-0041 maps them to, and Fine is the same family one cut deeper so the
