@@ -6,10 +6,19 @@
    red and the operator needs to know where. */
 
 :root {
+    /* The brand: the logo's green, the one the owner calls Kawasaki green
+       (2026-09-12). It is the accent for everything that is chosen, active or
+       primary — never a mood. Lime reads on ink, not on paper, so text that
+       must be read on white uses the deeper cut. */
+    --brand: #75c93b;
+    --brand-deep: #4f9a24;
+    --brand-tint: #eef8e6;
+
     /* Health is a mood; these are the colours a surface paints each mood in
        (ADR-0041): fine=green, paused=slate, working=blue, stressed=yellow,
-       exhausted=burnt, done=red, holding=orange (the rollup). */
-    --green: #1f9d55;
+       exhausted=burnt, done=red, holding=orange (the rollup). Fine is the
+       brand family, one cut deeper so the word stays legible. */
+    --green: #5cb32c;
     --slate: #718096;
     --blue: #3182ce;
     --yellow: #d69e2e;
@@ -39,6 +48,7 @@ body {
     padding: 0.75rem 1.5rem;
     background: var(--paper);
     border-bottom: 1px solid var(--line);
+    box-shadow: inset 0 3px 0 var(--brand);
 }
 
 .bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.04em; }
@@ -81,8 +91,8 @@ body {
     cursor: pointer;
 }
 
-.stage:hover { border-color: var(--muted); }
-.stage.selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.stage:hover { border-color: var(--brand); }
+.stage.selected { border-color: var(--brand); box-shadow: inset 0 0 0 2px var(--brand); }
 .stage .name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
 .stage .value { font-size: 1.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .stage .kind, .stage .items { color: var(--muted); font-size: 0.85rem; }
@@ -143,7 +153,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     border-radius: 4px;
     cursor: pointer;
 }
-.act:hover { border-color: var(--muted); }
+.act:hover { border-color: var(--brand); background: var(--brand-tint); }
 
 /* Holding says why (ADR-0052): beside the word, the worst leaf beneath the
    scope, its mood, its evidence and how old that is. The mood's colour is
@@ -173,7 +183,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     border: none; background: none; color: var(--muted); cursor: pointer;
     font: inherit; padding: 0.1rem 0.3rem; border-radius: 4px;
 }
-.crumbs .crumb-btn:hover { color: var(--ink); background: var(--ground); }
+.crumbs .crumb-btn:hover { color: var(--brand-deep); background: var(--brand-tint); }
 .crumbs .sep { color: var(--line); }
 .branches { display: grid; gap: 0.4rem; }
 .branch {
@@ -182,7 +192,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
     padding: 0.6rem 0.9rem; cursor: pointer; font: inherit;
 }
-.branch:hover { border-color: var(--muted); }
+.branch:hover { border-color: var(--brand); }
 .branch .label { font-weight: 600; }
 .branch .worst { color: var(--muted); font-size: 0.85rem; }
 .branch .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -195,13 +205,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
 
 /* Desktop navigation and the configuration editor (desktop only). */
-.topnav { display: flex; gap: 0.25rem; padding: 0.5rem 1rem; background: var(--ink); }
+/* Lime on ink is the brand's own contrast: the bar is ink, the chosen view is
+   lime, and the rest of the links warm to lime on hover. */
+.topnav {
+    display: flex; gap: 0.25rem; padding: 0.5rem 1rem; background: var(--ink);
+    border-bottom: 3px solid var(--brand);
+}
 .topnav-link {
     color: #cbd5e0; text-decoration: none; font-weight: 600; font-size: 0.9rem;
     padding: 0.35rem 0.9rem; border-radius: 6px;
 }
-.topnav-link:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
-.topnav-link.active { background: var(--green); color: var(--paper); }
+.topnav-link:hover { background: rgba(117,201,59,0.14); color: var(--brand); }
+.topnav-link.active { background: var(--brand); color: var(--ink); }
 
 /* The role concept (ADR-0009): who is at the keyboard shapes what is offered.
    Observer watches; Operator also configures; Developer also builds. */
@@ -212,19 +227,19 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
     padding: 0.25rem 0.7rem; border-radius: 6px;
 }
-.role-pick:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
-.role-pick.active { background: var(--blue); color: var(--paper); cursor: default; }
+.role-pick:hover { background: rgba(117,201,59,0.14); color: var(--brand); }
+.role-pick.active { border-color: var(--brand); color: var(--brand); cursor: default; }
 .bar .crumb-link { margin-left: auto; color: var(--muted); text-decoration: none; }
-.bar .crumb-link:hover { color: var(--ink); }
+.bar .crumb-link:hover { color: var(--brand-deep); }
 
 .cfg { padding: 1.5rem; display: grid; gap: 1.5rem; }
 .cfg .path { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .cfg .path label { color: var(--muted); font-size: 0.85rem; }
 .cfg .path input { flex: 1; min-width: 18rem; padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
 .cfg button { padding: 0.4rem 0.9rem; border: 1px solid var(--line); background: var(--paper); border-radius: 6px; cursor: pointer; font: inherit; }
-.cfg button.primary { background: var(--green); color: var(--paper); border-color: var(--green); font-weight: 600; }
+.cfg button.primary { background: var(--brand); color: var(--ink); border-color: var(--brand); font-weight: 600; }
 .cfg button:disabled { opacity: 0.5; cursor: default; }
-.cfg .status.ok { color: var(--green); }
+.cfg .status.ok { color: var(--brand-deep); }
 .cfg .status.bad { color: var(--red); }
 .group { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.25rem; }
 .group-head { display: flex; align-items: center; gap: 0.75rem; }
@@ -250,10 +265,10 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     background: none; border: 1px solid transparent; border-radius: 6px;
     padding: 0.4rem 0.6rem; cursor: pointer; font: inherit;
 }
-.config-item:hover { background: var(--ground); }
-.config-item.selected { background: var(--ground); border-color: var(--line); font-weight: 600; }
+.config-item:hover { background: var(--brand-tint); }
+.config-item.selected { background: var(--brand-tint); border-color: var(--brand); font-weight: 600; }
 .config-item .config-name { flex: 1; }
-.config-item .badge { font-size: 0.7rem; color: var(--paper); background: var(--green); padding: 0.05rem 0.4rem; border-radius: 999px; }
+.config-item .badge { font-size: 0.7rem; color: var(--ink); background: var(--brand); padding: 0.05rem 0.4rem; border-radius: 999px; }
 .configs .dir { margin-top: 0.75rem; color: var(--muted); font-size: 0.72rem; word-break: break-all; font-family: ui-monospace, monospace; }
 
 
@@ -269,9 +284,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; cursor: pointer;
 }
 .topology-tools button:hover, .topology-trail button:hover, .inspect-action:hover {
-    border-color: var(--muted);
+    border-color: var(--brand); color: var(--brand-deep);
 }
-.topology-tools button.active { background: var(--ink); color: var(--paper); }
+.topology-tools button.active { background: var(--brand); border-color: var(--brand); color: var(--ink); }
 .topology-time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .topology-trail { color: var(--muted); }
 .topology-trail button { border: none; background: transparent; color: var(--muted); }
@@ -297,7 +312,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-inspector dd.working { color: var(--blue); font-weight: 700; }
 .topology-node { cursor: pointer; outline: none; }
 .topology-node .node-body { fill: var(--paper); stroke: var(--line); stroke-width: 2; }
-.topology-node:hover .node-body, .topology-node:focus .node-body { stroke: var(--ink); }
+.topology-node:hover .node-body, .topology-node:focus .node-body { stroke: var(--brand); }
 .topology-node.configured .node-body { stroke-dasharray: 6 4; }
 .topology-node.observed .node-body { stroke-width: 3; }
 .topology-node .node-label { fill: var(--ink); font-size: 13px; font-weight: 700; pointer-events: none; }
@@ -313,7 +328,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node.exhausted .node-state { fill: var(--burnt); }
 .topology-node.done .node-state { fill: var(--red); }
 .topology-node.paused .node-state { fill: var(--slate); }
-.topology-node .node-pulse { fill: none; stroke: var(--blue); opacity: 0; pointer-events: none; }
+/* Movement is the brand's green; a mood, when there is one, overrides it on
+   the line and the particle (done red, stressed yellow) as everywhere else. */
+.topology-node .node-pulse { fill: none; stroke: var(--brand); opacity: 0; pointer-events: none; }
 .topology-node.active .node-pulse {
     animation: topology-pulse calc(2.6s - var(--activity) * 1.6s) ease-out infinite;
 }
@@ -321,7 +338,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     0% { r: 34px; opacity: calc(0.12 + var(--activity) * 0.28); }
     100% { r: 58px; opacity: 0; }
 }
-.topology-link .link-line { fill: none; stroke: var(--blue); stroke-width: 2.5; opacity: 0.72; }
+.topology-link .link-line { fill: none; stroke: var(--brand); stroke-width: 2.5; opacity: 0.85; }
 .topology-link.configured .link-line { stroke-dasharray: 7 5; opacity: 0.52; }
 .topology-link.observed .link-line { stroke-width: 3.5; }
 .topology-link.done .link-line { stroke: var(--red); stroke-dasharray: 9 6; }
@@ -331,18 +348,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link.publishconsume .link-line { stroke: var(--orange); }
 .topology-link.streaming .link-line { stroke-width: 5; }
 .topology-link .link-hit { fill: none; stroke: transparent; stroke-width: 18; cursor: pointer; }
-.topology-link .flow-particle { fill: var(--blue); pointer-events: none; }
+.topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
 .topology-link.done .flow-particle, .topology-link.retry .flow-particle { fill: var(--red); }
 .topology-link.stressed .flow-particle { fill: var(--yellow); }
 .topology-link.publishconsume .flow-particle { fill: var(--orange); }
-.arrow-head { fill: var(--blue); }
+.arrow-head { fill: var(--brand); }
 .topology-legend {
     display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem;
     padding: 0.75rem 1rem; border-top: 1px solid var(--line);
     color: var(--muted); font-size: 0.78rem;
 }
 .topology-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
-.topology-legend i { display: inline-block; width: 1.5rem; border-top: 3px solid var(--blue); }
+.topology-legend i { display: inline-block; width: 1.5rem; border-top: 3px solid var(--brand); }
 .topology-legend .publishconsume i { border-color: var(--orange); }
 .topology-legend .session i { border-color: #805ad5; }
 .topology-legend .retry i { border-color: var(--red); border-top-style: dashed; }
