@@ -1,0 +1,465 @@
+@page "/topology"
+@using System.Globalization
+@using Xmip.Gui.Surface
+@implements IDisposable
+
+<PageTitle>Xmip — Communication topology</PageTitle>
+
+<header class="bar">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <span class="crumb">communication topology</span>
+    <span class="source">@Surface.Source</span>
+</header>
+
+<section class="topology-tools" aria-label="Topology controls">
+    <div class="topology-modes">
+        <button class="@(Mode == TopologyMode.All ? "active" : "")"
+                @onclick="() => Mode = TopologyMode.All">Configured + observed</button>
+        <button class="@(Mode == TopologyMode.Configured ? "active" : "")"
+                @onclick="() => Mode = TopologyMode.Configured">Configured</button>
+        <button class="@(Mode == TopologyMode.Observed ? "active" : "")"
+                @onclick="() => Mode = TopologyMode.Observed">Observed</button>
+    </div>
+    <button class="motion-toggle" @onclick="() => MotionPaused = !MotionPaused">
+        @(MotionPaused ? "Resume movement" : "Pause movement")
+    </button>
+    <span class="topology-time">@English.Age(Snapshot.Observed)</span>
+</section>
+
+<nav class="topology-trail" aria-label="Topology drill-down">
+    <button @onclick="ShowInfrastructure">Infrastructure</button>
+    @foreach (TopologyNode node in Trail)
+    {
+        <span>/</span>
+        <button @onclick="() => Focus(node)">@node.Label</button>
+    }
+</nav>
+
+@if (Snapshot.Nodes.Count == 0)
+{
+    <section class="topology-empty">
+        <h1>No communication topology published</h1>
+        <p>@Snapshot.Source</p>
+        <p>Xmip does not infer application relationships from sockets or health records.</p>
+    </section>
+}
+else
+{
+    <section class="topology-layout">
+        <div class="topology-canvas">
+            <svg viewBox="0 0 1000 620" role="img"
+                 aria-label="Configured and observed communication topology">
+                <defs>
+                    <marker id="topology-arrow" markerWidth="8" markerHeight="8"
+                            refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L8,4 L0,8 z" class="arrow-head" />
+                    </marker>
+                </defs>
+
+                @foreach (RenderedLink link in RenderedLinks)
+                {
+                    <g class="topology-link @Mood(link.Link.State) @Origin(link.Link.Origin) @Pattern(link.Link.Pattern)">
+                        <path class="link-hit" d="@Curve(link)" @onclick="() => Select(link.Link)" />
+                        <path id="@SvgId(link.Link.Id)" class="link-line" d="@Curve(link)"
+                              marker-end="url(#topology-arrow)" />
+                        @if (!MotionPaused)
+                        {
+                            @for (int particle = 0; particle < Particles(link.Link); particle++)
+                            {
+                                bool reverse = Reverse(link.Link, particle);
+                                <circle @key="$"{link.Link.Id}-{particle}"" class="flow-particle"
+                                        r="@(link.Link.Pattern == CommunicationPattern.Streaming ? 4 : 5)">
+                                    <animateMotion path="@Motion(link, reverse)"
+                                                   dur="@Duration(link.Link)"
+                                                   begin="@($"{particle * -0.55}s")"
+                                                   repeatCount="indefinite" />
+                                </circle>
+                            }
+                        }
+                    </g>
+                }
+
+                @foreach (PlacedNode placed in PlacedNodes)
+                {
+                    TopologyNode node = placed.Node;
+                    <g class="topology-node @Mood(node.State) @Origin(node.Origin) @(node.Activity > 0.05 ? "active" : "")"
+                       transform="@Transform(placed)"
+                       style="@NodeStyle(node)"
+                       tabindex="0"
+                       role="button"
+                       @onclick="() => Select(node)">
+                        <title>@($"{node.Label}: {node.Kind}, {English.Mood(node.State)}. {node.Evidence}")</title>
+                        <circle class="node-pulse" r="42" />
+                        <rect class="node-body" x="-64" y="-34" width="128" height="68" rx="12" />
+                        <circle class="node-state" cx="-47" cy="-17" r="6" />
+                        <text class="node-label" text-anchor="middle" y="-3">@node.Label</text>
+                        <text class="node-kind" text-anchor="middle" y="16">@Kind(node.Kind)</text>
+                        <rect class="node-load-track" x="-48" y="24" width="96" height="4" rx="2" />
+                        <rect class="node-load" x="-48" y="24" width="@LoadWidth(node)" height="4" rx="2" />
+                    </g>
+                }
+            </svg>
+
+            <div class="topology-legend" aria-label="Communication pattern legend">
+                @foreach (CommunicationPattern pattern in Enum.GetValues<CommunicationPattern>())
+                {
+                    <span class="@Pattern(pattern)"><i></i>@PatternName(pattern)</span>
+                }
+            </div>
+        </div>
+
+        <aside class="topology-inspector">
+            @if (SelectedNode is not null)
+            {
+                <h2>@SelectedNode.Label</h2>
+                <dl>
+                    <dt>Kind</dt><dd>@Kind(SelectedNode.Kind)</dd>
+                    <dt>State</dt><dd class="@Mood(SelectedNode.State)">@English.Mood(SelectedNode.State)</dd>
+                    <dt>Evidence</dt><dd>@Value(SelectedNode.Evidence)</dd>
+                    <dt>Origin</dt><dd>@OriginName(SelectedNode.Origin)</dd>
+                    <dt>Load</dt><dd>@Percent(SelectedNode.Load)</dd>
+                    <dt>Activity</dt><dd>@Percent(SelectedNode.Activity)</dd>
+                    <dt>Scope</dt><dd class="mono">@Value(SelectedNode.Scope)</dd>
+                </dl>
+                @if (HasChildren(SelectedNode.Id))
+                {
+                    <button class="inspect-action" @onclick="() => Focus(SelectedNode)">Open components</button>
+                }
+            }
+            else if (SelectedLink is not null)
+            {
+                <h2>@PatternName(SelectedLink.Pattern)</h2>
+                <dl>
+                    <dt>From</dt><dd>@NodeLabel(SelectedLink.From)</dd>
+                    <dt>To</dt><dd>@NodeLabel(SelectedLink.To)</dd>
+                    <dt>Protocol</dt><dd>@Value(SelectedLink.Protocol)</dd>
+                    <dt>State</dt><dd class="@Mood(SelectedLink.State)">@English.Mood(SelectedLink.State)</dd>
+                    <dt>Origin</dt><dd>@OriginName(SelectedLink.Origin)</dd>
+                    <dt>Volume</dt><dd>@SelectedLink.Volume.ToString("N0", CultureInfo.InvariantCulture)</dd>
+                    <dt>Rate</dt><dd>@($"{SelectedLink.Rate:0.##}/s")</dd>
+                    <dt>Latency</dt><dd>@($"{SelectedLink.LatencyMilliseconds:0.##} ms")</dd>
+                    <dt>Progress</dt><dd>@Percent(SelectedLink.Progress)</dd>
+                    <dt>Attempts</dt><dd>@SelectedLink.Attempts</dd>
+                    <dt>Evidence</dt><dd>@Value(SelectedLink.Evidence)</dd>
+                </dl>
+            }
+            else
+            {
+                <h2>@(FocusNode?.Label ?? "Infrastructure")</h2>
+                <p>Select a node or communication relationship. Open a node to reveal the components beneath it.</p>
+                <p>Animation represents application movement. The line remains the configured or observed relationship.</p>
+            }
+        </aside>
+    </section>
+}
+
+@code {
+    private enum TopologyMode { All, Configured, Observed }
+
+    private sealed record PlacedNode(TopologyNode Node, double X, double Y);
+
+    private sealed record RenderedLink(
+        CommunicationLink Link,
+        PlacedNode From,
+        PlacedNode To,
+        int Index);
+
+    [Inject]
+    private IOperatorSurface Surface { get; set; } = default!;
+
+    private TopologySnapshot Snapshot { get; set; } =
+        TopologySnapshot.Empty("no topology read");
+
+    private TopologyMode Mode { get; set; }
+
+    private bool MotionPaused { get; set; }
+
+    private string? FocusId { get; set; }
+
+    private TopologyNode? SelectedNode { get; set; }
+
+    private CommunicationLink? SelectedLink { get; set; }
+
+    private System.Threading.Timer? _refresh;
+
+    private IReadOnlyDictionary<string, TopologyNode> NodeById =>
+        Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
+
+    private TopologyNode? FocusNode =>
+        FocusId is not null && NodeById.TryGetValue(FocusId, out TopologyNode? node)
+            ? node
+            : null;
+
+    private IReadOnlyList<TopologyNode> Trail
+    {
+        get
+        {
+            List<TopologyNode> trail = [];
+            TopologyNode? current = FocusNode;
+
+            while (current is not null)
+            {
+                trail.Add(current);
+                current = current.ParentId is not null
+                    && NodeById.TryGetValue(current.ParentId, out TopologyNode? parent)
+                        ? parent
+                        : null;
+            }
+
+            trail.Reverse();
+            return trail;
+        }
+    }
+
+    private IReadOnlyList<TopologyNode> VisibleNodes
+    {
+        get
+        {
+            IEnumerable<TopologyNode> nodes = FocusId is null
+                ? Snapshot.Nodes.Where(node => node.ParentId is null)
+                : Snapshot.Nodes.Where(node => node.ParentId == FocusId)
+                    .Concat(Snapshot.Nodes.Where(node =>
+                        node.ParentId is null && node.Id != FocusId));
+
+            return nodes.Where(Show).DistinctBy(node => node.Id).OrderBy(node => node.Label).ToList();
+        }
+    }
+
+    private IReadOnlyList<PlacedNode> PlacedNodes
+    {
+        get
+        {
+            IReadOnlyList<TopologyNode> nodes = VisibleNodes;
+            List<PlacedNode> placed = [];
+
+            for (int index = 0; index < nodes.Count; index++)
+            {
+                double angle = -Math.PI / 2D + (2D * Math.PI * index / Math.Max(nodes.Count, 1));
+                double radius = nodes.Count <= 2 ? 185D : 235D;
+                placed.Add(new PlacedNode(
+                    nodes[index],
+                    500D + Math.Cos(angle) * radius,
+                    300D + Math.Sin(angle) * radius));
+            }
+
+            return placed;
+        }
+    }
+
+    private IReadOnlyList<RenderedLink> RenderedLinks
+    {
+        get
+        {
+            IReadOnlyList<PlacedNode> placed = PlacedNodes;
+            Dictionary<string, PlacedNode> positions =
+                placed.ToDictionary(item => item.Node.Id, StringComparer.Ordinal);
+            List<RenderedLink> links = [];
+
+            foreach (CommunicationLink link in Snapshot.Links.Where(Show))
+            {
+                string? from = Representative(link.From, positions);
+                string? to = Representative(link.To, positions);
+
+                if (from is null || to is null || from == to)
+                {
+                    continue;
+                }
+
+                links.Add(new RenderedLink(link, positions[from], positions[to], links.Count));
+            }
+
+            return links;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Read();
+        _refresh = new System.Threading.Timer(
+            _ => InvokeAsync(() =>
+            {
+                Read();
+                StateHasChanged();
+            }),
+            null,
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromSeconds(2));
+    }
+
+    public void Dispose() => _refresh?.Dispose();
+
+    private void Read()
+    {
+        Snapshot = Surface.Topology();
+
+        if (FocusId is not null && !Snapshot.Nodes.Any(node => node.Id == FocusId))
+        {
+            ShowInfrastructure();
+        }
+    }
+
+    private bool Show(TopologyNode node) =>
+        Mode == TopologyMode.All
+        || (Mode == TopologyMode.Configured && node.Origin is TopologyOrigin.Configured or TopologyOrigin.Both)
+        || (Mode == TopologyMode.Observed && node.Origin is TopologyOrigin.Observed or TopologyOrigin.Both);
+
+    private bool Show(CommunicationLink link) =>
+        Mode == TopologyMode.All
+        || (Mode == TopologyMode.Configured && link.Origin is TopologyOrigin.Configured or TopologyOrigin.Both)
+        || (Mode == TopologyMode.Observed && link.Origin is TopologyOrigin.Observed or TopologyOrigin.Both);
+
+    private string? Representative(
+        string nodeId,
+        IReadOnlyDictionary<string, PlacedNode> positions)
+    {
+        string? current = nodeId;
+
+        while (current is not null)
+        {
+            if (positions.ContainsKey(current))
+            {
+                return current;
+            }
+
+            current = NodeById.TryGetValue(current, out TopologyNode? node)
+                ? node.ParentId
+                : null;
+        }
+
+        return null;
+    }
+
+    private void Select(TopologyNode node)
+    {
+        SelectedNode = node;
+        SelectedLink = null;
+    }
+
+    private void Select(CommunicationLink link)
+    {
+        SelectedLink = link;
+        SelectedNode = null;
+    }
+
+    private void Focus(TopologyNode node)
+    {
+        FocusId = node.Id;
+        SelectedNode = null;
+        SelectedLink = null;
+    }
+
+    private void ShowInfrastructure()
+    {
+        FocusId = null;
+        SelectedNode = null;
+        SelectedLink = null;
+    }
+
+    private bool HasChildren(string id) => Snapshot.Nodes.Any(node => node.ParentId == id);
+
+    private string NodeLabel(string id) =>
+        NodeById.TryGetValue(id, out TopologyNode? node) ? node.Label : id;
+
+    private static string Value(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string Percent(double value) =>
+        $"{Math.Clamp(value, 0D, 1D):P0}";
+
+    private static string Mood(HealthState state) => English.Mood(state);
+
+    private static string Origin(TopologyOrigin origin) =>
+        origin.ToString().ToLowerInvariant();
+
+    private static string OriginName(TopologyOrigin origin) =>
+        origin switch
+        {
+            TopologyOrigin.Configured => "configured",
+            TopologyOrigin.Observed => "observed",
+            _ => "configured and observed",
+        };
+
+    private static string Kind(TopologyNodeKind kind) =>
+        kind switch
+        {
+            TopologyNodeKind.VirtualMachine => "virtual machine",
+            _ => kind.ToString().ToLowerInvariant(),
+        };
+
+    private static string Pattern(CommunicationPattern pattern) =>
+        pattern.ToString().ToLowerInvariant();
+
+    private static string PatternName(CommunicationPattern pattern) =>
+        pattern switch
+        {
+            CommunicationPattern.RequestResponse => "Request / response",
+            CommunicationPattern.SendReceive => "Send → receive",
+            CommunicationPattern.PublishConsume => "Publish → consume",
+            CommunicationPattern.FireAndForget => "Fire-and-forget",
+            _ => pattern.ToString().ToLowerInvariant(),
+        };
+
+    private static string Transform(PlacedNode node) =>
+        FormattableString.Invariant($"translate({node.X:0.##} {node.Y:0.##})");
+
+    private static string NodeStyle(TopologyNode node) =>
+        FormattableString.Invariant(
+            $"--activity:{Math.Clamp(node.Activity, 0D, 1D):0.###};--load:{Math.Clamp(node.Load, 0D, 1D):0.###}");
+
+    private static double LoadWidth(TopologyNode node) =>
+        96D * Math.Clamp(node.Load, 0D, 1D);
+
+    private static string SvgId(string id)
+    {
+        return "topology-" + string.Concat(id.Select(character =>
+            char.IsLetterOrDigit(character) ? character : '-'));
+    }
+
+    private static int Stable(string value) =>
+        value.Aggregate(17, (hash, character) => unchecked(hash * 31 + character));
+
+    private static string Curve(RenderedLink link)
+    {
+        double middleX = (link.From.X + link.To.X) / 2D;
+        double middleY = (link.From.Y + link.To.Y) / 2D;
+        double dx = link.To.X - link.From.X;
+        double dy = link.To.Y - link.From.Y;
+        double length = Math.Max(Math.Sqrt(dx * dx + dy * dy), 1D);
+        double bend = ((Math.Abs(Stable(link.Link.Id)) % 5) - 2) * 14D;
+        double controlX = middleX - dy / length * bend;
+        double controlY = middleY + dx / length * bend;
+
+        return FormattableString.Invariant(
+            $"M {link.From.X:0.##} {link.From.Y:0.##} Q {controlX:0.##} {controlY:0.##} {link.To.X:0.##} {link.To.Y:0.##}");
+    }
+
+    private static string Motion(RenderedLink link, bool reverse) =>
+        reverse
+            ? FormattableString.Invariant(
+                $"M {link.To.X:0.##} {link.To.Y:0.##} L {link.From.X:0.##} {link.From.Y:0.##}")
+            : FormattableString.Invariant(
+                $"M {link.From.X:0.##} {link.From.Y:0.##} L {link.To.X:0.##} {link.To.Y:0.##}");
+
+    private static int Particles(CommunicationLink link) =>
+        link.Pattern switch
+        {
+            CommunicationPattern.Streaming => 4,
+            CommunicationPattern.Session => 2,
+            CommunicationPattern.RequestResponse => 2,
+            CommunicationPattern.Retry => (int)Math.Clamp(link.Attempts, 1U, 4U),
+            _ => 1,
+        };
+
+    private static bool Reverse(CommunicationLink link, int particle) =>
+        link.Pattern is CommunicationPattern.RequestResponse or CommunicationPattern.Session
+        && particle % 2 == 1;
+
+    private static string Duration(CommunicationLink link)
+    {
+        double seconds = link.Pattern == CommunicationPattern.Streaming
+            ? 1.1D
+            : Math.Clamp(3.2D - Math.Log10(link.Rate + 1D), 0.8D, 3.2D);
+
+        return FormattableString.Invariant($"{seconds:0.##}s");
+    }
+}
