@@ -180,7 +180,7 @@ else
 
     private CommunicationLink? SelectedLink { get; set; }
 
-    private System.Threading.Timer? _refresh;
+    private readonly CancellationTokenSource _stop = new();
 
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
@@ -275,18 +275,33 @@ else
     protected override void OnInitialized()
     {
         Read();
-        _refresh = new System.Threading.Timer(
-            _ => InvokeAsync(() =>
-            {
-                Read();
-                StateHasChanged();
-            }),
-            null,
-            TimeSpan.FromSeconds(2),
-            TimeSpan.FromSeconds(2));
+        _ = ObserveAsync();
     }
 
-    public void Dispose() => _refresh?.Dispose();
+    private async Task ObserveAsync()
+    {
+        try
+        {
+            await foreach (SurfaceChange _ in Surface.WatchAsync(_stop.Token))
+            {
+                await InvokeAsync(() =>
+                {
+                    Read();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Leaving the page is the normal end of its subscription.
+        }
+    }
+
+    public void Dispose()
+    {
+        _stop.Cancel();
+        _stop.Dispose();
+    }
 
     private void Read()
     {
