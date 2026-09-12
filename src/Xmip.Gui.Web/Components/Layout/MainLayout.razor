@@ -6,7 +6,8 @@
    2026-09-05; ADR-0052 clause 3): its role is Observer and that is not
    configurable, so the badge says so and never changes. *@
 <nav class="topnav">
-    <span class="topnav-link active">Monitor</span>
+    <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
+    <NavLink class="topnav-link" href="/topology">Topology</NavLink>
     <div class="role">
         <span class="role-label">role</span>
         <span class="role-pick active" title="@Describe(Role.Role)">@Role.Role.Label()</span>
