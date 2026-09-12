@@ -67,7 +67,7 @@ else
                             @for (int particle = 0; particle < Particles(link.Link); particle++)
                             {
                                 bool reverse = Reverse(link.Link, particle);
-                                <circle @key="$"{link.Link.Id}-{particle}"" class="flow-particle"
+                                <circle @key="particle" class="flow-particle"
                                         r="@(link.Link.Pattern == CommunicationPattern.Streaming ? 4 : 5)">
                                     <animateMotion path="@Motion(link, reverse)"
                                                    dur="@Duration(link.Link)"
@@ -425,7 +425,8 @@ else
         double dx = link.To.X - link.From.X;
         double dy = link.To.Y - link.From.Y;
         double length = Math.Max(Math.Sqrt(dx * dx + dy * dy), 1D);
-        double bend = ((Math.Abs(Stable(link.Link.Id)) % 5) - 2) * 14D;
+        uint stable = unchecked((uint)Stable(link.Link.Id));
+        double bend = ((stable % 5U) - 2D) * 14D;
         double controlX = middleX - dy / length * bend;
         double controlY = middleY + dx / length * bend;
 
