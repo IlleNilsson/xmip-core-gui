@@ -6,10 +6,10 @@
    red and the operator needs to know where. */
 
 :root {
-    /* The brand: the logo's green, the one the owner calls Kawasaki green
-       (2026-09-12). It is the accent for everything that is chosen, active or
-       primary — never a mood. Lime reads on ink, not on paper, so text that
-       must be read on white uses the deeper cut. */
+    /* The brand: the logo's own lime green (the owner, 2026-09-12). It is the
+       accent for everything that is chosen, active or primary — never a mood.
+       Lime reads on ink, not on paper, so text that must be read on white
+       uses the deeper cut. */
     --brand: #75c93b;
     --brand-deep: #4f9a24;
     --brand-tint: #eef8e6;
