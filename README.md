@@ -36,10 +36,14 @@ and observed relationships between infrastructure endpoints, then drills through
 services, processes, interfaces, ports, protocols and locations. Its animated
 movement represents application semantics — request/response, send/receive,
 publish/consume, streaming, fire-and-forget, sessions and retries — rather than
-decorative packets or an assumed bidirectional flow. The snapshot surface
-publishes this model now. The native operator boundary does not publish
-topology yet, so the view states that plainly instead of deriving application
-meaning from health records or sockets. Both views subscribe to the shared
+decorative packets or an assumed bidirectional flow. The snapshot surface reads
+this model, and the Playground's fleet publishes it since 2026-09-14: the fleet,
+the shared store, one process per named node and each node's exchanges over
+claim, daily and its own snapshot (ADR-0052, amendment 2026-09-14, ruling 3).
+The native operator boundary does not publish topology yet, so over that
+surface the view says so plainly; a node run from configuration is queue item
+1. Xmip draws what is configured and what is observed and infers nothing from
+a socket. Both views subscribe to the shared
 operator change stream rather than running independent refresh timers. Blazor
 carries resulting renders to the web client through its existing SignalR
 circuit; the desktop uses the same Razor components and notifications.
