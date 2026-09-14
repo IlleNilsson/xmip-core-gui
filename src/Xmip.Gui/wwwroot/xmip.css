@@ -160,6 +160,42 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 #blazor-error-ui .reload { color: var(--brand-deep); margin-left: 0.5rem; }
 #blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
 
+/* The circuit dropped (the web host's ReconnectModal). blazor.web.js sets
+   components-reconnect-state on the element; one word shows per state, and
+   nothing shows at all until it does. The estate's words and colours, not the
+   framework's box (the owner, 2026-09-14). */
+#components-reconnect-modal { display: none; }
+#components-reconnect-modal[components-reconnect-state="show"],
+#components-reconnect-modal[components-reconnect-state="retrying"],
+#components-reconnect-modal[components-reconnect-state="failed"],
+#components-reconnect-modal[components-reconnect-state="rejected"] {
+    display: block;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 1001;
+}
+.reconnect-panel {
+    padding: 0.6rem 1.25rem 0.7rem;
+    color: var(--ink);
+    background: var(--paper);
+    border-top: 3px solid var(--brand);
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+#components-reconnect-modal[components-reconnect-state="failed"] .reconnect-panel,
+#components-reconnect-modal[components-reconnect-state="rejected"] .reconnect-panel {
+    border-top-color: var(--red);
+}
+.reconnect-word { display: none; }
+#components-reconnect-modal[components-reconnect-state="show"] .reconnect-first,
+#components-reconnect-modal[components-reconnect-state="retrying"] .reconnect-again,
+#components-reconnect-modal[components-reconnect-state="failed"] .reconnect-failed,
+#components-reconnect-modal[components-reconnect-state="rejected"] .reconnect-rejected {
+    display: inline;
+}
+.reconnect-reload { color: var(--brand-deep); }
+
 /* Something went wrong on the server, or nothing is here: the two pages a
    host shows instead of the board. */
 .trouble { padding: 1.5rem; max-width: 40rem; }

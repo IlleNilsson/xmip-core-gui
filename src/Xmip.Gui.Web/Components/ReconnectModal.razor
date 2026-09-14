@@ -1,0 +1,27 @@
+@* The circuit dropped: the estate's own word for it, in the estate's own style,
+   in place of the box blazor.web.js draws when this element is absent (the
+   owner, 2026-09-14). blazor.web.js finds the element by its id and sets
+   `components-reconnect-state` on it — show, retrying, hide, failed,
+   rejected — and fills the two attempt counters; xmip.css shows the one line
+   that state calls for. No script of its own: the estate keeps JavaScript to
+   the VS Code extension, so Retry is the browser's own reload. *@
+<div id="components-reconnect-modal" data-nosnippet>
+    <div class="reconnect-panel" role="status" aria-live="polite">
+        <span class="reconnect-word reconnect-first">
+            Reconnecting to the web monitor…
+        </span>
+        <span class="reconnect-word reconnect-again">
+            Reconnecting to the web monitor… attempt
+            <span id="components-reconnect-current-attempt"></span> of
+            <span id="components-reconnect-max-retries"></span>.
+        </span>
+        <span class="reconnect-word reconnect-failed">
+            FAILED. The web monitor did not answer.
+            <a class="reconnect-reload" href="">Reload</a> to try again.
+        </span>
+        <span class="reconnect-word reconnect-rejected">
+            REFUSED. The web monitor no longer knows this page.
+            <a class="reconnect-reload" href="">Reload</a> to start over.
+        </span>
+    </div>
+</div>
