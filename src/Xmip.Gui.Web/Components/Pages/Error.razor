@@ -1,30 +1,27 @@
-﻿@page "/Error"
+@page "/Error"
 @using System.Diagnostics
 
-<PageTitle>Error</PageTitle>
+@* Where the host sends a request that failed outside Development
+   (Program.cs). The page says that it failed and how to find it in the log;
+   the log says why. The template's page, with its lecture on the Development
+   environment, went (ADR-0052 clause 6). *@
+<PageTitle>Xmip — Error</PageTitle>
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<header class="bar">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <span class="crumb">error</span>
+</header>
 
-@if (ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@RequestId</code>
-    </p>
-}
+<section class="trouble">
+    <h1>This request failed.</h1>
+    <p>The board is unaffected; the host's log has the reason.</p>
+    @if (ShowRequestId)
+    {
+        <p>Request <code>@RequestId</code>.</p>
+    }
+</section>
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
-
-@code{
+@code {
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 

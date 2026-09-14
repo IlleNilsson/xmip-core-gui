@@ -171,14 +171,17 @@
 </section>
 
 @code {
-    /// <summary>A stage of the message path, and what it counts.</summary>
+    /// <summary>A stage of the message path, and what it counts — the count
+    /// is the tree's own (ADR-0027 clause 5), read from ScopeTree, so the tile
+    /// and the figures cannot name different things.</summary>
     private sealed record Stage(string Name, string Segment, Counted Counted);
 
     private static readonly Stage[] Stages =
     [
-        new("Receive", "receive", Counted.Streams),
-        new("Process", "process", Counted.Journeys),
-        new("Send", "send", Counted.Messages),
+        .. ScopeTree.Stages.Select(segment => new Stage(
+            string.Concat(segment[..1].ToUpperInvariant(), segment[1..]),
+            segment,
+            ScopeTree.CountedAt(segment))),
     ];
 
     [Inject]
