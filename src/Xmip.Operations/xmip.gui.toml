@@ -23,7 +23,7 @@ NodeConfiguration = "module/operation/gui/samples/edge-01.xmip.toml"
 
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so on the page, not silently replaced.
-# Snapshot = "C:/Users/you/AppData/Local/Temp/playground-snapshot.toml"
+# Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
 
 # The role this desktop runs as (ADR-0009): observer, operator or developer.
 # Assigned here or in XMIP_ROLE, never chosen in the UI; absent, Observer.

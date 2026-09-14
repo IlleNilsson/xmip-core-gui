@@ -20,10 +20,10 @@ Surface = "native"
 RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # The file to read when Surface = "snapshot". The Playground writes
-# playground-snapshot.toml to XMIP_PLAYGROUND_SNAPSHOT, or to the temp
-# directory when that is unset; name the same file here. A path with no file
+# <cluster>-snapshot.toml, named for the cluster a roll was started as, under
+# .local-work/playground at the estate root; name the same file here. A path with no file
 # behind it is said so on the page, not silently replaced.
-# Snapshot = "C:/Users/you/AppData/Local/Temp/playground-snapshot.toml"
+# Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
 
 [Kestrel.Endpoints.Http]
 Url = "http://localhost:5087"
