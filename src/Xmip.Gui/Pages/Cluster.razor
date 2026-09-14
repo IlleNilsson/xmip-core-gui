@@ -200,6 +200,12 @@
 
     private string Focus { get; set; } = ScopeTree.Root;
 
+    // A link from the configuration tree or the topology lands the drill at
+    // that scope (ADR-0052 amendment 2026-09-14: links end where the thing is).
+    [SupplyParameterFromQuery(Name = "scope")]
+    public string? RequestedScope { get; set; }
+
+
     private readonly CancellationTokenSource _stop = new();
 
     /// <summary>A count as the board last saw it change: the value, when, by how
@@ -232,6 +238,11 @@
     protected override void OnParametersSet()
     {
         All = Surface.Health(ScopeTree.Root);
+
+        if (!string.IsNullOrWhiteSpace(RequestedScope) && RequestedScope != Focus)
+        {
+            Focus = RequestedScope;
+        }
     }
 
     protected override void OnInitialized()

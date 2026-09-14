@@ -1,0 +1,181 @@
+@page "/configuration"
+@using Xmip.Gui.Surface
+@implements IDisposable
+
+<PageTitle>Xmip — Configuration</PageTitle>
+
+<header class="bar">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <span class="crumb">configuration</span>
+    <span class="source">@Surface.Source</span>
+</header>
+
+@* The classic tree (the owner, 2026-09-14; ADR-0052 amendment 2026-09-14,
+   ruling 1): the whole cluster, every node, receive → process → send beneath
+   each, and every Location, Xmip Process and technology beneath those — all
+   of it open, in configuration order, holding still. The monitor moves and
+   sorts by trouble; this view does neither, so an operator can find a thing
+   by where it is declared and read what it is. A row links to the monitor's
+   drill at that scope and to the topology. What a surface does not publish —
+   the declaration behind a scope, the binaries a node runs — the row says
+   is not published, rather than inventing it. *@
+<section class="tree">
+    @if (All.Count == 0)
+    {
+        <p class="empty">Nothing observed yet: no node has published a scope.</p>
+    }
+    else
+    {
+        <ul class="tree-level">
+            <li class="tree-item">
+                <div class="tree-row @English.Mood(RootState)">
+                    <span class="dot"></span>
+                    <span class="kind">cluster</span>
+                    <span class="label">@ClusterName</span>
+                    <span class="mood">@English.Mood(RootState)</span>
+                    <a class="tree-link" href="/">monitor</a>
+                    <a class="tree-link" href="/topology">topology</a>
+                </div>
+                @Level(ScopeTree.Root)
+            </li>
+        </ul>
+    }
+</section>
+
+@code {
+    [Inject]
+    private IOperatorSurface Surface { get; set; } = default!;
+
+    private IReadOnlyList<HealthRecord> All { get; set; } = [];
+
+    private readonly CancellationTokenSource _stop = new();
+
+    private HealthState RootState => ScopeTree.Rollup(All) ?? HealthState.Working;
+
+    // The cluster is the first segment beneath the root — one cluster per
+    // surface today; the topology's navigation between clusters is queued.
+    private string ClusterName =>
+        All.Select(record => ScopeTree.Segment(record.Scope, 0))
+            .FirstOrDefault(name => !string.IsNullOrEmpty(name)) ?? "cluster";
+
+    protected override void OnInitialized()
+    {
+        All = Surface.Health(ScopeTree.Root);
+        _ = ObserveAsync();
+    }
+
+    private async Task ObserveAsync()
+    {
+        try
+        {
+            await foreach (SurfaceChange _ in Surface.WatchAsync(_stop.Token))
+            {
+                await InvokeAsync(() =>
+                {
+                    All = Surface.Health(ScopeTree.Root);
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Leaving the page is the normal end of its subscription.
+        }
+    }
+
+    public void Dispose()
+    {
+        _stop.Cancel();
+        _stop.Dispose();
+    }
+
+    // One level of the tree beneath a scope, every branch open. Configuration
+    // order, not trouble order: the three stages in the order the message
+    // path runs them, everything else by name.
+    private RenderFragment Level(string scope) => builder =>
+    {
+        IReadOnlyList<Branch> branches = Ordered(ScopeTree.Branches(All, scope));
+
+        if (branches.Count == 0)
+        {
+            return;
+        }
+
+        builder.OpenElement(0, "ul");
+        builder.AddAttribute(1, "class", "tree-level");
+
+        foreach (Branch branch in branches)
+        {
+            builder.OpenElement(2, "li");
+            builder.AddAttribute(3, "class", "tree-item");
+            builder.AddContent(4, Row(branch));
+
+            if (!branch.IsLeaf)
+            {
+                builder.AddContent(5, Level(branch.Scope));
+            }
+
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private static RenderFragment Row(Branch branch) => __builder =>
+    {
+        string mood = English.Mood(branch.State);
+        string kind = Kind(branch.Scope);
+        <div class="tree-row @mood">
+            <span class="dot" title="severity @branch.Worst.Severity"></span>
+            <span class="kind">@kind</span>
+            <span class="label">@branch.Label</span>
+            <span class="mood">@mood</span>
+            @if (branch.IsLeaf)
+            {
+                <span class="evidence">@branch.Worst.Evidence</span>
+            }
+            else
+            {
+                <span class="evidence">@branch.Count beneath</span>
+            }
+            <a class="tree-link" href="@MonitorLink(branch.Scope)">monitor</a>
+        </div>
+    };
+
+    private static string MonitorLink(string scope) =>
+        "/?scope=" + Uri.EscapeDataString(scope);
+
+    // What a scope is, from where it sits: the record names cluster, node and
+    // the three stages; beneath a stage sits the Location or Xmip Process and
+    // beneath that the technology (ADR-0027; ADR-0028 for the playground).
+    private static string Kind(string scope)
+    {
+        string[] parts = ScopeTree.Parts(scope);
+        string stage = ScopeTree.Stage(scope);
+
+        return parts.Length switch
+        {
+            1 => "cluster",
+            2 => "node",
+            3 when ScopeTree.Stages.Contains(parts[2]) => "stage",
+            3 => "scope",
+            4 when stage == "receive" => "receive location",
+            4 when stage == "send" => "send location",
+            4 when stage == "process" => "xmip process",
+            _ => "technology",
+        };
+    }
+
+    private static IReadOnlyList<Branch> Ordered(IReadOnlyList<Branch> branches) =>
+        [
+            .. branches
+                .OrderBy(branch => StageOrder(branch.Label))
+                .ThenBy(branch => branch.Label, StringComparer.Ordinal),
+        ];
+
+    private static int StageOrder(string label)
+    {
+        int index = ScopeTree.Stages.ToList().IndexOf(label);
+        return index < 0 ? ScopeTree.Stages.Count : index;
+    }
+}
