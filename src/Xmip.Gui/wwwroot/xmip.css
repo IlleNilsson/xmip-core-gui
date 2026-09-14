@@ -141,6 +141,32 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .done .state { color: var(--red); }
 .none .state { color: var(--muted); }
 
+/* The banner Blazor shows when the circuit or the page itself fails, in both
+   hosts. Hidden until the framework shows it; on the page's own paper and
+   ink, so a broken page still looks like this page. */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 0.6rem 1.25rem 0.7rem;
+    color: var(--ink);
+    background: var(--paper);
+    border-top: 3px solid var(--red);
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+#blazor-error-ui .reload { color: var(--brand-deep); margin-left: 0.5rem; }
+#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
+
+/* Something went wrong on the server, or nothing is here: the two pages a
+   host shows instead of the board. */
+.trouble { padding: 1.5rem; max-width: 40rem; }
+.trouble h1 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+.trouble p { color: var(--muted); margin: 0 0 0.5rem; }
+.trouble code { font-family: ui-monospace, monospace; color: var(--ink); }
+
 /* Pause and resume: the operator acting, not just watching. Small, on the row,
    never the loudest thing on the page. */
 .act {

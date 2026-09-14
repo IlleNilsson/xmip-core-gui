@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Configuration;
-using Tomlyn.Extensions.Configuration;
+using Xmip.Surface;
 
 namespace Xmip.Operations.Configuration;
 
@@ -68,9 +68,8 @@ public sealed class NodeConfiguration
             return config;
         }
 
-        IConfigurationRoot toml = new ConfigurationBuilder()
-            .AddTomlFile(path, optional: true, reloadOnChange: false)
-            .Build();
+        // The one TOML reader every surface uses (ADR-0052 clause 1).
+        IConfigurationRoot toml = TomlDocument.Read(path);
 
         config.ServiceName = toml["service:name"] ?? "";
         config.ClusterName = toml["service:cluster_name"] ?? "";

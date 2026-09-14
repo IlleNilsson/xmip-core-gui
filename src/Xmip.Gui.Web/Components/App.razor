@@ -7,8 +7,9 @@
     <link rel="icon" type="image/png" href="@Assets["_content/Xmip.Gui/xmip-x.png"]" />
     <BasePath />
     <ResourcePreloader />
+    @* One stylesheet, the shared library's; this host has no scoped CSS of
+       its own, the template's went (ADR-0052 clause 6). *@
     <link rel="stylesheet" href="@Assets["_content/Xmip.Gui/xmip.css"]" />
-    <link rel="stylesheet" href="@Assets["Xmip.Gui.Web.styles.css"]" />
     <ImportMap />
     <HeadOutlet />
 </head>
