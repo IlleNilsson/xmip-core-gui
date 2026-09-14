@@ -12,13 +12,14 @@
 
 @* The classic tree (the owner, 2026-09-14; ADR-0052 amendment 2026-09-14,
    ruling 1): the whole cluster, every node, receive → process → send beneath
-   each, and every Location, Xmip Process and technology beneath those — all
-   of it open, in configuration order, holding still. The monitor moves and
-   sorts by trouble; this view does neither, so an operator can find a thing
-   by where it is declared and read what it is. A row links to the monitor's
-   drill at that scope and to the topology. What a surface does not publish —
-   the declaration behind a scope, the binaries a node runs — the row says
-   is not published, rather than inventing it. *@
+   each, and every Location, Xmip Process and technology beneath those, in
+   configuration order, holding still. The monitor moves and sorts by
+   trouble; this view does neither, so an operator can find a thing by where
+   it is declared and read what it is. Cluster, node and stage stand open;
+   deeper branches open on a click — the browser's own details element, no
+   script. A row links to the monitor's drill at that scope. What a surface
+   does not publish — the declaration behind a scope, the binaries a node
+   runs — is not invented here. *@
 <section class="tree">
     @if (All.Count == 0)
     {
@@ -26,19 +27,15 @@
     }
     else
     {
-        <ul class="tree-level">
-            <li class="tree-item">
-                <div class="tree-row @English.Mood(RootState)">
-                    <span class="dot"></span>
-                    <span class="kind">cluster</span>
-                    <span class="label">@ClusterName</span>
-                    <span class="mood">@English.Mood(RootState)</span>
-                    <a class="tree-link" href="/">monitor</a>
-                    <a class="tree-link" href="/topology">topology</a>
-                </div>
-                @Level(ScopeTree.Root)
-            </li>
-        </ul>
+        <div class="tree-row @English.Mood(RootState)">
+            <span class="dot"></span>
+            <span class="kind">cluster</span>
+            <span class="label">@ClusterName</span>
+            <span class="mood">@English.Mood(RootState)</span>
+            <span class="evidence">@All.Count thing(s) observed</span>
+            <a class="tree-link" href="/topology">topology</a>
+        </div>
+        @Level(ScopeTree.Root, 1)
     }
 </section>
 
@@ -48,7 +45,18 @@
 
     private IReadOnlyList<HealthRecord> All { get; set; } = [];
 
+    // Every scope's children, built once per read: one pass over the records
+    // rather than a regrouping of all of them at every branch, which took
+    // half a minute over a playground's thousands of leaves.
+    private IReadOnlyDictionary<string, IReadOnlyList<Branch>> Children { get; set; } =
+        new Dictionary<string, IReadOnlyList<Branch>>(StringComparer.Ordinal);
+
     private readonly CancellationTokenSource _stop = new();
+
+    // Levels that stand open without a click: the cluster, its nodes and the
+    // stage beneath each; the playground puts its nodes under a `node`
+    // segment, so one more level than a configured cluster would need.
+    private const int OpenDepth = 4;
 
     private HealthState RootState => ScopeTree.Rollup(All) ?? HealthState.Working;
 
@@ -60,7 +68,7 @@
 
     protected override void OnInitialized()
     {
-        All = Surface.Health(ScopeTree.Root);
+        Read();
         _ = ObserveAsync();
     }
 
@@ -72,7 +80,7 @@
             {
                 await InvokeAsync(() =>
                 {
-                    All = Surface.Health(ScopeTree.Root);
+                    Read();
                     StateHasChanged();
                 });
             }
@@ -89,61 +97,124 @@
         _stop.Dispose();
     }
 
-    // One level of the tree beneath a scope, every branch open. Configuration
-    // order, not trouble order: the three stages in the order the message
-    // path runs them, everything else by name.
-    private RenderFragment Level(string scope) => builder =>
+    private void Read()
     {
-        IReadOnlyList<Branch> branches = Ordered(ScopeTree.Branches(All, scope));
+        All = Surface.Health(ScopeTree.Root);
+        Children = Build(All);
+    }
 
-        if (branches.Count == 0)
+    // One level of the tree beneath a scope. Configuration order, not trouble
+    // order: the three stages in the order the message path runs them,
+    // everything else by name. A branch with children is a details element,
+    // open down to the stage; a leaf is its row.
+    private RenderFragment Level(string scope, int depth) => __builder =>
+    {
+        if (!Children.TryGetValue(scope, out IReadOnlyList<Branch>? branches))
         {
             return;
         }
 
-        builder.OpenElement(0, "ul");
-        builder.AddAttribute(1, "class", "tree-level");
-
-        foreach (Branch branch in branches)
-        {
-            builder.OpenElement(2, "li");
-            builder.AddAttribute(3, "class", "tree-item");
-            builder.AddContent(4, Row(branch));
-
-            if (!branch.IsLeaf)
+        <ul class="tree-level">
+            @foreach (Branch branch in branches)
             {
-                builder.AddContent(5, Level(branch.Scope));
+                <li class="tree-item">
+                    @if (branch.IsLeaf)
+                    {
+                        @Row(branch)
+                    }
+                    else
+                    {
+                        <details open="@(depth < OpenDepth)">
+                            <summary>@Row(branch)</summary>
+                            @Level(branch.Scope, depth + 1)
+                        </details>
+                    }
+                </li>
             }
-
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
+        </ul>
     };
 
     private static RenderFragment Row(Branch branch) => __builder =>
     {
         string mood = English.Mood(branch.State);
-        string kind = Kind(branch.Scope);
         <div class="tree-row @mood">
             <span class="dot" title="severity @branch.Worst.Severity"></span>
-            <span class="kind">@kind</span>
+            <span class="kind">@Kind(branch.Scope)</span>
             <span class="label">@branch.Label</span>
             <span class="mood">@mood</span>
-            @if (branch.IsLeaf)
-            {
-                <span class="evidence">@branch.Worst.Evidence</span>
-            }
-            else
-            {
-                <span class="evidence">@branch.Count beneath</span>
-            }
+            <span class="evidence">@(branch.IsLeaf ? branch.Worst.Evidence : $"{branch.Count} beneath")</span>
             <a class="tree-link" href="@MonitorLink(branch.Scope)">monitor</a>
         </div>
     };
 
     private static string MonitorLink(string scope) =>
         "/?scope=" + Uri.EscapeDataString(scope);
+
+    // The whole tree in one pass: every record is counted at each of its
+    // ancestors, the worst record beneath each scope is kept, and a scope
+    // with no record deeper than itself is a leaf.
+    private static IReadOnlyDictionary<string, IReadOnlyList<Branch>> Build(
+        IReadOnlyList<HealthRecord> records)
+    {
+        Dictionary<string, (string Parent, int Count, bool Leaf, HealthRecord Worst)> seen =
+            new(StringComparer.Ordinal);
+
+        foreach (HealthRecord record in records)
+        {
+            string[] parts = ScopeTree.Parts(record.Scope);
+
+            for (int depth = 1; depth <= parts.Length; depth++)
+            {
+                string scope = ScopeTree.Join(parts.Take(depth));
+                string parent = depth == 1 ? ScopeTree.Root : ScopeTree.Join(parts.Take(depth - 1));
+                bool exact = depth == parts.Length;
+
+                if (seen.TryGetValue(scope, out var known))
+                {
+                    HealthRecord worst = Worse(known.Worst, record);
+                    seen[scope] = (parent, known.Count + 1, known.Leaf && exact, worst);
+                }
+                else
+                {
+                    seen[scope] = (parent, 1, exact, record);
+                }
+            }
+        }
+
+        Dictionary<string, List<Branch>> children = new(StringComparer.Ordinal);
+
+        foreach ((string scope, (string parent, int count, bool leaf, HealthRecord worst)) in seen)
+        {
+            Branch branch = new(
+                scope,
+                ScopeTree.Parts(scope).Last(),
+                leaf ? worst.State : ScopeTree.Rolled(worst.State),
+                leaf,
+                count,
+                worst);
+
+            if (!children.TryGetValue(parent, out List<Branch>? siblings))
+            {
+                siblings = [];
+                children[parent] = siblings;
+            }
+
+            siblings.Add(branch);
+        }
+
+        return children.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<Branch>)
+            [
+                .. pair.Value
+                    .OrderBy(branch => StageOrder(branch.Label))
+                    .ThenBy(branch => branch.Label, StringComparer.Ordinal),
+            ],
+            StringComparer.Ordinal);
+    }
+
+    private static HealthRecord Worse(HealthRecord a, HealthRecord b) =>
+        b.State > a.State || (b.State == a.State && b.Severity > a.Severity) ? b : a;
 
     // What a scope is, from where it sits: the record names cluster, node and
     // the three stages; beneath a stage sits the Location or Xmip Process and
@@ -165,13 +236,6 @@
             _ => "technology",
         };
     }
-
-    private static IReadOnlyList<Branch> Ordered(IReadOnlyList<Branch> branches) =>
-        [
-            .. branches
-                .OrderBy(branch => StageOrder(branch.Label))
-                .ThenBy(branch => branch.Label, StringComparer.Ordinal),
-        ];
 
     private static int StageOrder(string label)
     {
