@@ -45,11 +45,9 @@
 
     private IReadOnlyList<HealthRecord> All { get; set; } = [];
 
-    // Every scope's children, built once per read: one pass over the records
-    // rather than a regrouping of all of them at every branch, which took
-    // half a minute over a playground's thousands of leaves.
-    private IReadOnlyDictionary<string, IReadOnlyList<Branch>> Children { get; set; } =
-        new Dictionary<string, IReadOnlyList<Branch>>(StringComparer.Ordinal);
+    // The publication as its tree, built once per read (ADR-0052, amendment
+    // 2026-09-15): every level here is a lookup, put into configuration order.
+    private ScopeIndex Index { get; set; } = ScopeIndex.Empty("nothing read yet");
 
     private readonly CancellationTokenSource _stop = new();
 
@@ -99,8 +97,8 @@
 
     private void Read()
     {
-        All = Surface.Health(ScopeTree.Root);
-        Children = Build(All);
+        Index = Surface.Index();
+        All = Index.Health(ScopeTree.Root);
     }
 
     // One level of the tree beneath a scope. Configuration order, not trouble
@@ -109,7 +107,14 @@
     // open down to the stage; a leaf is its row.
     private RenderFragment Level(string scope, int depth) => __builder =>
     {
-        if (!Children.TryGetValue(scope, out IReadOnlyList<Branch>? branches))
+        IReadOnlyList<Branch> branches =
+        [
+            .. Index.Branches(scope)
+                .OrderBy(branch => StageOrder(branch.Label))
+                .ThenBy(branch => branch.Label, StringComparer.Ordinal),
+        ];
+
+        if (branches.Count == 0)
         {
             return;
         }
@@ -149,72 +154,6 @@
 
     private static string MonitorLink(string scope) =>
         "/?scope=" + Uri.EscapeDataString(scope);
-
-    // The whole tree in one pass: every record is counted at each of its
-    // ancestors, the worst record beneath each scope is kept, and a scope
-    // with no record deeper than itself is a leaf.
-    private static IReadOnlyDictionary<string, IReadOnlyList<Branch>> Build(
-        IReadOnlyList<HealthRecord> records)
-    {
-        Dictionary<string, (string Parent, int Count, bool Leaf, HealthRecord Worst)> seen =
-            new(StringComparer.Ordinal);
-
-        foreach (HealthRecord record in records)
-        {
-            string[] parts = ScopeTree.Parts(record.Scope);
-
-            for (int depth = 1; depth <= parts.Length; depth++)
-            {
-                string scope = ScopeTree.Join(parts.Take(depth));
-                string parent = depth == 1 ? ScopeTree.Root : ScopeTree.Join(parts.Take(depth - 1));
-                bool exact = depth == parts.Length;
-
-                if (seen.TryGetValue(scope, out var known))
-                {
-                    HealthRecord worst = Worse(known.Worst, record);
-                    seen[scope] = (parent, known.Count + 1, known.Leaf && exact, worst);
-                }
-                else
-                {
-                    seen[scope] = (parent, 1, exact, record);
-                }
-            }
-        }
-
-        Dictionary<string, List<Branch>> children = new(StringComparer.Ordinal);
-
-        foreach ((string scope, (string parent, int count, bool leaf, HealthRecord worst)) in seen)
-        {
-            Branch branch = new(
-                scope,
-                ScopeTree.Parts(scope).Last(),
-                leaf ? worst.State : ScopeTree.Rolled(worst.State),
-                leaf,
-                count,
-                worst);
-
-            if (!children.TryGetValue(parent, out List<Branch>? siblings))
-            {
-                siblings = [];
-                children[parent] = siblings;
-            }
-
-            siblings.Add(branch);
-        }
-
-        return children.ToDictionary(
-            pair => pair.Key,
-            pair => (IReadOnlyList<Branch>)
-            [
-                .. pair.Value
-                    .OrderBy(branch => StageOrder(branch.Label))
-                    .ThenBy(branch => branch.Label, StringComparer.Ordinal),
-            ],
-            StringComparer.Ordinal);
-    }
-
-    private static HealthRecord Worse(HealthRecord a, HealthRecord b) =>
-        b.State > a.State || (b.State == a.State && b.Severity > a.Severity) ? b : a;
 
     // What a scope is, from where it sits: the record names cluster, node and
     // the three stages; beneath a stage sits the Location or Xmip Process and

@@ -55,7 +55,7 @@
         }
     </nav>
     @{
-        IReadOnlyList<Branch> branches = ScopeTree.Branches(All, Focus);
+        IReadOnlyList<Branch> branches = Index.Branches(Focus);
     }
     @if (branches.Count == 0)
     {
@@ -91,9 +91,9 @@
 <section class="list">
     <h2>@Heading <small>@Subheading</small></h2>
     @{
-        IReadOnlyList<HealthRecord> shown = Selected is null
+        List<HealthRecord> shown = Selected is null
             ? All.Where(r => r.State != HealthState.Fine).ToList()
-            : InStage(Selected);
+            : [.. InStage(Selected)];
     }
     @if (shown.Count == 0)
     {
@@ -101,8 +101,7 @@
     }
     else
     {
-        @foreach (HealthRecord record in shown)
-        {
+        <Virtualize Items="shown" Context="record" ItemSize="34">
             <div class="row @English.Mood(record.State)">
                 <span class="dot" title="severity @record.Severity"></span>
                 <span class="scope">@ScopeTree.Name(record.Scope)</span>
@@ -126,7 +125,7 @@
                     <span></span>
                 }
             </div>
-        }
+        </Virtualize>
     }
 </section>
 
@@ -192,9 +191,36 @@
     [Inject]
     private RoleContext Role { get; set; } = default!;
 
-    // Read once per render, not once per property access — every read is a
-    // call across the boundary.
+    // Read once per publication, not once per property access: the index is
+    // the publication as its tree, and every question here is a lookup in it
+    // (ADR-0052, amendment 2026-09-15).
+    private ScopeIndex Index { get; set; } = ScopeIndex.Empty("nothing read yet");
+
     private IReadOnlyList<HealthRecord> All { get; set; } = [];
+
+    private IReadOnlyDictionary<string, IReadOnlyList<HealthRecord>> ByStage { get; set; } =
+        new Dictionary<string, IReadOnlyList<HealthRecord>>(StringComparer.Ordinal);
+
+    private IReadOnlyDictionary<string, IReadOnlyList<HealthRecord>> ByNode { get; set; } =
+        new Dictionary<string, IReadOnlyList<HealthRecord>>(StringComparer.Ordinal);
+
+    private IReadOnlyList<string> Nodes { get; set; } = [];
+
+    private void Read()
+    {
+        Index = Surface.Index();
+        All = Index.Health(ScopeTree.Root);
+        Nodes = Index.Nodes();
+        ByNode = Nodes.ToDictionary(
+            node => node,
+            node => Index.Health(ScopeTree.Root + node),
+            StringComparer.Ordinal);
+        ByStage = ScopeTree.Stages.ToDictionary(
+            stage => stage,
+            stage => (IReadOnlyList<HealthRecord>)
+                [.. All.Where(record => ScopeTree.Stage(record.Scope) == stage)],
+            StringComparer.Ordinal);
+    }
 
     private Stage? Selected { get; set; }
 
@@ -237,7 +263,7 @@
 
     protected override void OnParametersSet()
     {
-        All = Surface.Health(ScopeTree.Root);
+        Read();
 
         if (!string.IsNullOrWhiteSpace(RequestedScope) && RequestedScope != Focus)
         {
@@ -258,7 +284,7 @@
             {
                 await InvokeAsync(() =>
                 {
-                    All = Surface.Health(ScopeTree.Root);
+                    Read();
                     StateHasChanged();
                 });
             }
@@ -283,13 +309,13 @@
     private void Pause(string scope)
     {
         Surface.PauseScope(scope, "operator");
-        All = Surface.Health(ScopeTree.Root);
+        Read();
     }
 
     private void Resume(string scope)
     {
         Surface.ResumeScope(scope);
-        All = Surface.Health(ScopeTree.Root);
+        Read();
     }
 
     // Receive and Send Locations can be paused; a Process runs off a
@@ -300,18 +326,13 @@
         return ScopeTree.Stage(scope) is "receive" or "send";
     }
 
-    private IReadOnlyList<string> Nodes =>
-        All.Select(r => ScopeTree.Node(r.Scope))
-            .Where(n => n.Length > 0)
-            .Distinct()
-            .Order()
-            .ToList();
-
     private IReadOnlyList<HealthRecord> InStage(Stage stage) =>
-        All.Where(r => ScopeTree.Stage(r.Scope) == stage.Segment).ToList();
+        ByStage.TryGetValue(stage.Segment, out IReadOnlyList<HealthRecord>? records)
+            ? records
+            : [];
 
     private IReadOnlyList<HealthRecord> OnNode(string node) =>
-        All.Where(r => ScopeTree.Node(r.Scope) == node).ToList();
+        ByNode.TryGetValue(node, out IReadOnlyList<HealthRecord>? records) ? records : [];
 
     private string Heading => Selected is null ? "Needs attention" : Selected.Name;
 
