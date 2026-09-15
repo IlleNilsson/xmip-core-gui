@@ -29,6 +29,11 @@
          configures nothing in JSON, so the template's appsettings files are
          gone and xmip.gui.toml is read through Xmip.Surface instead. -->
     <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+
+    <!-- The surface served: a hub every RemoteOperator on another machine
+         follows, told when this host's surface changes (ADR-0052, amendment
+         2026-09-15). Only a web host references it. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Relay\Xmip.Surface.Relay.csproj" />
   </ItemGroup>
 
   <ItemGroup>

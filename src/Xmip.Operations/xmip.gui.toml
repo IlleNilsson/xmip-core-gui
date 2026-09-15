@@ -6,9 +6,10 @@
 
 [Xmip]
 # Which surface the board reads (ADR-0052 clause 3): "native", the runtime's
-# library loaded in this process, or "snapshot", a file a node or the
-# Playground publishes. Chosen here and never guessed from a file in a temp
-# directory. The same keys as the web host's xmip.gui.toml.
+# library loaded in this process, "snapshot", a file a node or the Playground
+# publishes, or "remote", a web host followed over its surface hub at Url.
+# Chosen here and never guessed from a file in a temp directory. The same
+# keys as the web host's xmip.gui.toml.
 Surface = "native"
 
 # The runtime's native library, exporting xmip_operate_v1, xmip_start_v1 and
@@ -24,6 +25,9 @@ NodeConfiguration = "module/operation/gui/samples/edge-01.xmip.toml"
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so on the page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
+
+# The web host to follow when Surface = "remote".
+# Url = "http://another-host:5087"
 
 # The role this desktop runs as (ADR-0009): observer, operator or developer.
 # Assigned here or in XMIP_ROLE, never chosen in the UI; absent, Observer.
