@@ -79,10 +79,15 @@ disagree — and the desktop configures: it starts the node its configuration
 names, and its Configure page validates and starts through the runtime.
 
 Configuration is each host's `xmip.gui.toml`, with the same keys under
-`[Xmip]`: `Surface = "native" | "snapshot"`, `RuntimeLibrary` (else
-`XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>` when
-the surface is a snapshot — a path with no file behind it is said so on the
-page — and, on the desktop only, `NodeConfiguration` and `Role`. TOML,
+`[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
+(else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
+when the surface is a snapshot — a path with no file behind it is said so on
+the page — `Url = <web host>` when the surface is remote, and, on the desktop
+only, `NodeConfiguration` and `Role`. The web host serves its own surface at
+`/surface`: a SignalR hub every remote surface follows and is told through
+when this host's surface changes, so the CLI, the PowerShell module and a GUI
+on another machine follow it without polling (ADR-0052, amendment
+2026-09-15). TOML,
 because Xmip configures nothing in JSON anywhere — the web host's default
 `appsettings.json` sources are removed in `Program.cs` and the TOML reader in
 `Xmip.Surface` takes their place.

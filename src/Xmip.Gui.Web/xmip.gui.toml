@@ -8,9 +8,10 @@
 
 [Xmip]
 # Which surface the page reads (ADR-0052 clause 3): "native", the runtime's
-# library loaded in this process, or "snapshot", a file a node or the
-# Playground publishes. Chosen here and never guessed from a file in a temp
-# directory. The web GUI monitors: it starts no node and offers no Pause or
+# library loaded in this process, "snapshot", a file a node or the Playground
+# publishes, or "remote", another web host followed over its surface hub at
+# Url. Chosen here and never guessed from a file in a temp directory. This
+# host serves its own surface at /surface for the same following. The web GUI monitors: it starts no node and offers no Pause or
 # Resume (ADR-0014, amendment of 2026-09-05), and its role is Observer.
 Surface = "native"
 
@@ -21,9 +22,13 @@ RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dl
 
 # The file to read when Surface = "snapshot". The Playground writes
 # <cluster>-snapshot.toml, named for the cluster a roll was started as, under
-# .local-work/playground at the estate root; name the same file here. A path with no file
-# behind it is said so on the page, not silently replaced.
+# .local-work/playground at the estate root; name the same file here. A path
+# with no file behind it is said so on the page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
+
+# The web host to follow when Surface = "remote". A host that does not answer
+# is said so on the page.
+# Url = "http://another-host:5087"
 
 [Kestrel.Endpoints.Http]
 Url = "http://localhost:5087"

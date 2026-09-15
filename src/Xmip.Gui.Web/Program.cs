@@ -2,6 +2,7 @@ using Xmip.Gui.Surface;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
 using Xmip.Surface;
+using Xmip.Surface.Relay;
 
 // Development unless the environment says otherwise. launchSettings.json used
 // to set this and it is gone with the rest of the JSON; without it the host
@@ -65,6 +66,11 @@ builder.Services.AddSingleton<IOperatorSurface>(services =>
     return surface;
 });
 
+// This host's surface, served: the CLI, the PowerShell module and a GUI on
+// another machine follow it over SignalR and are told when it changes, never
+// asking (ADR-0052, amendment 2026-09-15). The same surface the pages read.
+builder.Services.AddXmipSurfaceRelay();
+
 WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -84,5 +90,6 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(Xmip.Gui.Pages.Cluster).Assembly)
     .AddInteractiveServerRenderMode();
+app.MapXmipSurfaceHub();
 
 app.Run();
