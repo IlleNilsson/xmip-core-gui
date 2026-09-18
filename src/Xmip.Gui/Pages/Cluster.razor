@@ -53,6 +53,7 @@
             <button class="crumb-btn" @onclick="() => Focus = crumb.Scope">@crumb.Label</button>
             <span class="sep">/</span>
         }
+        <a class="crumb-link" href="@ScopeLink.Configuration(Focus)">configuration</a>
     </nav>
     @{
         IReadOnlyList<Branch> branches = Index.Branches(Focus);

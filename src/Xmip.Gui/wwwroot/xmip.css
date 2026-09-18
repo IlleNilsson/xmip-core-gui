@@ -261,6 +261,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .tree-row .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree-row .tree-link { color: var(--brand-deep); font-size: 0.85rem; text-decoration: none; }
 .tree-row .tree-link:hover { text-decoration: underline; }
+.tree-row .tree-links { display: flex; gap: 0.75rem; justify-content: flex-end; }
+.tree-row .tree-link.problem { color: var(--red); font-weight: 600; }
+.tree-row:target { outline: 2px solid var(--red); outline-offset: 2px; scroll-margin-top: 5rem; }
 .tree-row.done .label { color: var(--red); }
 .tree-row.holding .mood { color: var(--orange); }
 
@@ -366,7 +369,10 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     display: flex; align-items: center; gap: 0.5rem; margin: 1rem 1.5rem 0;
 }
 .topology-tools { justify-content: space-between; flex-wrap: wrap; }
-.topology-modes { display: flex; gap: 0.25rem; }
+.inspect-links { display: flex; gap: 1rem; margin-top: 0.75rem; }
+.inspect-links a, .crumb-link { color: var(--brand-deep); font-size: 0.9rem; text-decoration: none; }
+.inspect-links a:hover, .crumb-link:hover { text-decoration: underline; }
+.crumb-link { margin-left: auto; }
 .topology-tools button, .topology-trail button, .inspect-action {
     border: 1px solid var(--line); background: var(--paper); color: var(--ink);
     border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; cursor: pointer;

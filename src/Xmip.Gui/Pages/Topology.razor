@@ -12,14 +12,6 @@
 </header>
 
 <section class="topology-tools" aria-label="Topology controls">
-    <div class="topology-modes">
-        <button class="@(Mode == TopologyMode.All ? "active" : "")"
-                @onclick="() => Mode = TopologyMode.All">Configured + observed</button>
-        <button class="@(Mode == TopologyMode.Configured ? "active" : "")"
-                @onclick="() => Mode = TopologyMode.Configured">Configured</button>
-        <button class="@(Mode == TopologyMode.Observed ? "active" : "")"
-                @onclick="() => Mode = TopologyMode.Observed">Observed</button>
-    </div>
     <button class="motion-toggle" @onclick="() => MotionPaused = !MotionPaused">
         @(MotionPaused ? "Resume movement" : "Pause movement")
     </button>
@@ -121,6 +113,7 @@ else
                     <dt>Activity</dt><dd>@Percent(SelectedNode.Activity)</dd>
                     <dt>Scope</dt><dd class="mono">@Value(SelectedNode.Scope)</dd>
                 </dl>
+                @Drill(SelectedNode.Scope)
                 @if (HasChildren(SelectedNode.Id))
                 {
                     <button class="inspect-action" @onclick="() => Focus(SelectedNode)">Open components</button>
@@ -142,6 +135,7 @@ else
                     <dt>Attempts</dt><dd>@SelectedLink.Attempts</dd>
                     <dt>Evidence</dt><dd>@Value(SelectedLink.Evidence)</dd>
                 </dl>
+                @Drill(ScopeOf(SelectedLink.From))
             }
             else
             {
@@ -154,7 +148,6 @@ else
 }
 
 @code {
-    private enum TopologyMode { All, Configured, Observed }
 
     private sealed record PlacedNode(TopologyNode Node, double X, double Y);
 
@@ -170,7 +163,6 @@ else
     private TopologySnapshot Snapshot { get; set; } =
         TopologySnapshot.Empty("no topology read");
 
-    private TopologyMode Mode { get; set; }
 
     private bool MotionPaused { get; set; }
 
@@ -313,15 +305,30 @@ else
         }
     }
 
-    private bool Show(TopologyNode node) =>
-        Mode == TopologyMode.All
-        || (Mode == TopologyMode.Configured && node.Origin is TopologyOrigin.Configured or TopologyOrigin.Both)
-        || (Mode == TopologyMode.Observed && node.Origin is TopologyOrigin.Observed or TopologyOrigin.Both);
+    // The topology is always what is configured and what is observed,
+    // together: the owner, 2026-09-18, on a switch between the two that the
+    // page carried — no need for it. Origin is still said on what is
+    // selected; it is never a filter.
+    private static bool Show(TopologyNode node) => node is not null;
 
-    private bool Show(CommunicationLink link) =>
-        Mode == TopologyMode.All
-        || (Mode == TopologyMode.Configured && link.Origin is TopologyOrigin.Configured or TopologyOrigin.Both)
-        || (Mode == TopologyMode.Observed && link.Origin is TopologyOrigin.Observed or TopologyOrigin.Both);
+    private static bool Show(CommunicationLink link) => link is not null;
+
+    // From what is selected to the same scope in the other two views: the
+    // topology is one of three points to drill from, and a node or a link
+    // ends at the actual configuration (ADR-0052, ruling 4).
+    private static RenderFragment Drill(string? scope) => __builder =>
+    {
+        if (!string.IsNullOrWhiteSpace(scope))
+        {
+            <p class="inspect-links">
+                <a href="@ScopeLink.Configuration(scope)">configuration</a>
+                <a href="@ScopeLink.Monitor(scope)">monitor</a>
+            </p>
+        }
+    };
+
+    private string? ScopeOf(string nodeId) =>
+        Snapshot.Nodes.FirstOrDefault(node => node.Id == nodeId)?.Scope;
 
     private string? Representative(
         string nodeId,
