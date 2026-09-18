@@ -19,7 +19,13 @@
    deeper branches open on a click — the browser's own details element, no
    script. A row links to the monitor's drill at that scope. What a surface
    does not publish — the declaration behind a scope, the binaries a node
-   runs — is not invented here. *@
+   runs — is not invented here.
+
+   Drilling to the problem (the owner, 2026-09-18: the severity is there and
+   the way to the problem area is not): a branch that is not fine names the
+   leaf that explains it, and links to that leaf's row; the branches on the
+   way to it stand open however deep, so the link lands on something
+   visible and the eye can follow the path without a click. *@
 <section class="tree">
     @if (All.Count == 0)
     {
@@ -32,10 +38,17 @@
             <span class="kind">cluster</span>
             <span class="label">@ClusterName</span>
             <span class="mood">@English.Mood(RootState)</span>
-            <span class="evidence">@All.Count thing(s) observed</span>
-            <a class="tree-link" href="/topology">topology</a>
+            <span class="evidence">@RootEvidence</span>
+            <span class="tree-links">
+                @if (RootWorst is { } worst && RootState != HealthState.Fine)
+                {
+                    <a class="tree-link problem"
+                       href="@ScopeLink.Configuration(worst.Scope)">problem</a>
+                }
+                <a class="tree-link" href="/topology">topology</a>
+            </span>
         </div>
-        @Level(ScopeTree.Root, 1)
+        @Level(ScopeTree.Root, 1, RootWorst?.Scope)
     }
 </section>
 
@@ -57,6 +70,14 @@
     private const int OpenDepth = 4;
 
     private HealthState RootState => ScopeTree.Rollup(All) ?? HealthState.Working;
+
+    // The leaf that explains the cluster's mood: the worst beneath the root.
+    private HealthRecord? RootWorst => ScopeTree.Worst(All);
+
+    private string RootEvidence => RootWorst is { } worst && RootState != HealthState.Fine
+        ? $"{All.Count} observed — worst {Relative(ScopeTree.Root, worst.Scope)}: " +
+            worst.Evidence
+        : $"{All.Count} thing(s) observed";
 
     // The cluster is the first segment beneath the root — one cluster per
     // surface today; the topology's navigation between clusters is queued.
@@ -104,8 +125,9 @@
     // One level of the tree beneath a scope. Configuration order, not trouble
     // order: the three stages in the order the message path runs them,
     // everything else by name. A branch with children is a details element,
-    // open down to the stage; a leaf is its row.
-    private RenderFragment Level(string scope, int depth) => __builder =>
+    // open down to the stage, and open beyond it where it lies on the way to
+    // `trouble`, the leaf that explains its parent; a leaf is its row.
+    private RenderFragment Level(string scope, int depth, string? trouble) => __builder =>
     {
         IReadOnlyList<Branch> branches =
         [
@@ -129,9 +151,9 @@
                     }
                     else
                     {
-                        <details open="@(depth < OpenDepth)">
+                        <details open="@(depth < OpenDepth || OnTheWay(branch.Scope, trouble))">
                             <summary>@Row(branch)</summary>
-                            @Level(branch.Scope, depth + 1)
+                            @Level(branch.Scope, depth + 1, TroubleBeneath(branch))
                         </details>
                     }
                 </li>
@@ -142,18 +164,50 @@
     private static RenderFragment Row(Branch branch) => __builder =>
     {
         string mood = English.Mood(branch.State);
-        <div class="tree-row @mood">
+        bool troubled = !branch.IsLeaf && branch.State != HealthState.Fine;
+        <div class="tree-row @mood" id="@ScopeLink.Anchor(branch.Scope)">
             <span class="dot" title="severity @branch.Worst.Severity"></span>
             <span class="kind">@Kind(branch.Scope)</span>
             <span class="label">@branch.Label</span>
             <span class="mood">@mood</span>
-            <span class="evidence">@(branch.IsLeaf ? branch.Worst.Evidence : $"{branch.Count} beneath")</span>
-            <a class="tree-link" href="@MonitorLink(branch.Scope)">monitor</a>
+            <span class="evidence" title="@Said(branch, troubled)">@Said(branch, troubled)</span>
+            <span class="tree-links">
+                @if (troubled)
+                {
+                    <a class="tree-link problem"
+                       href="@ScopeLink.Configuration(branch.Worst.Scope)">problem</a>
+                }
+                <a class="tree-link" href="@ScopeLink.Monitor(branch.Scope)">monitor</a>
+            </span>
         </div>
     };
 
-    private static string MonitorLink(string scope) =>
-        "/?scope=" + Uri.EscapeDataString(scope);
+    // A leaf says its evidence; a fine branch how much is beneath it; a
+    // troubled branch where the trouble is and what it says.
+    private static string Said(Branch branch, bool troubled)
+    {
+        if (branch.IsLeaf)
+        {
+            return branch.Worst.Evidence;
+        }
+
+        return troubled
+            ? $"{branch.Count} beneath — worst " +
+                $"{Relative(branch.Scope, branch.Worst.Scope)}: {branch.Worst.Evidence}"
+            : $"{branch.Count} beneath";
+    }
+
+    // The leaf that explains a branch, where the branch is not fine.
+    private static string? TroubleBeneath(Branch branch) =>
+        branch.State == HealthState.Fine ? null : branch.Worst.Scope;
+
+    private static bool OnTheWay(string scope, string? trouble) =>
+        trouble is not null
+        && (trouble == scope || trouble.StartsWith(scope + "/", StringComparison.Ordinal));
+
+    // A scope as it reads from a scope above it: the segments between them.
+    private static string Relative(string from, string scope) =>
+        string.Join('/', ScopeTree.Parts(scope).Skip(ScopeTree.Parts(from).Length));
 
     // What a scope is, from where it sits: the record names cluster, node and
     // the three stages; beneath a stage sits the Location or Xmip Process and
