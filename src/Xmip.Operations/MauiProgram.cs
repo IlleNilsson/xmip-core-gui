@@ -10,6 +10,13 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        // What this process says of itself while it runs (ADR-0053). The
+        // desktop configures and monitors a real node: runtime.
+        Xmip.Surface.ProcessDeclaration.Declare(
+            "xmip-operations",
+            Xmip.Surface.ScopeTree.Root,
+            Xmip.Surface.ProcessDeclaration.Runtime);
+
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
