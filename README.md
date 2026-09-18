@@ -30,7 +30,22 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-The monitor has two complementary views. The cluster board follows Xmip's
+Three views, and three points to drill from: **Configuration**, the classic
+tree, holding still; **Monitor**, the board that follows Receive → Process →
+Send; and **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18). A
+scope reached in one leads to the same scope in the others, written in one
+place, `ScopeLink`: a Configuration row to the Monitor's drill, the Monitor's
+drill to the Configuration row, a node or a link selected on the Topology to
+both. In the tree a branch that is not fine names the leaf that explains it
+and links to that leaf's row, with the way to it standing open. The Topology
+is always what is configured and what is observed, together; there is no
+switch between them.
+
+`src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
+the three views over the surface library's own published fixture, so what is
+asserted is what an operator sees and no surface is faked.
+
+The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
 and observed relationships between infrastructure endpoints, then drills through
 services, processes, interfaces, ports, protocols and locations. Its animated
