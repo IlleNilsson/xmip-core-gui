@@ -8,7 +8,9 @@
 
   <PropertyGroup>
     <RootNamespace>Xmip.Gui.Web</RootNamespace>
-    <AssemblyName>Xmip.Gui.Web</AssemblyName>
+    <!-- The System Process is xmip-gui-web (ADR-0053): every process Xmip
+         owns matches xmip-*. The project and its namespace keep their names. -->
+    <AssemblyName>xmip-gui-web</AssemblyName>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
 
     <!-- The web host reaches xmip_operate.h through Xmip.Surface's
