@@ -56,6 +56,16 @@ body {
 .bar .crumb { color: var(--muted); }
 .bar .source { margin-left: auto; color: var(--muted); font-size: 0.85rem; }
 
+/* What the run was started with: one quiet line under the bar, on every view. */
+.run-line {
+    margin: 0;
+    padding: 0.35rem 1.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+}
+
 .cluster {
     display: flex;
     align-items: center;

@@ -11,6 +11,8 @@
     <span class="source">@Surface.Source</span>
 </header>
 
+<RunLine Run="Surface.Run()" />
+
 <section class="topology-tools" aria-label="Topology controls">
     <button class="motion-toggle" @onclick="() => MotionPaused = !MotionPaused">
         @(MotionPaused ? "Resume movement" : "Pause movement")
@@ -32,7 +34,7 @@
     <section class="topology-empty">
         <h1>No communication topology published</h1>
         <p>@Snapshot.Source</p>
-        <p>Xmip draws what is configured and what is observed: a node run from configuration publishes its Locations and Processes, and the Playground's fleet publishes its nodes and their exchanges. Nothing is inferred from a socket.</p>
+        <p>Xmip draws what is configured and what is observed: a node run from configuration publishes its Locations and Processes, and a Playground cluster publishes its nodes, the stages each runs, their endpoints and the handoffs between them. Nothing is inferred from a socket.</p>
     </section>
 }
 else

@@ -52,9 +52,14 @@ services, processes, interfaces, ports, protocols and locations. Its animated
 movement represents application semantics — request/response, send/receive,
 publish/consume, streaming, fire-and-forget, sessions and retries — rather than
 decorative packets or an assumed bidirectional flow. The snapshot surface reads
-this model, and the Playground's fleet publishes it since 2026-09-14: the fleet,
-the shared store, one process per named node and each node's exchanges over
-claim, daily and its own snapshot (ADR-0052, amendment 2026-09-14, ruling 3).
+this model, and a Playground roll publishes it: the cluster, its nodes, the
+stages of the message path each node runs — receive, process, send — one
+endpoint per transport beneath a receive or a send stage, and the handoffs
+between the nodes, R to P to S, each link's volume its hops; the shared store
+is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
+ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
+started with — tests, cluster, nodes, which are online, the level — in one line
+at the top of all three views.
 The native operator boundary does not publish topology yet, so over that
 surface the view says so plainly; a node run from configuration is queue item
 1. Xmip draws what is configured and what is observed and infers nothing from
