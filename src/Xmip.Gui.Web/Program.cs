@@ -74,8 +74,8 @@ builder.Services.AddXmipSurfaceRelay();
 WebApplication app = builder.Build();
 
 // What this process says of itself while it runs (ADR-0053): the surface it
-// reads, and the purpose what started it stated. Start-XmipWeb says test
-// where it follows a Playground roll.
+// reads, and the purpose what started it stated. Start-XmipOperationWeb says
+// test where it follows a Playground roll.
 ProcessDeclaration.Declare(
     "xmip-gui-web",
     app.Configuration[SurfaceChoice.SnapshotKey]
