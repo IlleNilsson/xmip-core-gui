@@ -1,0 +1,14 @@
+@* What the run was started with, one line at the top of every view (the
+   owner, 2026-09-19): the tests, the cluster, the nodes, which of them are
+   online, how hard. Renders nothing when the publisher says nothing of its
+   run — a node run from configuration has no such thing to say. *@
+@if (Run is not null && Run.Said)
+{
+    <p class="run-line" aria-label="What this run was started with">@Run.Line()</p>
+}
+
+@code {
+    /// <summary>What the surface says of its run.</summary>
+    [Parameter]
+    public RunHeader? Run { get; set; }
+}

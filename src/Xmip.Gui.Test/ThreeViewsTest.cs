@@ -84,6 +84,16 @@ public sealed class ThreeViewsTest : BunitContext
     }
 
     [Fact]
+    public void ASurfaceThatSaysNothingOfItsRunShowsNoRunLine()
+    {
+        // The line is the run's (the owner, 2026-09-19); a snapshot with no
+        // [run] table reads as it always did, and no view invents one.
+        Assert.Empty(Render<Cluster>().FindAll("p.run-line"));
+        Assert.Empty(Render<Configuration>().FindAll("p.run-line"));
+        Assert.Empty(Render<Topology>().FindAll("p.run-line"));
+    }
+
+    [Fact]
     public void TheMonitorsDrillLeadsToTheConfigurationAtTheSameScope()
     {
         IRenderedComponent<Cluster> page = Render<Cluster>();

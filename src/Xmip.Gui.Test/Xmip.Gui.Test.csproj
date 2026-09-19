@@ -34,9 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- One fixture, the surface library's: a copy would drift from it. -->
+    <!-- The surface library's own fixtures: a copy would drift from them. -->
     <None Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Fixture\snapshot.toml"
           Link="Fixture\snapshot.toml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Fixture\cluster.toml"
+          Link="Fixture\cluster.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
