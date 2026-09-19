@@ -12,6 +12,9 @@
 
 <RunLine Run="Surface.Run()" />
 
+<ScopeFilterBox Id="filter-monitor" Pattern="@Pattern" PatternChanged="Filtered"
+                Said="@Filter.Said" />
+
 @* The cluster: how it is, and what it moves. An operator runs the message
    path — Receive, Process, Send — and looks at a node only when a stage is
    not Fine. So the stages are the landing page and the nodes are at the
@@ -58,11 +61,15 @@
         <a class="crumb-link" href="@ScopeLink.Configuration(Focus)">configuration</a>
     </nav>
     @{
-        IReadOnlyList<Branch> branches = Index.Branches(Focus);
+        IReadOnlyList<Branch> branches = Filter.Only(Index.Branches(Focus));
     }
     @if (branches.Count == 0)
     {
-        <p class="empty">Nothing beneath this point.</p>
+        <p class="empty">
+            @(Filter.Filtering
+                ? "Nothing beneath this point matches the filter."
+                : "Nothing beneath this point.")
+        </p>
     }
     else
     {
@@ -94,9 +101,9 @@
 <section class="list">
     <h2>@Heading <small>@Subheading</small></h2>
     @{
-        List<HealthRecord> shown = Selected is null
-            ? All.Where(r => r.State != HealthState.Fine).ToList()
-            : [.. InStage(Selected)];
+        List<HealthRecord> shown = [.. Filter.Only(Selected is null
+            ? All.Where(record => record.State != HealthState.Fine)
+            : InStage(Selected))];
     }
     @if (shown.Count == 0)
     {
@@ -134,13 +141,17 @@
 
 <section class="nodes">
     <h2>Nodes <small>infrastructure — where to look when a stage is not fine</small></h2>
-    @if (Nodes.Count == 0)
+    @if (ShownNodes.Count == 0)
     {
-        <p class="empty">Nothing has been published — @Surface.Source</p>
+        <p class="empty">
+            @(Filter.Filtering
+                ? "No node matches the filter."
+                : $"Nothing has been published — {Surface.Source}")
+        </p>
     }
     else
     {
-        @foreach (string node in Nodes)
+        @foreach (string node in ShownNodes)
         {
             IReadOnlyList<HealthRecord> onNode = OnNode(node);
             string nodeScope = ScopeTree.Root + node;
@@ -209,9 +220,26 @@
 
     private IReadOnlyList<string> Nodes { get; set; } = [];
 
+    // The filter narrows what is shown, never what the cluster is: the banner
+    // and the tiles say the whole cluster whatever is typed, so no pattern can
+    // make a troubled estate look fine (ADR-0052, amendment 2026-09-19).
+    private string Pattern { get; set; } = string.Empty;
+
+    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
+
+    private IReadOnlyList<string> ShownNodes =>
+        [.. Nodes.Where(node => Filter.Shows(ScopeTree.Root + node))];
+
+    private void Filtered(string pattern)
+    {
+        Pattern = pattern;
+        Read();
+    }
+
     private void Read()
     {
         Index = Surface.Index();
+        Filter = ScopeFilter.Over(Index, Pattern);
         All = Index.Health(ScopeTree.Root);
         Nodes = Index.Nodes();
         ByNode = Nodes.ToDictionary(
@@ -343,9 +371,11 @@
         Selected is null ? "everything not fine, worst first" : "every node, worst first";
 
     private string NothingShown =>
-        Selected is null
-            ? "Nothing needs attention."
-            : $"No {Selected.Name.ToLowerInvariant()} configured on any node.";
+        Filter.Filtering
+            ? "Nothing here matches the filter."
+            : Selected is null
+                ? "Nothing needs attention."
+                : $"No {Selected.Name.ToLowerInvariant()} configured on any node.";
 
     // A leaf shows its own evidence, as it does; a node row shows the worst
     // leaf's beneath it, named, not the first record's (ADR-0052 clause 2).
