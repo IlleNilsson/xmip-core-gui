@@ -12,6 +12,9 @@
 
 <RunLine Run="Surface.Run()" />
 
+<ScopeFilterBox Id="filter-configuration" Pattern="@Pattern" PatternChanged="Filtered"
+                Said="@Filter.Said" />
+
 @* The classic tree (the owner, 2026-09-14; ADR-0052 amendment 2026-09-14,
    ruling 1): the whole cluster, every node, receive → process → send beneath
    each, and every Location, Xmip Process and technology beneath those, in
@@ -63,6 +66,19 @@
     // The publication as its tree, built once per read (ADR-0052, amendment
     // 2026-09-15): every level here is a lookup, put into configuration order.
     private ScopeIndex Index { get; set; } = ScopeIndex.Empty("nothing read yet");
+
+    // The tree keeps the path down to what matched, however deep, so a row a
+    // pattern names can still be reached; a row that matched shows everything
+    // beneath it, because a node named whole is a node with its own tree.
+    private string Pattern { get; set; } = string.Empty;
+
+    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
+
+    private void Filtered(string pattern)
+    {
+        Pattern = pattern;
+        Read();
+    }
 
     private readonly CancellationTokenSource _stop = new();
 
@@ -122,6 +138,7 @@
     {
         Index = Surface.Index();
         All = Index.Health(ScopeTree.Root);
+        Filter = ScopeFilter.Over(Index, Pattern);
     }
 
     // One level of the tree beneath a scope. Configuration order, not trouble
@@ -133,7 +150,7 @@
     {
         IReadOnlyList<Branch> branches =
         [
-            .. Index.Branches(scope)
+            .. Filter.Only(Index.Branches(scope))
                 .OrderBy(branch => StageOrder(branch.Label))
                 .ThenBy(branch => branch.Label, StringComparer.Ordinal),
         ];
@@ -153,7 +170,11 @@
                     }
                     else
                     {
-                        <details open="@(depth < OpenDepth || OnTheWay(branch.Scope, trouble))">
+                        @* A filtered tree stands open to what it kept: the
+                           rows are few, and the operator asked for them. *@
+                        <details open="@(Filter.Filtering
+                                         || depth < OpenDepth
+                                         || OnTheWay(branch.Scope, trouble))">
                             <summary>@Row(branch)</summary>
                             @Level(branch.Scope, depth + 1, TroubleBeneath(branch))
                         </details>

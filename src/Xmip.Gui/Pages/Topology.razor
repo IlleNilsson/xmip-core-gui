@@ -11,6 +11,9 @@
 
 <RunLine Run="Surface.Run()" />
 
+<ScopeFilterBox Id="filter-topology" Pattern="@Pattern" PatternChanged="Filtered"
+                Said="@Filter.Said" />
+
 <section class="topology-tools" aria-label="Topology controls">
     <button class="motion-toggle" @onclick="() => MotionPaused = !MotionPaused">
         @(MotionPaused ? "Resume movement" : "Pause movement")
@@ -27,7 +30,16 @@
     }
 </nav>
 
-@if (Snapshot.Nodes.Count == 0)
+@if (Whole.Nodes.Count > 0 && Snapshot.Nodes.Count == 0)
+{
+    @* Drawn nothing because the filter kept nothing, which is not the same
+       as a cluster that publishes no topology. *@
+    <section class="topology-empty">
+        <h1>Nothing matches @Filter.Pattern</h1>
+        <p>@Filter.Said</p>
+    </section>
+}
+else if (Snapshot.Nodes.Count == 0)
 {
     <section class="topology-empty">
         <h1>No communication topology published</h1>
@@ -64,8 +76,24 @@ else
     [Inject]
     private IOperatorSurface Surface { get; set; } = default!;
 
+    // What the surface published, and what the filter leaves of it. The
+    // filter narrows the nodes; a link is drawn only where both of its ends
+    // are still there, since a line to something hidden points at nothing.
+    private TopologySnapshot Whole { get; set; } =
+        TopologySnapshot.Empty("no topology read");
+
     private TopologySnapshot Snapshot { get; set; } =
         TopologySnapshot.Empty("no topology read");
+
+    private string Pattern { get; set; } = string.Empty;
+
+    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
+
+    private void Filtered(string pattern)
+    {
+        Pattern = pattern;
+        Read();
+    }
 
     // The publication as its tree, read with the topology: what each node
     // declared it can do is a lookup in it, never a second parse of the file
@@ -147,8 +175,10 @@ else
 
     private void Read()
     {
-        Snapshot = Surface.Topology();
+        Whole = Surface.Topology();
         Index = Surface.Index();
+        Filter = ScopeFilter.Over(Index, Pattern);
+        Snapshot = Filter.Only(Whole);
         Run = Surface.Run();
 
         if (FocusId is not null && !Snapshot.Nodes.Any(node => node.Id == FocusId))

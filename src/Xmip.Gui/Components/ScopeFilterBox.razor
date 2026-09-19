@@ -1,0 +1,52 @@
+@* One line, on every view: the pattern that narrows what is shown, and what
+   came of it. The rule is the estate's, not PowerShell's (ADR-0059 clause 7):
+   a thing that selects among scopes that already exist takes a wildcard, and
+   the wildcard is `*` and `?` — never a regular expression. The matching is
+   Xmip.Surface's, the same one the prompt and the executable use, so an
+   operator who learns the pattern at one surface is right at the others.
+
+   It narrows on Enter or on leaving the box, not on every keystroke: a view
+   over eleven thousand scopes would otherwise re-render itself under the
+   operator's fingers. The empty box is everything, and nothing matched says
+   so here in words — never as a page that has quietly gone blank. *@
+
+<div class="scope-filter">
+    <label for="@Id">filter</label>
+    <input id="@Id" class="scope-filter-input" type="search" value="@Pattern"
+           placeholder="scope pattern — * and ?, empty is everything"
+           @onchange="Typed" />
+    @if (Said.Length > 0)
+    {
+        <span class="scope-filter-said @(Refused ? "refused" : "")">@Said</span>
+    }
+</div>
+
+@code {
+
+    /// <summary>The pattern as the operator last left it.</summary>
+    [Parameter]
+    public string Pattern { get; set; } = string.Empty;
+
+    /// <summary>Raised with what the operator typed, the empty string
+    /// included — that is how a filter is taken off again.</summary>
+    [Parameter]
+    public EventCallback<string> PatternChanged { get; set; }
+
+    /// <summary>What the view says about the filter: the count, or the
+    /// refusal (<see cref="ScopeFilter.Said"/>).</summary>
+    [Parameter]
+    public string Said { get; set; } = string.Empty;
+
+    /// <summary>Which view this box belongs to, so two of them on one page
+    /// could never share an identifier.</summary>
+    [Parameter]
+    public string Id { get; set; } = "scope-filter";
+
+    private bool Refused =>
+        Said.StartsWith("REFUSED", StringComparison.Ordinal);
+
+    private Task Typed(ChangeEventArgs typed)
+    {
+        return PatternChanged.InvokeAsync(typed.Value?.ToString() ?? string.Empty);
+    }
+}
