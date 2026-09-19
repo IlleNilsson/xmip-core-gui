@@ -16,7 +16,8 @@ namespace Xmip.Gui.Test;
 /// </summary>
 public sealed class ClusterTopologyTest : BunitContext
 {
-    private const string RunLine = "RoundTrip · C1 · nodes R1 P1 S1 · online R1 · realistic";
+    private const string RunLine =
+        "RoundTrip · C1 · nodes R1=receive P1=process+send S1=send · online R1 · realistic";
 
     public ClusterTopologyTest()
     {
@@ -76,6 +77,52 @@ public sealed class ClusterTopologyTest : BunitContext
         Select(page, "tcp");
         Assert.Equal("endpoint", page.Find(".topology-inspector dd").TextContent);
         Assert.Empty(page.FindAll("button.inspect-action"));
+    }
+
+    /// <summary>
+    /// What a node declares it can do reaches the operator where the operator
+    /// looks at that node (ADR-0056; ADR-0014, amendment 2026-09-19): in the
+    /// run line at the top of every view, on the node in the topology's
+    /// inspector, and as a row of its own in the configuration tree, where the
+    /// publisher's whole sentence is — including the two kinds this rig does
+    /// not model.
+    /// </summary>
+    [Fact]
+    public void ANodesDeclaredCapabilityIsVisibleWhereAnOperatorLooksAtThatNode()
+    {
+        IRenderedComponent<Topology> page = Render<Topology>();
+
+        Open(page, "C1");
+        Select(page, "P1");
+
+        IElement declared = page.Find(".topology-inspector dd.capability");
+        Assert.Equal("process+send", declared.TextContent.Split('·')[0].Trim());
+        Assert.Contains("published by the node", declared.TextContent, StringComparison.Ordinal);
+        Assert.Contains(
+            "authentication and runtime capability are not modelled",
+            declared.GetAttribute("title") ?? string.Empty,
+            StringComparison.Ordinal);
+
+        Select(page, "R1");
+        Assert.Contains(
+            "receive · online",
+            page.Find(".topology-inspector dd.capability").TextContent,
+            StringComparison.Ordinal);
+
+        // A stage is not something that declares, so nothing is said of one.
+        Open(page, "R1");
+        Select(page, "receive");
+        Assert.Empty(page.FindAll(".topology-inspector dd.capability"));
+
+        // The configuration tree carries the node's own words, whole, at a row
+        // of its own beneath the node.
+        IRenderedComponent<Configuration> tree = Render<Configuration>();
+        IElement row = tree.Find($"#{ScopeLink.Anchor("xmip:///C1/node/S1/capability")}");
+        Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
+        Assert.Equal(
+            "declares send; offline; authentication and runtime capability are "
+                + "not modelled in this rig",
+            row.QuerySelector(".evidence")?.TextContent);
     }
 
     [Fact]
