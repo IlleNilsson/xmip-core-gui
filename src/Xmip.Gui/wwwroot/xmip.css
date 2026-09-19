@@ -411,6 +411,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-inspector dt { color: var(--muted); font-size: 0.8rem; }
 .topology-inspector dd { margin: 0; overflow-wrap: anywhere; }
 .topology-inspector .mono { font-family: ui-monospace, monospace; font-size: 0.8rem; }
+.topology-inspector dd.capability small { display: block; color: var(--muted); font-size: 0.75rem; }
 .topology-inspector dd.done { color: var(--red); font-weight: 700; }
 .topology-inspector dd.stressed { color: var(--yellow); font-weight: 700; }
 .topology-inspector dd.working { color: var(--blue); font-weight: 700; }

@@ -1,0 +1,288 @@
+@* The topology's canvas: every visible node placed on a ring, the
+   communication between them drawn as a curve, and application movement as
+   particles running along it. Animation represents application movement; the
+   line remains the configured or observed relationship.
+
+   What is drawn is what is configured and what is observed, together (the
+   owner, 2026-09-18) — origin is said on what is selected, and is never a
+   filter here. The legend names the patterns. *@
+@using static Xmip.Gui.Surface.TopologyWords
+
+<div class="topology-canvas">
+    <svg viewBox="0 0 1000 620" role="img"
+         aria-label="Configured and observed communication topology">
+        <defs>
+            <marker id="topology-arrow" markerWidth="8" markerHeight="8"
+                    refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,4 L0,8 z" class="arrow-head" />
+            </marker>
+        </defs>
+
+        @foreach (RenderedLink link in RenderedLinks)
+        {
+            <g class="@LinkClass(link.Link)">
+                <path class="link-hit" d="@Curve(link)"
+                      @onclick="() => OnSelectLink.InvokeAsync(link.Link)" />
+                <path id="@SvgId(link.Link.Id)" class="link-line" d="@Curve(link)"
+                      marker-end="url(#topology-arrow)" />
+                @if (!MotionPaused)
+                {
+                    @for (int particle = 0; particle < Particles(link.Link); particle++)
+                    {
+                        bool reverse = Reverse(link.Link, particle);
+                        <circle @key="particle" class="flow-particle"
+                                r="@Radius(link.Link)">
+                            <animateMotion path="@Motion(link, reverse)"
+                                           dur="@Duration(link.Link)"
+                                           begin="@($"{particle * -0.55}s")"
+                                           repeatCount="indefinite" />
+                        </circle>
+                    }
+                }
+            </g>
+        }
+
+        @foreach (PlacedNode placed in PlacedNodes)
+        {
+            TopologyNode node = placed.Node;
+            <g class="@NodeClass(node)"
+               transform="@Transform(placed)"
+               style="@NodeStyle(node)"
+               tabindex="0"
+               role="button"
+               @onclick="() => OnSelectNode.InvokeAsync(node)">
+                <title>@Title(node)</title>
+                <circle class="node-pulse" r="42" />
+                <rect class="node-body" x="-64" y="-34" width="128" height="68" rx="12" />
+                <circle class="node-state" cx="-47" cy="-17" r="6" />
+                <text class="node-label" text-anchor="middle" y="-3">@node.Label</text>
+                <text class="node-kind" text-anchor="middle" y="16">@Kind(node.Kind)</text>
+                <rect class="node-load-track" x="-48" y="24" width="96" height="4" rx="2" />
+                <rect class="node-load" x="-48" y="24" width="@LoadWidth(node)"
+                      height="4" rx="2" />
+            </g>
+        }
+    </svg>
+
+    <div class="topology-legend" aria-label="Communication pattern legend">
+        @foreach (CommunicationPattern pattern in Enum.GetValues<CommunicationPattern>())
+        {
+            <span class="@Pattern(pattern)"><i></i>@PatternName(pattern)</span>
+        }
+    </div>
+</div>
+
+@code {
+
+    private sealed record PlacedNode(TopologyNode Node, double X, double Y);
+
+    private sealed record RenderedLink(
+        CommunicationLink Link,
+        PlacedNode From,
+        PlacedNode To,
+        int Index);
+
+    /// <summary>The configured and observed topology to draw.</summary>
+    [Parameter]
+    public TopologySnapshot Snapshot { get; set; } = TopologySnapshot.Empty("no topology read");
+
+    /// <summary>The node whose components are open, or null for infrastructure.</summary>
+    [Parameter]
+    public string? FocusId { get; set; }
+
+    /// <summary>Whether the operator has paused the movement along the lines.</summary>
+    [Parameter]
+    public bool MotionPaused { get; set; }
+
+    /// <summary>Raised with the node the operator clicked.</summary>
+    [Parameter]
+    public EventCallback<TopologyNode> OnSelectNode { get; set; }
+
+    /// <summary>Raised with the communication relationship the operator clicked.</summary>
+    [Parameter]
+    public EventCallback<CommunicationLink> OnSelectLink { get; set; }
+
+    private IReadOnlyDictionary<string, TopologyNode> NodeById =>
+        Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
+
+    private IReadOnlyList<TopologyNode> VisibleNodes
+    {
+        get
+        {
+            IEnumerable<TopologyNode> nodes = FocusId is null
+                ? Snapshot.Nodes.Where(node => node.ParentId is null)
+                : Snapshot.Nodes.Where(node => node.ParentId == FocusId)
+                    .Concat(Snapshot.Nodes.Where(node =>
+                        node.ParentId is null && node.Id != FocusId));
+
+            return nodes.Where(Show)
+                .DistinctBy(node => node.Id)
+                .OrderBy(node => node.Label)
+                .ToList();
+        }
+    }
+
+    private IReadOnlyList<PlacedNode> PlacedNodes
+    {
+        get
+        {
+            IReadOnlyList<TopologyNode> nodes = VisibleNodes;
+            List<PlacedNode> placed = [];
+
+            for (int index = 0; index < nodes.Count; index++)
+            {
+                double angle = -Math.PI / 2D + (2D * Math.PI * index / Math.Max(nodes.Count, 1));
+                double radius = nodes.Count <= 2 ? 185D : 235D;
+                placed.Add(new PlacedNode(
+                    nodes[index],
+                    500D + Math.Cos(angle) * radius,
+                    300D + Math.Sin(angle) * radius));
+            }
+
+            return placed;
+        }
+    }
+
+    private IReadOnlyList<RenderedLink> RenderedLinks
+    {
+        get
+        {
+            IReadOnlyList<PlacedNode> placed = PlacedNodes;
+            Dictionary<string, PlacedNode> positions =
+                placed.ToDictionary(item => item.Node.Id, StringComparer.Ordinal);
+            List<RenderedLink> links = [];
+
+            foreach (CommunicationLink link in Snapshot.Links.Where(Show))
+            {
+                string? from = Representative(link.From, positions);
+                string? to = Representative(link.To, positions);
+
+                if (from is null || to is null || from == to)
+                {
+                    continue;
+                }
+
+                links.Add(new RenderedLink(link, positions[from], positions[to], links.Count));
+            }
+
+            return links;
+        }
+    }
+
+    // The topology is always what is configured and what is observed,
+    // together: the owner, 2026-09-18, on a switch between the two that the
+    // page carried — no need for it. Origin is still said on what is
+    // selected; it is never a filter.
+    private static bool Show(TopologyNode node) => node is not null;
+
+    private static bool Show(CommunicationLink link) => link is not null;
+
+    // A link between things that are closed is drawn between the open
+    // ancestors that hold them: R1 to P1 while the stages are closed.
+    private string? Representative(
+        string nodeId,
+        IReadOnlyDictionary<string, PlacedNode> positions)
+    {
+        string? current = nodeId;
+
+        while (current is not null)
+        {
+            if (positions.ContainsKey(current))
+            {
+                return current;
+            }
+
+            current = NodeById.TryGetValue(current, out TopologyNode? node)
+                ? node.ParentId
+                : null;
+        }
+
+        return null;
+    }
+
+    private static string LinkClass(CommunicationLink link) =>
+        $"topology-link {Mood(link.State)} {Origin(link.Origin)} {Pattern(link.Pattern)}";
+
+    private static string NodeClass(TopologyNode node) =>
+        $"topology-node {Mood(node.State)} {Origin(node.Origin)} "
+        + (node.Activity > 0.05 ? "active" : "");
+
+    private static string Title(TopologyNode node) =>
+        $"{node.Label}: {node.Kind}, {English.Mood(node.State)}. {node.Evidence}";
+
+    private static string Transform(PlacedNode node) =>
+        FormattableString.Invariant($"translate({node.X:0.##} {node.Y:0.##})");
+
+    private static string NodeStyle(TopologyNode node)
+    {
+        double activity = Math.Clamp(node.Activity, 0D, 1D);
+        double load = Math.Clamp(node.Load, 0D, 1D);
+
+        return FormattableString.Invariant($"--activity:{activity:0.###};--load:{load:0.###}");
+    }
+
+    private static double LoadWidth(TopologyNode node) =>
+        96D * Math.Clamp(node.Load, 0D, 1D);
+
+    private static string SvgId(string id)
+    {
+        return "topology-" + string.Concat(id.Select(character =>
+            char.IsLetterOrDigit(character) ? character : '-'));
+    }
+
+    private static int Stable(string value) =>
+        value.Aggregate(17, (hash, character) => unchecked(hash * 31 + character));
+
+    private static string Curve(RenderedLink link)
+    {
+        double fromX = link.From.X;
+        double fromY = link.From.Y;
+        double toX = link.To.X;
+        double toY = link.To.Y;
+        double middleX = (fromX + toX) / 2D;
+        double middleY = (fromY + toY) / 2D;
+        double dx = toX - fromX;
+        double dy = toY - fromY;
+        double length = Math.Max(Math.Sqrt(dx * dx + dy * dy), 1D);
+        uint stable = unchecked((uint)Stable(link.Link.Id));
+        double bend = ((stable % 5U) - 2D) * 14D;
+        double controlX = middleX - dy / length * bend;
+        double controlY = middleY + dx / length * bend;
+
+        return FormattableString.Invariant(
+            $"M {fromX:0.##} {fromY:0.##} Q {controlX:0.##} {controlY:0.##} {toX:0.##} {toY:0.##}");
+    }
+
+    private static string Motion(RenderedLink link, bool reverse) =>
+        reverse
+            ? FormattableString.Invariant(
+                $"M {link.To.X:0.##} {link.To.Y:0.##} L {link.From.X:0.##} {link.From.Y:0.##}")
+            : FormattableString.Invariant(
+                $"M {link.From.X:0.##} {link.From.Y:0.##} L {link.To.X:0.##} {link.To.Y:0.##}");
+
+    private static int Radius(CommunicationLink link) =>
+        link.Pattern == CommunicationPattern.Streaming ? 4 : 5;
+
+    private static int Particles(CommunicationLink link) =>
+        link.Pattern switch
+        {
+            CommunicationPattern.Streaming => 4,
+            CommunicationPattern.Session => 2,
+            CommunicationPattern.RequestResponse => 2,
+            CommunicationPattern.Retry => (int)Math.Clamp(link.Attempts, 1U, 4U),
+            _ => 1,
+        };
+
+    private static bool Reverse(CommunicationLink link, int particle) =>
+        link.Pattern is CommunicationPattern.RequestResponse or CommunicationPattern.Session
+        && particle % 2 == 1;
+
+    private static string Duration(CommunicationLink link)
+    {
+        double seconds = link.Pattern == CommunicationPattern.Streaming
+            ? 1.1D
+            : Math.Clamp(3.2D - Math.Log10(link.Rate + 1D), 0.8D, 3.2D);
+
+        return FormattableString.Invariant($"{seconds:0.##}s");
+    }
+}

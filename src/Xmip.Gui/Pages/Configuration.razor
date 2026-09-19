@@ -219,6 +219,13 @@
         string[] parts = ScopeTree.Parts(scope);
         string stage = ScopeTree.Stage(scope);
 
+        // What a node declares it can do is not a technology beneath it
+        // (ADR-0056): it is the node's own statement, and it says so.
+        if (parts.Length >= 2 && string.Equals(parts[^1], "capability", StringComparison.Ordinal))
+        {
+            return "capability";
+        }
+
         return parts.Length switch
         {
             1 => "cluster",
