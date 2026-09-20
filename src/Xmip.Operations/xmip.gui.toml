@@ -22,8 +22,10 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 # (ADR-0014, amendment of 2026-09-05). Remove the line to start nothing.
 NodeConfiguration = "module/operation/gui/samples/edge-01.xmip.toml"
 
-# The file to read when Surface = "snapshot". A path with no file behind it
-# is said so on the page, not silently replaced.
+# The file to read when Surface = "snapshot". The Playground writes
+# <cluster>-snapshot.toml, named for whatever the roll's cluster was called;
+# name the file yours writes. A path with no file behind it is said so on the
+# page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
 
 # The web host to follow when Surface = "remote".

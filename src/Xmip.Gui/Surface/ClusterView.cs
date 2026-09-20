@@ -6,8 +6,9 @@ namespace Xmip.Gui.Surface;
 /// <summary>
 /// What each of the three views is: a face over one cluster of the set the
 /// host holds (ADR-0052, amendment 2026-09-20). Which cluster is in the
-/// address — <c>?cluster=C2</c> — so a link carries it, a reload keeps it and
-/// two browser tabs can watch two clusters at once. A view told nothing, or
+/// address — <c>?cluster=&lt;name&gt;</c>, whatever the cluster was named — so
+/// a link carries it, a reload keeps it and two browser tabs can watch two
+/// clusters at once. A view told nothing, or
 /// told a cluster this host does not hold, is on the first: a roll that ended
 /// leaves a link behind, and the answer to that is the other cluster, never an
 /// error page.
