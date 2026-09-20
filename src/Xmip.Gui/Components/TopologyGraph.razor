@@ -178,7 +178,7 @@
     private static bool Show(CommunicationLink link) => link is not null;
 
     // A link between things that are closed is drawn between the open
-    // ancestors that hold them: R1 to P1 while the stages are closed.
+    // ancestors that hold them: node to node while the stages are closed.
     private string? Representative(
         string nodeId,
         IReadOnlyDictionary<string, PlacedNode> positions)
