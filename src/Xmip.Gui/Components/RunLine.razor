@@ -1,14 +1,63 @@
+@using Xmip.Gui.Surface
+@inject ClusterSurfaces Surfaces
+@inject NavigationManager Nav
+
 @* What the run was started with, one line at the top of every view (the
    owner, 2026-09-19): the tests, the cluster, the nodes, which of them are
    online, how hard. Renders nothing when the publisher says nothing of its
-   run — a node run from configuration has no such thing to say. *@
-@if (Run is not null && Run.Said)
+   run — a node run from configuration has no such thing to say.
+
+   Where the host holds more than one cluster (ADR-0052, amendment 2026-09-20)
+   the clusters stand at the head of this same line, the one in view marked.
+   On this line and not on a line of its own: the views are crowded (the
+   owner, twice), there is a run line and a filter line already, and what a
+   view is showing belongs beside what that run was started with. A host with
+   one cluster draws nothing new, so nothing changes for it. *@
+@if (Surfaces.Several || Said.Length > 0)
 {
-    <p class="run-line" aria-label="What this run was started with">@Run.Line()</p>
+    <p class="run-line" aria-label="What this run was started with">
+        @if (Surfaces.Several)
+        {
+            <span class="run-clusters" aria-label="Cluster">
+                @foreach (string held in Surfaces.Clusters)
+                {
+                    <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
+                       title="@Title(held)" href="@ScopeLink.Cluster(Path, held)">@held</a>
+                }
+            </span>
+        }
+        @Said
+    </p>
 }
 
 @code {
     /// <summary>What the surface says of its run.</summary>
     [Parameter]
     public RunHeader? Run { get; set; }
+
+    /// <summary>Which cluster the view is on, so the chooser marks it.</summary>
+    [Parameter]
+    public string? Cluster { get; set; }
+
+    private string Said => Run is { Said: true } run ? run.Line() : string.Empty;
+
+    // The address the operator is on, without its query: switching cluster
+    // keeps the view and starts the drill and the filter over (ScopeLink).
+    private string Path => Nav.ToBaseRelativePath(Nav.Uri);
+
+    private bool Showing(string held) =>
+        string.Equals(held, Surfaces.Showing(Cluster), StringComparison.Ordinal);
+
+    private string Mark(string held) =>
+        (Showing(held) ? "current" : string.Empty)
+        + (Surfaces.Publishing(held) ? string.Empty : " ended");
+
+    // Blazor leaves out an attribute whose value is null, so a pick that is
+    // not the one in view carries no aria-current at all.
+    private string? Here(string held) => Showing(held) ? "page" : null;
+
+    private string Title(string held) =>
+        Surfaces.Publishing(held)
+            ? $"cluster {held}"
+            : $"cluster {held} — nothing published; its roll has ended";
 }

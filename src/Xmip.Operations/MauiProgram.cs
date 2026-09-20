@@ -70,6 +70,14 @@ public static class MauiProgram
             return surface;
         });
 
+        // The desktop routes to the same pages, and a page reads the set its
+        // host holds (ADR-0052, amendment 2026-09-20). The desktop starts a
+        // node from the surface it configures, so its set is that one surface;
+        // a desktop over a list of snapshots is the web host's shape and is
+        // not what the desktop is for.
+        builder.Services.AddSingleton(services =>
+            ClusterSurfaces.Over(services.GetRequiredService<IOperatorSurface>()));
+
         // Validate and Start on the Configure page go through the runtime the
         // board reads when that is the native one; over a snapshot, the
         // runtime is found by the one rule and loaded for the commands alone.

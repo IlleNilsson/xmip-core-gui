@@ -21,7 +21,7 @@ public sealed class ScopeFilterViewTest : BunitContext
     public ScopeFilterViewTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
-        Services.AddSingleton<IOperatorSurface>(new SnapshotOperator(fixture));
+        Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer));
     }
 

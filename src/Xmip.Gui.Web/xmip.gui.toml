@@ -25,6 +25,14 @@ RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dl
 # .local-work/playground at the estate root; name the same file here. A path
 # with no file behind it is said so on the page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
+#
+# A list is one cluster per file, and the three views say which cluster they
+# are on and move between them (ADR-0052, amendment 2026-09-20). Two files
+# publishing one cluster are REFUSED, because a cluster rolls once.
+# Snapshot = [
+#   "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml",
+#   "D:/Repos/Xmip/.local-work/playground/C2-snapshot.toml",
+# ]
 
 # The web host to follow when Surface = "remote". A host that does not answer
 # is said so on the page.

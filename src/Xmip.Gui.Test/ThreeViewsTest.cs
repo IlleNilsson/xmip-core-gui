@@ -20,7 +20,7 @@ public sealed class ThreeViewsTest : BunitContext
     public ThreeViewsTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "snapshot.toml");
-        Services.AddSingleton<IOperatorSurface>(new SnapshotOperator(fixture));
+        Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer));
     }
 

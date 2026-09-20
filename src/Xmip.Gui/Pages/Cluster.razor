@@ -1,6 +1,6 @@
 @page "/"
 @using Xmip.Gui.Surface
-@implements IDisposable
+@inherits ClusterView
 
 <PageTitle>Xmip — Cluster</PageTitle>
 
@@ -10,7 +10,7 @@
     <span class="source">@Surface.Source</span>
 </header>
 
-<RunLine Run="Surface.Run()" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" />
 
 <ScopeFilterBox Id="filter-monitor" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -58,7 +58,7 @@
             <button class="crumb-btn" @onclick="() => Focus = crumb.Scope">@crumb.Label</button>
             <span class="sep">/</span>
         }
-        <a class="crumb-link" href="@ScopeLink.Configuration(Focus)">configuration</a>
+        <a class="crumb-link" href="@ScopeLink.Configuration(Focus, Cluster)">configuration</a>
     </nav>
     @{
         IReadOnlyList<Branch> branches = Filter.Only(Index.Branches(Focus));
@@ -197,9 +197,6 @@
             ScopeTree.CountedAt(segment))),
     ];
 
-    [Inject]
-    private IOperatorSurface Surface { get; set; } = default!;
-
     // The role decides whether actions are even offered (ADR-0009): an Observer
     // watches and is shown no Pause or Resume; an Operator acts.
     [Inject]
@@ -236,11 +233,19 @@
         Read();
     }
 
-    private void Read()
+    protected override void Read()
     {
         Index = Surface.Index();
         Filter = ScopeFilter.Over(Index, Pattern);
         All = Index.Health(ScopeTree.Root);
+
+        // A scope of the cluster being left is in no tree here, so the drill
+        // starts at the root rather than at a point that says nothing.
+        if (!Index.Contains(Focus))
+        {
+            Focus = ScopeTree.Root;
+        }
+
         Nodes = Index.Nodes();
         ByNode = Nodes.ToDictionary(
             node => node,
@@ -261,9 +266,6 @@
     // that scope (ADR-0052 amendment 2026-09-14: links end where the thing is).
     [SupplyParameterFromQuery(Name = "scope")]
     public string? RequestedScope { get; set; }
-
-
-    private readonly CancellationTokenSource _stop = new();
 
     /// <summary>A count as the board last saw it change: the value, when, by how
     /// much and over how long — the flow an operator watches, not a total.</summary>
@@ -292,44 +294,17 @@
         return seen;
     }
 
+    // The base reads the cluster in view and follows its change feed; the
+    // drill is this page's own, and a link that named a scope lands on it.
     protected override void OnParametersSet()
     {
-        Read();
+        base.OnParametersSet();
 
-        if (!string.IsNullOrWhiteSpace(RequestedScope) && RequestedScope != Focus)
+        if (!string.IsNullOrWhiteSpace(RequestedScope) && RequestedScope != Focus
+            && Index.Contains(RequestedScope))
         {
             Focus = RequestedScope;
         }
-    }
-
-    protected override void OnInitialized()
-    {
-        _ = ObserveAsync();
-    }
-
-    private async Task ObserveAsync()
-    {
-        try
-        {
-            await foreach (SurfaceChange _ in Surface.WatchAsync(_stop.Token))
-            {
-                await InvokeAsync(() =>
-                {
-                    Read();
-                    StateHasChanged();
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Leaving the page is the normal end of its subscription.
-        }
-    }
-
-    public void Dispose()
-    {
-        _stop.Cancel();
-        _stop.Dispose();
     }
 
     private void Select(Stage stage)

@@ -50,21 +50,30 @@ builder.Services.AddRazorComponents()
 // the desktop is the desktop's to decide.
 builder.Services.AddSingleton(new RoleContext(Role.Observer));
 
-// One surface for every screen, chosen in xmip.gui.toml and never guessed
+// The surfaces every screen reads, chosen in xmip.gui.toml and never guessed
 // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
-// path. This host loads no node and starts nothing — a node is started from
-// the desktop or the CLI. Relative paths in the file resolve against the
-// content root, which is where the file itself is: the project directory
-// under `dotnet run`, the application's own directory once published.
-builder.Services.AddSingleton<IOperatorSurface>(services =>
+// path — or, since the amendment of 2026-09-20, one snapshot per cluster, so
+// one host serves two rolls and the views move between them. This host loads
+// no node and starts nothing — a node is started from the desktop or the CLI.
+// Relative paths in the file resolve against the content root, which is where
+// the file itself is: the project directory under `dotnet run`, the
+// application's own directory once published.
+builder.Services.AddSingleton(services =>
 {
-    IOperatorSurface surface = SurfaceChoice.Open(
+    ClusterSurfaces held = SurfaceChoice.OpenAll(
         services.GetRequiredService<IConfiguration>(), builder.Environment.ContentRootPath);
 
-    services.GetRequiredService<ILogger<Program>>().ReadingSurface(surface.Source);
+    services.GetRequiredService<ILogger<Program>>().ReadingSurface(held.Source);
 
-    return surface;
+    return held;
 });
+
+// The relay serves one host's surface (ADR-0052, amendment 2026-09-15), and a
+// surface is one cluster's publication. Where this host holds several, what it
+// serves over the hub is the first — a remote surface reads one tree, and a
+// tree of two clusters is a scope that is in neither.
+builder.Services.AddSingleton(
+    services => services.GetRequiredService<ClusterSurfaces>().First);
 
 // This host's surface, served: the CLI, the PowerShell module and a GUI on
 // another machine follow it over SignalR and are told when it changes, never
@@ -78,11 +87,18 @@ WebApplication app = builder.Build();
 // test where it follows a Playground roll.
 ProcessDeclaration.Declare(
     "xmip-gui-web",
-    app.Configuration[SurfaceChoice.SnapshotKey]
+    Located(SurfaceChoice.Snapshots(app.Configuration))
         ?? app.Configuration[SurfaceChoice.UrlKey]
         ?? app.Configuration[SurfaceChoice.SurfaceKey]
         ?? ScopeTree.Root,
     ProcessDeclaration.PurposeOf(app.Configuration));
+
+// Where this host reads: the one snapshot it follows, or every one of them
+// where it holds several clusters (ADR-0052, amendment 2026-09-20).
+static string? Located(IReadOnlyList<string> snapshots)
+{
+    return snapshots.Count == 0 ? null : string.Join(", ", snapshots);
+}
 
 if (!app.Environment.IsDevelopment())
 {
