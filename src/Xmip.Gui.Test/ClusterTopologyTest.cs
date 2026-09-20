@@ -22,7 +22,7 @@ public sealed class ClusterTopologyTest : BunitContext
     public ClusterTopologyTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
-        Services.AddSingleton<IOperatorSurface>(new SnapshotOperator(fixture));
+        Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer));
     }
 

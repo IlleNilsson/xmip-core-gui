@@ -1,6 +1,6 @@
 @page "/configuration"
 @using Xmip.Gui.Surface
-@implements IDisposable
+@inherits ClusterView
 
 <PageTitle>Xmip — Configuration</PageTitle>
 
@@ -10,7 +10,7 @@
     <span class="source">@Surface.Source</span>
 </header>
 
-<RunLine Run="Surface.Run()" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" />
 
 <ScopeFilterBox Id="filter-configuration" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -48,19 +48,16 @@
                 @if (RootWorst is { } worst && RootState != HealthState.Fine)
                 {
                     <a class="tree-link problem"
-                       href="@ScopeLink.Configuration(worst.Scope)">problem</a>
+                       href="@ScopeLink.Configuration(worst.Scope, Carried)">problem</a>
                 }
-                <a class="tree-link" href="/topology">topology</a>
+                <a class="tree-link" href="@ScopeLink.Topology(Carried)">topology</a>
             </span>
         </div>
-        @Level(ScopeTree.Root, 1, RootWorst?.Scope)
+        @Level(ScopeTree.Root, 1, RootWorst?.Scope, Carried)
     }
 </section>
 
 @code {
-    [Inject]
-    private IOperatorSurface Surface { get; set; } = default!;
-
     private IReadOnlyList<HealthRecord> All { get; set; } = [];
 
     // The publication as its tree, built once per read (ADR-0052, amendment
@@ -80,8 +77,6 @@
         Read();
     }
 
-    private readonly CancellationTokenSource _stop = new();
-
     // Levels that stand open without a click: the cluster, its nodes and the
     // stage beneath each; the playground puts its nodes under a `node`
     // segment, so one more level than a configured cluster would need.
@@ -97,44 +92,14 @@
             worst.Evidence
         : $"{All.Count} thing(s) observed";
 
-    // The cluster is the first segment beneath the root — one cluster per
-    // surface today; the topology's navigation between clusters is queued.
+    // The cluster is the first segment beneath the root — one publication is
+    // one cluster's, and the host's other clusters are its own publications
+    // (ADR-0052, amendment 2026-09-20), reached from the run line.
     private string ClusterName =>
         All.Select(record => ScopeTree.Segment(record.Scope, 0))
             .FirstOrDefault(name => !string.IsNullOrEmpty(name)) ?? "cluster";
 
-    protected override void OnInitialized()
-    {
-        Read();
-        _ = ObserveAsync();
-    }
-
-    private async Task ObserveAsync()
-    {
-        try
-        {
-            await foreach (SurfaceChange _ in Surface.WatchAsync(_stop.Token))
-            {
-                await InvokeAsync(() =>
-                {
-                    Read();
-                    StateHasChanged();
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Leaving the page is the normal end of its subscription.
-        }
-    }
-
-    public void Dispose()
-    {
-        _stop.Cancel();
-        _stop.Dispose();
-    }
-
-    private void Read()
+    protected override void Read()
     {
         Index = Surface.Index();
         All = Index.Health(ScopeTree.Root);
@@ -146,7 +111,8 @@
     // everything else by name. A branch with children is a details element,
     // open down to the stage, and open beyond it where it lies on the way to
     // `trouble`, the leaf that explains its parent; a leaf is its row.
-    private RenderFragment Level(string scope, int depth, string? trouble) => __builder =>
+    private RenderFragment Level(string scope, int depth, string? trouble, string? cluster) =>
+        __builder =>
     {
         IReadOnlyList<Branch> branches =
         [
@@ -166,7 +132,7 @@
                 <li class="tree-item">
                     @if (branch.IsLeaf)
                     {
-                        @Row(branch)
+                        @Row(branch, cluster)
                     }
                     else
                     {
@@ -175,8 +141,8 @@
                         <details open="@(Filter.Filtering
                                          || depth < OpenDepth
                                          || OnTheWay(branch.Scope, trouble))">
-                            <summary>@Row(branch)</summary>
-                            @Level(branch.Scope, depth + 1, TroubleBeneath(branch))
+                            <summary>@Row(branch, cluster)</summary>
+                            @Level(branch.Scope, depth + 1, TroubleBeneath(branch), cluster)
                         </details>
                     }
                 </li>
@@ -184,7 +150,7 @@
         </ul>
     };
 
-    private static RenderFragment Row(Branch branch) => __builder =>
+    private static RenderFragment Row(Branch branch, string? cluster) => __builder =>
     {
         string mood = English.Mood(branch.State);
         bool troubled = !branch.IsLeaf && branch.State != HealthState.Fine;
@@ -198,9 +164,9 @@
                 @if (troubled)
                 {
                     <a class="tree-link problem"
-                       href="@ScopeLink.Configuration(branch.Worst.Scope)">problem</a>
+                       href="@ScopeLink.Configuration(branch.Worst.Scope, cluster)">problem</a>
                 }
-                <a class="tree-link" href="@ScopeLink.Monitor(branch.Scope)">monitor</a>
+                <a class="tree-link" href="@ScopeLink.Monitor(branch.Scope, cluster)">monitor</a>
             </span>
         </div>
     };

@@ -1,5 +1,6 @@
 @page "/topology"
-@implements IDisposable
+@using Xmip.Gui.Surface
+@inherits ClusterView
 
 <PageTitle>Xmip — Communication topology</PageTitle>
 
@@ -9,7 +10,7 @@
     <span class="source">@Surface.Source</span>
 </header>
 
-<RunLine Run="Surface.Run()" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" />
 
 <ScopeFilterBox Id="filter-topology" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -64,6 +65,7 @@ else
         <TopologyInspector Snapshot="Snapshot"
                            Index="Index"
                            Run="Run"
+                           Cluster="@Carried"
                            SelectedNode="SelectedNode"
                            SelectedLink="SelectedLink"
                            FocusNode="FocusNode"
@@ -72,9 +74,6 @@ else
 }
 
 @code {
-
-    [Inject]
-    private IOperatorSurface Surface { get; set; } = default!;
 
     // What the surface published, and what the filter leaves of it. The
     // filter narrows the nodes; a link is drawn only where both of its ends
@@ -111,8 +110,6 @@ else
 
     private CommunicationLink? SelectedLink { get; set; }
 
-    private readonly CancellationTokenSource _stop = new();
-
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
 
@@ -142,38 +139,7 @@ else
         }
     }
 
-    protected override void OnInitialized()
-    {
-        Read();
-        _ = ObserveAsync();
-    }
-
-    private async Task ObserveAsync()
-    {
-        try
-        {
-            await foreach (SurfaceChange _ in Surface.WatchAsync(_stop.Token))
-            {
-                await InvokeAsync(() =>
-                {
-                    Read();
-                    StateHasChanged();
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Leaving the page is the normal end of its subscription.
-        }
-    }
-
-    public void Dispose()
-    {
-        _stop.Cancel();
-        _stop.Dispose();
-    }
-
-    private void Read()
+    protected override void Read()
     {
         Whole = Surface.Topology();
         Index = Surface.Index();

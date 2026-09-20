@@ -101,6 +101,12 @@
     [Parameter]
     public EventCallback<TopologyNode> OnOpen { get; set; }
 
+    /// <summary>The cluster the links out of here carry, where the host holds
+    /// more than one (ADR-0052, amendment 2026-09-20); null where it holds
+    /// one, and then the links read as they always did.</summary>
+    [Parameter]
+    public string? Cluster { get; set; }
+
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
 
@@ -122,13 +128,13 @@
     // From what is selected to the same scope in the other two views: the
     // topology is one of three points to drill from, and a node or a link
     // ends at the actual configuration (ADR-0052, ruling 4).
-    private static RenderFragment Drill(string? scope) => __builder =>
+    private RenderFragment Drill(string? scope) => __builder =>
     {
         if (!string.IsNullOrWhiteSpace(scope))
         {
             <p class="inspect-links">
-                <a href="@ScopeLink.Configuration(scope)">configuration</a>
-                <a href="@ScopeLink.Monitor(scope)">monitor</a>
+                <a href="@ScopeLink.Configuration(scope, Cluster)">configuration</a>
+                <a href="@ScopeLink.Monitor(scope, Cluster)">monitor</a>
             </p>
         }
     };

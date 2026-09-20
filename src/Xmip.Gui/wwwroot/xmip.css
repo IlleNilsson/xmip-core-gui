@@ -71,6 +71,34 @@ body {
     border-bottom: 1px solid var(--line);
 }
 
+/* Which cluster the view is on, and the way to the others (ADR-0052,
+   amendment 2026-09-20). It sits at the head of the run line rather than on a
+   line of its own: the views are crowded (the owner, twice), and what a view
+   is showing belongs beside what that run was started with. A host with one
+   cluster draws none of this. */
+.run-clusters {
+    display: inline-flex;
+    gap: 0.25rem;
+    margin-right: 0.6rem;
+    padding-right: 0.6rem;
+    border-right: 1px solid var(--line);
+}
+
+.cluster-pick {
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.cluster-pick:hover { background: rgba(117, 201, 59, 0.14); color: var(--brand); }
+
+.cluster-pick.current { background: var(--brand); color: var(--ink); font-weight: 600; }
+
+/* A roll that ended keeps its place and says it has stopped publishing, so a
+   cluster never disappears from under the operator's hand. */
+.cluster-pick.ended { opacity: 0.55; font-style: italic; }
+
 /* The filter: one line under the run line, on every view. The views are
    crowded (the owner, twice), so this reduces noise and must not add to it —
    a label, a box and what came of it, and nothing else. */
