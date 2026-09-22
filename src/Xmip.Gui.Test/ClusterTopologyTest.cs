@@ -121,7 +121,7 @@ public sealed class ClusterTopologyTest : BunitContext
         Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
         Assert.Equal(
             "declares send; offline; authentication and runtime capability are "
-                + "not modelled in this rig",
+                + "not modelled",
             row.QuerySelector(".evidence")?.TextContent);
     }
 
