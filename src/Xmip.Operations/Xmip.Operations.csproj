@@ -56,7 +56,7 @@
 
     <!-- The surface, its choice, runtime discovery and the TOML reader
          (ADR-0052): the same selection as the web host, from the same keys. -->
-    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

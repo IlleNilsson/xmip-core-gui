@@ -32,7 +32,7 @@
     <!-- What every .NET surface shares, beside the binding in xmip-core-abi
          (ADR-0052 clause 1). A sibling in the estate, not vendored: the path
          is the estate's layout, four levels up. -->
-    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

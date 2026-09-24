@@ -18,7 +18,7 @@ Surface = "native"
 # The runtime's native library, exporting xmip_operate_v1. Found by one rule
 # for every surface: this key, else XMIP_RUNTIME_LIBRARY, else the library
 # beside the executable.
-RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
+RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # The file to read when Surface = "snapshot". The Playground writes
 # <cluster>-snapshot.toml, named for the cluster a roll was started as, under
