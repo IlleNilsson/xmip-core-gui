@@ -6,6 +6,7 @@
    What is drawn is what is configured and what is observed, together (the
    owner, 2026-09-18) — origin is said on what is selected, and is never a
    filter here. The legend names the patterns. *@
+@using Xmip.Gui.Surface
 @using static Xmip.Gui.Surface.TopologyWords
 
 <div class="topology-canvas">
@@ -201,10 +202,10 @@
     }
 
     private static string LinkClass(CommunicationLink link) =>
-        $"topology-link {Mood(link.State)} {Origin(link.Origin)} {Pattern(link.Pattern)}";
+        $"topology-link {MoodClass.Of(link.State)} {Origin(link.Origin)} {Pattern(link.Pattern)}";
 
     private static string NodeClass(TopologyNode node) =>
-        $"topology-node {Mood(node.State)} {Origin(node.Origin)} "
+        $"topology-node {MoodClass.Of(node.State)} {Origin(node.Origin)} "
         + (node.Activity > 0.05 ? "active" : "");
 
     private static string Title(TopologyNode node) =>

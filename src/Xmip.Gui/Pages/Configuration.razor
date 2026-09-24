@@ -38,7 +38,7 @@
     }
     else
     {
-        <div class="tree-row @English.Mood(RootState)">
+        <div class="tree-row @MoodClass.Of(RootState)">
             <span class="dot"></span>
             <span class="kind">cluster</span>
             <span class="label">@ClusterName</span>
@@ -154,7 +154,7 @@
     {
         string mood = English.Mood(branch.State);
         bool troubled = !branch.IsLeaf && branch.State != HealthState.Fine;
-        <div class="tree-row @mood" id="@ScopeLink.Anchor(branch.Scope)">
+        <div class="tree-row @MoodClass.Of(branch.State)" id="@ScopeLink.Anchor(branch.Scope)">
             <span class="dot" title="severity @branch.Worst.Severity"></span>
             <span class="kind">@Kind(branch.Scope)</span>
             <span class="label">@branch.Label</span>

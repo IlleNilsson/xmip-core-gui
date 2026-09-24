@@ -37,6 +37,9 @@
     <!-- The surface library's own fixtures: a copy would drift from them. -->
     <None Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Fixture\*.toml"
           Link="Fixture\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The stylesheet, for the test that holds it to painting names. -->
+    <None Include="..\Xmip.Gui\wwwroot\xmip.css"
+          Link="Fixture\xmip.css" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
