@@ -48,7 +48,7 @@
                     <button class="tree-leaf @Sel($"process:{index}")"
                             @onclick='() => Select("process", index)'>
                         @Name(_node.Processes[index].Name)
-                        <span class="tag">@_node.Processes[index].ExecutionStyle</span>
+                        <span class="tag">@(_node.Processes[index].ExecutionStyle ?? "style not set")</span>
                     </button>
                 }
             </div>
@@ -64,7 +64,7 @@
                         <button class="tree-leaf @Sel($"{branch}:{index}")"
                                 @onclick="() => Select(branch, index)">
                             @Name(locations[index].Name)
-                            <span class="tag">@locations[index].Transport</span>
+                            <span class="tag">@(locations[index].Transport ?? "no transport")</span>
                         </button>
                     }
                 </div>
@@ -115,13 +115,13 @@
                                         <td><input @bind="process.Name" /></td>
                                         <td>
                                             <select @bind="process.ExecutionStyle">
-                                                @foreach (string style in NodeConfiguration.ExecutionStyles)
+                                                @foreach (string style in Choices(NodeConfiguration.ExecutionStyles, process.ExecutionStyle))
                                                 {
-                                                    <option value="@style">@style</option>
+                                                    <option value="@style">@Say(style, "not set: sequential")</option>
                                                 }
                                             </select>
                                         </td>
-                                        <td><input type="checkbox" @bind="process.Start" /></td>
+                                        <td>@StartPicker(process.Start, value => process.Start = value)</td>
                                         <td><button class="del" @onclick="() => _node.Processes.Remove(process)">✕</button></td>
                                     </tr>
                                 }
@@ -138,13 +138,13 @@
                         <label>Name<input @bind="proc.Name" /></label>
                         <label>Execution style
                             <select @bind="proc.ExecutionStyle">
-                                @foreach (string style in NodeConfiguration.ExecutionStyles)
+                                @foreach (string style in Choices(NodeConfiguration.ExecutionStyles, proc.ExecutionStyle))
                                 {
-                                    <option value="@style">@style</option>
+                                    <option value="@style">@Say(style, "not set: sequential")</option>
                                 }
                             </select>
                         </label>
-                        <label>Start<input type="checkbox" @bind="proc.Start" /></label>
+                        <label>Start @StartPicker(proc.Start, value => proc.Start = value)</label>
                     </div>
                 </div>
             }
@@ -158,14 +158,14 @@
                             <label>Name<input @bind="loc.Name" /></label>
                             <label>Transport
                                 <select @bind="loc.Transport">
-                                    @foreach (string transport in Transports)
+                                    @foreach (string transport in Choices(Transports, loc.Transport))
                                     {
-                                        <option value="@transport">@transport</option>
+                                        <option value="@transport">@Say(transport, "choose a transport")</option>
                                     }
                                 </select>
                             </label>
                             <label>Address<input @bind="loc.Address" /></label>
-                            <label>Start<input type="checkbox" @bind="loc.Start" /></label>
+                            <label>Start @StartPicker(loc.Start, value => loc.Start = value)</label>
                         </div>
                     </div>
                 }
@@ -193,14 +193,14 @@
                                             <td><input @bind="location.Name" /></td>
                                             <td>
                                                 <select @bind="location.Transport">
-                                                    @foreach (string transport in Transports)
+                                                    @foreach (string transport in Choices(Transports, location.Transport))
                                                     {
-                                                        <option value="@transport">@transport</option>
+                                                        <option value="@transport">@Say(transport, "choose a transport")</option>
                                                     }
                                                 </select>
                                             </td>
                                             <td><input class="addr" @bind="location.Address" /></td>
-                                            <td><input type="checkbox" @bind="location.Start" /></td>
+                                            <td>@StartPicker(location.Start, value => location.Start = value)</td>
                                             <td><button class="del" @onclick="() => locations.Remove(location)">✕</button></td>
                                         </tr>
                                     }
@@ -287,10 +287,15 @@
 
         try
         {
+            // Saved as it stands, a half-built document included, and then
+            // judged by the runtime: what the operator reads after Save is the
+            // runtime's verdict on what is on disk, never the editor's.
+            string text = _node.ToToml();
             _node.Write(_path);
             _entries = Store.List();
-            _status = $"saved {Path.GetFileName(_path)}";
-            _ok = true;
+            ConfigurationVerdict verdict = Runtime.Validate(_path, text);
+            _status = $"saved {Path.GetFileName(_path)}; {verdict.Said}";
+            _ok = verdict.Ok;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -301,9 +306,14 @@
 
     // The verdict is decided from the record and the sentence is shown
     // (ADR-0052 clause 4); the page never reads its own English back.
+    // What is validated is the document the editor holds, saved or not
+    // (ADR-0027, amendment 2026-09-05).
     private void Validate()
     {
-        Show(Runtime.Validate(_path));
+        if (_node is not null)
+        {
+            Show(Runtime.Validate(_path, _node.ToToml()));
+        }
     }
 
     private void StartNode()
@@ -372,4 +382,57 @@
 
     private static readonly string[] Transports =
         ["file", "tcp", "udp", "http", "smtp", "websocket"];
+
+    // The offered values, with the one the document holds kept even when it is
+    // not among them, and an empty first choice for "not set": the editor shows
+    // what the file says and supplies nothing the runtime requires.
+    private static IEnumerable<string> Choices(string[] offered, string? current)
+    {
+        yield return "";
+        foreach (string value in offered)
+        {
+            yield return value;
+        }
+
+        if (!string.IsNullOrEmpty(current) && Array.IndexOf(offered, current) < 0)
+        {
+            yield return current;
+        }
+    }
+
+    private static string Say(string value, string unset)
+    {
+        return value.Length == 0 ? $"({unset})" : value;
+    }
+
+    // `start` is required and has no default, so it is a three-way choice —
+    // not set, yes, no — rather than a checkbox that reads an absent key as no.
+    private RenderFragment StartPicker(bool? start, Action<bool?> set) => __builder =>
+    {
+        <select value="@StartText(start)" @onchange="change => set(StartValue(change.Value))">
+            <option value="">(not set)</option>
+            <option value="true">yes</option>
+            <option value="false">no</option>
+        </select>
+    };
+
+    private static string StartText(bool? start)
+    {
+        return start switch
+        {
+            true => "true",
+            false => "false",
+            null => "",
+        };
+    }
+
+    private static bool? StartValue(object? chosen)
+    {
+        return (chosen as string) switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null,
+        };
+    }
 }

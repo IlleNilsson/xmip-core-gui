@@ -98,6 +98,27 @@ platform it carries. Same screen, same operator boundary, so the two cannot
 disagree — and the desktop configures: it starts the node its configuration
 names, and its Configure page validates and starts through the runtime.
 
+The Configure page edits the one node configuration document
+`xmip-core-configure` reads, and holds no model of its own:
+`NodeConfiguration` is a view over the document's syntax tree, parsed and
+edited by `Xmip.Surface`'s `TomlDocument`, each field one key matched whole,
+strings escaped and unescaped by the TOML library. An edit replaces one value
+in place; everything else — comments, blank lines, the order of keys and
+tables, modules, Subprocesses, Extensions, unknown keys — is written back as
+read. A Process it adds writes no `required_modules`, `xmip_subprocesses` or
+`extensions`; the document reads them as empty (ADR-0031, amendment
+2026-09-24).
+It supplies nothing the runtime requires: a Location or Process without
+`start`, or a Location without `transport`, is shown as not set and saved
+without it. Validate hands the runtime the text the editor holds, saved or
+not, through `xmip_validate_v1` (ADR-0027, amendment 2026-09-05), and Save
+reports the runtime's verdict on what it wrote; the editor has no verdict of
+its own (open problem 25, row b). `src/Xmip.Operations.Test` proves it
+against the runtime's own build: a saved document validates, a missing
+`start` or `transport` is refused and not defaulted, an escaped string
+round-trips, a Process added with only a name and `start` validates, and
+comments and layout survive an edit and a save.
+
 Configuration is each host's `xmip.gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
