@@ -204,11 +204,11 @@
     private static string Kind(string scope)
     {
         string[] parts = ScopeTree.Parts(scope);
-        string stage = ScopeTree.Stage(scope);
 
         // What a node declares it can do is not a technology beneath it
-        // (ADR-0056): it is the node's own statement, and it says so.
-        if (parts.Length >= 2 && string.Equals(parts[^1], "capability", StringComparison.Ordinal))
+        // (ADR-0056): it is the node's own statement, and it says so. Where a
+        // node publishes it is observe's to say, not a leaf's name.
+        if (NodeCapability.Declared(scope, string.Empty) is not null)
         {
             return "capability";
         }
@@ -219,9 +219,7 @@
             2 => "node",
             3 when ScopeTree.Stages.Contains(parts[2]) => "stage",
             3 => "scope",
-            4 when stage == "receive" => "receive location",
-            4 when stage == "send" => "send location",
-            4 when stage == "process" => "xmip process",
+            4 => ScopeTree.Location(ScopeTree.Stage(scope)) ?? "technology",
             _ => "technology",
         };
     }

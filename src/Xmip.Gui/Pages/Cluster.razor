@@ -119,7 +119,7 @@
                 <span class="evidence">@Evidence(record)</span>
                 <span class="age">@English.Age(record.Observed)</span>
                 @* Paused is a mood (ADR-0041): the record says so itself. *@
-                @if (Role.MayOperate() && IsPausable(record.Scope))
+                @if (Role.MayOperate() && ScopeTree.Pausable(record.Scope))
                 {
                     @if (record.State == HealthState.Paused)
                     {
@@ -322,14 +322,6 @@
     {
         Surface.ResumeScope(scope);
         Read();
-    }
-
-    // Receive and Send Locations can be paused; a Process runs off a
-    // subscription and an operator pauses the Location that feeds it, not the
-    // Process itself.
-    private static bool IsPausable(string scope)
-    {
-        return ScopeTree.Stage(scope) is "receive" or "send";
     }
 
     private IReadOnlyList<HealthRecord> InStage(Stage stage) =>
