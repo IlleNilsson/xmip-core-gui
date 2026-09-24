@@ -14,10 +14,10 @@
     --brand-deep: #4f9a24;
     --brand-tint: #eef8e6;
 
-    /* Health is a mood; these are the colours a surface paints each mood in
-       (ADR-0041): fine=green, paused=slate, working=blue, stressed=yellow,
-       exhausted=burnt, done=red, holding=orange (the rollup). Fine is the
-       brand family, one cut deeper so the word stays legible. */
+    /* Health is a mood, and which color names which mood is the runtime's
+       to say (observe::Health::color, ADR-0041): the page carries the name
+       as a class and this sheet only paints each name. Green is the brand
+       family, one cut deeper so a word in it stays legible. */
     --green: #5cb32c;
     --slate: #718096;
     --blue: #3182ce;
@@ -30,7 +30,24 @@
     --line: #e2e8f0;
     --paper: #ffffff;
     --ground: #f7fafc;
+
+    /* The paint of whatever mood an element sits in; outside one, the text's
+       own color. */
+    --mood: currentColor;
 }
+
+/* Each color name the runtime gives a mood, to its token (ADR-0041, amendment
+   2026-09-14). Nothing here says which mood is which color: an element in a
+   mood carries its color's name beside the mood's word (MoodClass), and
+   everything painted by mood reads --mood. */
+.green { --mood: var(--green); }
+.slate { --mood: var(--slate); }
+.blue { --mood: var(--blue); }
+.yellow { --mood: var(--yellow); }
+.burnt { --mood: var(--burnt); }
+.orange { --mood: var(--orange); }
+.red { --mood: var(--red); }
+.muted { --mood: var(--muted); }
 
 * { box-sizing: border-box; }
 
@@ -207,22 +224,10 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .row .age { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
 .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; flex: none; }
-.fine .dot { background: var(--green); }
-.paused .dot { background: var(--slate); }
-.working .dot { background: var(--blue); }
-.stressed .dot { background: var(--yellow); }
-.exhausted .dot { background: var(--burnt); }
-.holding .dot { background: var(--orange); }
-.done .dot { background: var(--red); }
+.dot { background: var(--mood); }
 .none .dot { background: var(--line); border: 1px solid var(--muted); }
 
-.fine .state { color: var(--green); }
-.paused .state { color: var(--slate); }
-.working .state { color: var(--blue); }
-.stressed .state { color: var(--yellow); }
-.exhausted .state { color: var(--burnt); }
-.holding .state { color: var(--orange); }
-.done .state { color: var(--red); }
+.state { color: var(--mood); }
 .none .state { color: var(--muted); }
 
 /* The banner Blazor shows when the circuit or the page itself fails, in both
@@ -303,8 +308,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 
 /* Holding says why (ADR-0052): beside the word, the worst leaf beneath the
    scope, its mood, its evidence and how old that is. The mood's colour is
-   the same map as the dot's — the stylesheet is the one place a mood
-   becomes a colour (ADR-0041). */
+   the dot's: --mood, from the color name the runtime gives the mood
+   (ADR-0041). */
 .why {
     display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem;
     min-width: 0; font-size: 0.85rem; color: var(--muted);
@@ -313,11 +318,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .why .mood { font-weight: 600; }
 .why .evidence { overflow: hidden; text-overflow: ellipsis; }
 .why .age { font-variant-numeric: tabular-nums; }
-.why.paused .mood { color: var(--slate); }
-.why.working .mood { color: var(--blue); }
-.why.stressed .mood { color: var(--yellow); }
-.why.exhausted .mood { color: var(--burnt); }
-.why.done .mood { color: var(--red); }
+.why:not(.fine, .holding) .mood { color: var(--mood); }
 .cluster .why { flex: 1; }
 .stage .why { margin-top: 0.35rem; font-size: 0.8rem; }
 .branch .why { font-size: 0.85rem; }
@@ -347,8 +348,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .tree-row .tree-links { display: flex; gap: 0.75rem; justify-content: flex-end; }
 .tree-row .tree-link.problem { color: var(--red); font-weight: 600; }
 .tree-row:target { outline: 2px solid var(--red); outline-offset: 2px; scroll-margin-top: 5rem; }
-.tree-row.done .label { color: var(--red); }
-.tree-row.holding .mood { color: var(--orange); }
+.tree-row.done .label, .tree-row.holding .mood { color: var(--mood); }
 
 /* Drill-down: the path from the cluster, and what sits beneath the focus. */
 .drill { padding: 1.5rem 1.5rem 0; }
@@ -370,12 +370,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .branch .label { font-weight: 600; }
 .branch .worst { color: var(--muted); font-size: 0.85rem; }
 .branch .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.branch.done .worst, .branch.done .label { color: var(--red); }
-.branch.holding .worst { color: var(--orange); }
-.branch.exhausted .worst { color: var(--burnt); }
-.branch.stressed .worst { color: var(--yellow); }
-.branch.paused .worst { color: var(--slate); }
-.branch.working .worst { color: var(--blue); }
+.branch:not(.fine) .worst, .branch.done .label { color: var(--mood); }
 .branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
 
 /* Desktop navigation and the configuration editor (desktop only). */
@@ -485,9 +480,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-inspector dd { margin: 0; overflow-wrap: anywhere; }
 .topology-inspector .mono { font-family: ui-monospace, monospace; font-size: 0.8rem; }
 .topology-inspector dd.capability small { display: block; color: var(--muted); font-size: 0.75rem; }
-.topology-inspector dd.done { color: var(--red); font-weight: 700; }
-.topology-inspector dd.stressed { color: var(--yellow); font-weight: 700; }
-.topology-inspector dd.working { color: var(--blue); font-weight: 700; }
+.topology-inspector dd:is(.done, .stressed, .working) { color: var(--mood); font-weight: 700; }
 .topology-node { cursor: pointer; outline: none; }
 .topology-node .node-body { fill: var(--paper); stroke: var(--line); stroke-width: 2; }
 .topology-node:hover .node-body, .topology-node:focus .node-body { stroke: var(--brand); }
@@ -497,15 +490,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node .node-kind { fill: var(--muted); font-size: 10px; pointer-events: none; }
 .topology-node .node-load-track { fill: var(--line); }
 .topology-node .node-load { fill: var(--green); }
-.topology-node.stressed .node-load { fill: var(--yellow); }
-.topology-node.exhausted .node-load { fill: var(--burnt); }
-.topology-node.done .node-load { fill: var(--red); }
-.topology-node .node-state { fill: var(--green); }
-.topology-node.working .node-state { fill: var(--blue); }
-.topology-node.stressed .node-state { fill: var(--yellow); }
-.topology-node.exhausted .node-state { fill: var(--burnt); }
-.topology-node.done .node-state { fill: var(--red); }
-.topology-node.paused .node-state { fill: var(--slate); }
+.topology-node:is(.stressed, .exhausted, .done) .node-load { fill: var(--mood); }
+.topology-node .node-state { fill: var(--mood); }
 /* Movement is the brand's green; a mood, when there is one, overrides it on
    the line and the particle (done red, stressed yellow) as everywhere else. */
 .topology-node .node-pulse { fill: none; stroke: var(--brand); opacity: 0; pointer-events: none; }
@@ -519,16 +505,16 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link .link-line { fill: none; stroke: var(--brand); stroke-width: 2.5; opacity: 0.85; }
 .topology-link.configured .link-line { stroke-dasharray: 7 5; opacity: 0.52; }
 .topology-link.observed .link-line { stroke-width: 3.5; }
-.topology-link.done .link-line { stroke: var(--red); stroke-dasharray: 9 6; }
-.topology-link.stressed .link-line { stroke: var(--yellow); }
+.topology-link:is(.done, .stressed) .link-line { stroke: var(--mood); }
+.topology-link.done .link-line { stroke-dasharray: 9 6; }
 .topology-link.retry .link-line { stroke: var(--red); stroke-dasharray: 4 7; }
 .topology-link.session .link-line { stroke: #805ad5; }
 .topology-link.publishconsume .link-line { stroke: var(--orange); }
 .topology-link.streaming .link-line { stroke-width: 5; }
 .topology-link .link-hit { fill: none; stroke: transparent; stroke-width: 18; cursor: pointer; }
 .topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
-.topology-link.done .flow-particle, .topology-link.retry .flow-particle { fill: var(--red); }
-.topology-link.stressed .flow-particle { fill: var(--yellow); }
+.topology-link.retry .flow-particle { fill: var(--red); }
+.topology-link:is(.done, .stressed) .flow-particle { fill: var(--mood); }
 .topology-link.publishconsume .flow-particle { fill: var(--orange); }
 .arrow-head { fill: var(--brand); }
 .topology-legend {

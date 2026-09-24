@@ -79,7 +79,7 @@
                 string worst = branch.IsLeaf
                     ? English.Mood(branch.State)
                     : $"{branch.Count} beneath · {English.Mood(branch.State)}";
-                <button class="branch @English.Mood(branch.State)"
+                <button class="branch @MoodClass.Of(branch.State)"
                         @onclick="() => Focus = branch.Scope">
                     <span class="dot" title="severity @branch.Worst.Severity"></span>
                     <span class="label">@branch.Label</span>
@@ -112,7 +112,7 @@
     else
     {
         <Virtualize Items="shown" Context="record" ItemSize="34">
-            <div class="row @English.Mood(record.State)">
+            <div class="row @MoodClass.Of(record.State)">
                 <span class="dot" title="severity @record.Severity"></span>
                 <span class="scope">@ScopeTree.Name(record.Scope)</span>
                 <span class="node">@ScopeTree.Node(record.Scope)</span>
@@ -366,8 +366,9 @@
             : $"{ScopeTree.Name(worst.Scope)}: {worst.Evidence}";
     }
 
-    // The class carries the mood and the stylesheet paints it (ADR-0041): the
-    // rollup word for a set of leaves, or "none" when nothing is recorded.
+    // The classes carry the mood and its color's name, and the stylesheet
+    // paints the name (ADR-0041): the rollup for a set of leaves, or "none"
+    // when nothing is recorded.
     private static string Class(IReadOnlyList<HealthRecord> records) =>
-        records.Count == 0 ? "none" : English.Rollup(records);
+        MoodClass.Of(records);
 }

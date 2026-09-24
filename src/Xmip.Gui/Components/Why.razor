@@ -2,9 +2,11 @@
    beneath it, that leaf's evidence, and how old the evidence is. Renders
    nothing when there is no leaf or the worst one is Fine — Fine needs no
    explanation. *@
+@using Xmip.Gui.Surface
+
 @if (Leaf is not null && Leaf.State != HealthState.Fine)
 {
-    <span class="why @English.Mood(Leaf.State)">
+    <span class="why @MoodClass.Of(Leaf.State)">
         <span class="leaf">@ScopeTree.Name(Leaf.Scope)</span>
         <span class="mood">@English.Mood(Leaf.State)</span>
         @if (!string.IsNullOrEmpty(Leaf.Evidence))

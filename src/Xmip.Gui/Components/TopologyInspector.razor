@@ -12,7 +12,7 @@
         <h2>@SelectedNode.Label</h2>
         <dl>
             <dt>Kind</dt><dd>@Kind(SelectedNode.Kind)</dd>
-            <dt>State</dt><dd class="@Mood(SelectedNode.State)">@Mood(SelectedNode.State)</dd>
+            <dt>State</dt><dd class="@MoodClass.Of(SelectedNode.State)">@Mood(SelectedNode.State)</dd>
             <dt>Evidence</dt><dd>@Value(SelectedNode.Evidence)</dd>
             @* What the node declared it can do (ADR-0056), where an
                operator has drilled to the node itself. One row: the
@@ -45,7 +45,7 @@
             <dt>From</dt><dd>@NodeLabel(SelectedLink.From)</dd>
             <dt>To</dt><dd>@NodeLabel(SelectedLink.To)</dd>
             <dt>Protocol</dt><dd>@Value(SelectedLink.Protocol)</dd>
-            <dt>State</dt><dd class="@Mood(SelectedLink.State)">@Mood(SelectedLink.State)</dd>
+            <dt>State</dt><dd class="@MoodClass.Of(SelectedLink.State)">@Mood(SelectedLink.State)</dd>
             <dt>Origin</dt><dd>@OriginName(SelectedLink.Origin)</dd>
             <dt>Volume</dt><dd>@English.Figure(SelectedLink.Volume)</dd>
             <dt>Rate</dt><dd>@($"{SelectedLink.Rate:0.##}/s")</dd>
