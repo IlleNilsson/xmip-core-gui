@@ -18,10 +18,12 @@ public sealed class RuntimeCommands(IOperatorSurface surface, string libraryPath
 {
     private NativeOperator? _own;
 
-    /// <summary>Validate a node configuration through the native runtime.</summary>
-    public ConfigurationVerdict Validate(string configurationPath)
+    /// <summary>Validate the document the editor is holding through the native
+    /// runtime, saved or not (ADR-0027, amendment 2026-09-05): the runtime's
+    /// answer is the only one the editor gives.</summary>
+    public ConfigurationVerdict Validate(string configurationPath, string configuration)
     {
-        return Runtime().Validate(configurationPath);
+        return Runtime().Validate(configurationPath, configuration);
     }
 
     /// <summary>Start a node from its configuration through the native runtime.</summary>

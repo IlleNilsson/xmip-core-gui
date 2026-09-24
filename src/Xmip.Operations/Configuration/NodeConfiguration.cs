@@ -1,113 +1,225 @@
-using System.Globalization;
-using System.Text;
-using Microsoft.Extensions.Configuration;
+using Tomlyn.Syntax;
 using Xmip.Surface;
 
 namespace Xmip.Operations.Configuration;
 
 /// <summary>
-/// A node's configuration — the cluster and node it belongs to, the modules it
-/// loads, the Xmip Processes it runs (with their execution style), and the
-/// Receive and Send Locations it works over. The shape is what
-/// <c>xmip-core-configure</c> parses today (open problem 14 has not decided the
-/// format); this reads and writes it so the desktop can configure a node.
+/// The desktop editor's view of a node's configuration document — the one
+/// document <c>xmip-core-configure</c> reads (<c>XmipConfigurationDocument</c>).
 /// ADR-0014: configuration is the desktop's, not the web's. TOML on disk
 /// (ADR-0031).
 /// </summary>
+/// <remarks>
+/// <para>This is an edit and display layer, not a model of its own. It holds
+/// the document's syntax tree, parsed and edited through
+/// <see cref="TomlDocument"/>, and each property reads or writes one key of
+/// it, matched whole. An edit replaces one value in place; everything else —
+/// comments, blank lines, the order of keys and tables, the modules and their
+/// manifests, a Process's Subprocesses and Extensions, a key the editor does
+/// not know — is written back exactly as it was read. Strings are unescaped
+/// on read and escaped on write by the TOML library.</para>
+/// <para>Nothing the runtime requires is supplied here. A Location or a
+/// Process without <c>start</c> reads as <see langword="null"/> and is written
+/// without it; a Location without <c>transport</c> likewise. A new Process
+/// writes no <c>required_modules</c>, <c>xmip_subprocesses</c> or
+/// <c>extensions</c>: the document reads them as empty (ADR-0031, amendment
+/// 2026-09-24). Whether the document is good is the runtime's answer, through
+/// <c>xmip_validate_v1</c> (ADR-0027, amendment 2026-09-05) — never this
+/// class's. Until 2026-09-24 this class parsed the TOML by hand, matched keys
+/// by prefix, never unescaped, and wrote <c>start = true</c> and
+/// <c>transport = "file"</c> where the file had none (open problem 25, row
+/// b).</para>
+/// <para>The editor edits the document in the shape it is written in:
+/// <c>[service]</c> as a table, Processes and Locations as <c>[[…]]</c>
+/// rows. A document written another way — inline tables, dotted keys at the
+/// top — is kept as it is and shown as far as that shape goes.</para>
+/// </remarks>
 public sealed class NodeConfiguration
 {
-    public string ServiceName { get; set; } = "";
-    public string ClusterName { get; set; } = "";
-    public string NodeName { get; set; } = "";
+    private static readonly string[] Service = ["service"];
+    private static readonly string[] ProcessKey = ["xmip_processes"];
+    private static readonly string[] ReceiveKey = ["receive_locations"];
+    private static readonly string[] SendKey = ["send_locations"];
 
-    /// <summary>Whether the node may assume the internet (ADR-0045). Off unless said.</summary>
-    public bool Online { get; set; }
+    private readonly DocumentSyntax _document;
 
-    /// <summary>Modules are read and preserved verbatim on save so editing never
-    /// drops them; their manifests are richer than the editor models.</summary>
-    public string PreservedModules { get; set; } = "";
-
-    public List<XmipProcess> Processes { get; init; } = [];
-    public List<Location> ReceiveLocations { get; init; } = [];
-    public List<Location> SendLocations { get; init; } = [];
-
-    /// <summary>One Xmip Process: a name, whether it starts, and how its work runs
-    /// (the execution style — the throughput lever). Any deeper configuration of
-    /// the Process (required modules, Subprocesses, Extensions) is preserved
-    /// verbatim in <see cref="Body"/> so editing the style never drops it.</summary>
-    public sealed class XmipProcess
+    private NodeConfiguration(DocumentSyntax document)
     {
-        public string Name { get; set; } = "";
-        public bool Start { get; set; } = true;
-        public string ExecutionStyle { get; set; } = "sequential";
-        public string Body { get; set; } = "";
+        _document = document;
+        Processes = [.. Rows(ProcessKey).Select(row => new XmipProcess(row))];
+        ReceiveLocations = [.. Rows(ReceiveKey).Select(row => new Location(row))];
+        SendLocations = [.. Rows(SendKey).Select(row => new Location(row))];
     }
 
-    /// <summary>The execution styles, matching <c>xmip-core-configure</c>'s
-    /// kebab-case values. Sequential is the safe default; Parallel and Concurrent
-    /// trade ordering for throughput.</summary>
+    /// <summary>An empty document, for a node not configured yet.</summary>
+    public NodeConfiguration()
+        : this(TomlDocument.Parse(""))
+    {
+    }
+
+    /// <summary><c>[service] name</c>.</summary>
+    public string ServiceName
+    {
+        get => ServiceText("name");
+        set => TomlDocument.Set(ServiceTable(), "name", value);
+    }
+
+    /// <summary><c>[service] cluster_name</c>.</summary>
+    public string ClusterName
+    {
+        get => ServiceText("cluster_name");
+        set => TomlDocument.Set(ServiceTable(), "cluster_name", value);
+    }
+
+    /// <summary><c>[service] node_name</c>.</summary>
+    public string NodeName
+    {
+        get => ServiceText("node_name");
+        set => TomlDocument.Set(ServiceTable(), "node_name", value);
+    }
+
+    /// <summary>Whether the node may assume the internet (ADR-0045). Off unless
+    /// said, which is the document's own rule, not the editor's.</summary>
+    public bool Online
+    {
+        get => ExistingService() is { } service && TomlDocument.Flag(service, "online") is true;
+        set => TomlDocument.Set(ServiceTable(), "online", value);
+    }
+
+    /// <summary>The Xmip Processes, in document order.</summary>
+    public List<XmipProcess> Processes { get; }
+
+    /// <summary>The Receive Locations, in document order.</summary>
+    public List<Location> ReceiveLocations { get; }
+
+    /// <summary>The Send Locations, in document order.</summary>
+    public List<Location> SendLocations { get; }
+
+    /// <summary>The execution styles, <c>xmip-core-configure</c>'s kebab-case
+    /// values, for the editor to offer. A value outside them is kept as the
+    /// file says and refused by the runtime, not replaced.</summary>
     public static readonly string[] ExecutionStyles = ["sequential", "parallel", "concurrent"];
 
-    /// <summary>One Receive or Send Location: a named endpoint over a transport,
-    /// addressed in that transport's own terms.</summary>
+    /// <summary>One Xmip Process: the keys the editor shows, over its row of the
+    /// document. Its Subprocesses and Extensions stay in the document.</summary>
+    public sealed class XmipProcess
+    {
+        internal XmipProcess(TableArraySyntax row)
+        {
+            Row = row;
+        }
+
+        /// <summary>A Process that is in no document yet, with no key set.</summary>
+        public XmipProcess()
+            : this(new TableArraySyntax())
+        {
+        }
+
+        internal TableArraySyntax Row { get; }
+
+        /// <summary><c>name</c>; empty when the row has none.</summary>
+        public string Name
+        {
+            get => TomlDocument.Text(Row, "name") ?? "";
+            set => TomlDocument.Set(Row, "name", value);
+        }
+
+        /// <summary><c>start</c>; <see langword="null"/> when the row has none.</summary>
+        public bool? Start
+        {
+            get => TomlDocument.Flag(Row, "start");
+            set => TomlDocument.Set(Row, "start", value);
+        }
+
+        /// <summary><c>execution_style</c>, as written; <see langword="null"/>
+        /// when the row has none, which the document reads as sequential.</summary>
+        public string? ExecutionStyle
+        {
+            get => TomlDocument.Text(Row, "execution_style");
+            set => TomlDocument.Set(Row, "execution_style", string.IsNullOrEmpty(value) ? null : value);
+        }
+    }
+
+    /// <summary>One Receive or Send Location over its row of the document: a
+    /// named endpoint over a transport, addressed in that transport's own
+    /// terms.</summary>
     public sealed class Location
     {
-        public string Name { get; set; } = "";
-        public bool Start { get; set; } = true;
-        public string Transport { get; set; } = "file";
-        public string Address { get; set; } = "";
+        internal Location(TableArraySyntax row)
+        {
+            Row = row;
+        }
+
+        /// <summary>A Location that is in no document yet, with no key set:
+        /// the operator chooses its transport and whether it starts.</summary>
+        public Location()
+            : this(new TableArraySyntax())
+        {
+        }
+
+        internal TableArraySyntax Row { get; }
+
+        /// <summary><c>name</c>; empty when the row has none.</summary>
+        public string Name
+        {
+            get => TomlDocument.Text(Row, "name") ?? "";
+            set => TomlDocument.Set(Row, "name", value);
+        }
+
+        /// <summary><c>start</c>; <see langword="null"/> when the row has none.</summary>
+        public bool? Start
+        {
+            get => TomlDocument.Flag(Row, "start");
+            set => TomlDocument.Set(Row, "start", value);
+        }
+
+        /// <summary><c>transport</c>; <see langword="null"/> when the row has none.</summary>
+        public string? Transport
+        {
+            get => TomlDocument.Text(Row, "transport");
+            set => TomlDocument.Set(Row, "transport", string.IsNullOrEmpty(value) ? null : value);
+        }
+
+        /// <summary><c>address</c>; empty when the row has none.</summary>
+        public string Address
+        {
+            get => TomlDocument.Text(Row, "address") ?? "";
+            set => TomlDocument.Set(Row, "address", value);
+        }
     }
 
     /// <summary>Read a node configuration from a TOML file. A missing file is an
-    /// empty configuration rather than an error, so the editor can start one.</summary>
+    /// empty document rather than an error, so the editor can start one.</summary>
+    /// <exception cref="FormatException">The file is not TOML.</exception>
     public static NodeConfiguration Read(string path)
     {
-        NodeConfiguration config = new();
-        if (!File.Exists(path))
-        {
-            return config;
-        }
-
-        // The one TOML reader every surface uses (ADR-0052 clause 1).
-        IConfigurationRoot toml = TomlDocument.Read(path);
-
-        config.ServiceName = toml["service:name"] ?? "";
-        config.ClusterName = toml["service:cluster_name"] ?? "";
-        config.NodeName = toml["service:node_name"] ?? "";
-        config.Online = string.Equals(toml["service:online"], "true", StringComparison.OrdinalIgnoreCase);
-
-        ReadLocations(toml, "receive_locations", config.ReceiveLocations);
-        ReadLocations(toml, "send_locations", config.SendLocations);
-
-        config.ParseBlocks(File.ReadAllText(path));
-
-        return config;
+        return File.Exists(path) ? Parse(File.ReadAllText(path)) : new NodeConfiguration();
     }
 
-    /// <summary>Write the configuration back as TOML: the service, the preserved
-    /// modules, the Processes with their execution style, then the Locations.
-    /// Deterministic, so a round trip changes only what the operator changed.</summary>
+    /// <summary>The editor's view over the document <paramref name="text"/> is.</summary>
+    /// <exception cref="FormatException">The text is not TOML.</exception>
+    public static NodeConfiguration Parse(string text)
+    {
+        return new NodeConfiguration(TomlDocument.Parse(text));
+    }
+
+    /// <summary>The document as TOML text: what <see cref="Write"/> saves and
+    /// what the runtime is asked to validate. A row the editor added joins the
+    /// rows of its kind; a row it removed leaves with its own tables.</summary>
+    public string ToToml()
+    {
+        Store(ProcessKey, [.. Processes.Select(process => process.Row)]);
+        Store(ReceiveKey, [.. ReceiveLocations.Select(location => location.Row)]);
+        Store(SendKey, [.. SendLocations.Select(location => location.Row)]);
+
+        return _document.ToString();
+    }
+
+    /// <summary>Save the document, replacing the file whole so a reader never
+    /// sees half of it.</summary>
     public void Write(string path)
     {
-        StringBuilder toml = new();
-
-        toml.AppendLine("[service]");
-        AppendString(toml, "name", ServiceName);
-        AppendString(toml, "cluster_name", ClusterName);
-        AppendString(toml, "node_name", NodeName);
-        // ADR-0045: offline unless the operator says otherwise.
-        toml.AppendLine($"online = {(Online ? "true" : "false")}");
-        toml.AppendLine();
-
-        if (!string.IsNullOrWhiteSpace(PreservedModules))
-        {
-            toml.AppendLine(PreservedModules.TrimEnd());
-            toml.AppendLine();
-        }
-
-        AppendProcesses(toml);
-        AppendLocations(toml, "receive_locations", ReceiveLocations);
-        AppendLocations(toml, "send_locations", SendLocations);
+        string text = ToToml();
 
         string? directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory))
@@ -116,175 +228,49 @@ public sealed class NodeConfiguration
         }
 
         string temp = path + ".writing";
-        File.WriteAllText(temp, toml.ToString());
+        File.WriteAllText(temp, text);
         File.Move(temp, path, overwrite: true);
     }
 
-    private static void ReadLocations(IConfigurationRoot toml, string key, List<Location> into)
+    private TableSyntax? ExistingService()
     {
-        foreach (IConfigurationSection row in toml.GetSection(key).GetChildren())
+        return TomlDocument.Tables<TableSyntax>(_document, Service).FirstOrDefault();
+    }
+
+    private string ServiceText(string key)
+    {
+        return ExistingService() is { } service ? TomlDocument.Text(service, key) ?? "" : "";
+    }
+
+    private TableSyntax ServiceTable()
+    {
+        if (ExistingService() is { } service)
         {
-            into.Add(new Location
-            {
-                Name = row["name"] ?? "",
-                Start = !string.Equals(row["start"], "false", StringComparison.OrdinalIgnoreCase),
-                Transport = row["transport"] ?? "file",
-                Address = row["address"] ?? "",
-            });
-        }
-    }
-
-    private void AppendProcesses(StringBuilder toml)
-    {
-        foreach (XmipProcess process in Processes)
-        {
-            toml.AppendLine("[[xmip_processes]]");
-            AppendString(toml, "name", process.Name);
-            toml.AppendLine($"start = {(process.Start ? "true" : "false")}");
-            AppendString(toml, "execution_style", NormaliseStyle(process.ExecutionStyle));
-            if (!string.IsNullOrWhiteSpace(process.Body))
-            {
-                toml.AppendLine(process.Body.TrimEnd('\n', '\r'));
-            }
-            toml.AppendLine();
-        }
-    }
-
-    private static void AppendLocations(StringBuilder toml, string key, List<Location> locations)
-    {
-        foreach (Location location in locations)
-        {
-            toml.AppendLine($"[[{key}]]");
-            AppendString(toml, "name", location.Name);
-            toml.AppendLine($"start = {(location.Start ? "true" : "false")}");
-            AppendString(toml, "transport", location.Transport);
-            AppendString(toml, "address", location.Address);
-            toml.AppendLine();
-        }
-    }
-
-    private static void AppendString(StringBuilder toml, string key, string value)
-    {
-        string escaped = value.Replace("\\", "\\\\", StringComparison.Ordinal)
-            .Replace("\"", "\\\"", StringComparison.Ordinal);
-        toml.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{key} = \"{escaped}\""));
-    }
-
-    private static string NormaliseStyle(string style)
-    {
-        string lower = style.Trim().ToLowerInvariant();
-        return Array.IndexOf(ExecutionStyles, lower) >= 0 ? lower : "sequential";
-    }
-
-    /// <summary>Split the document into the modules kept verbatim and the Xmip
-    /// Processes modelled as editable items. A <c>[[modules]]</c> family header
-    /// captures into the modules text; a top-level <c>[[xmip_processes]]</c>
-    /// starts a Process, whose own name / start / execution_style are modelled and
-    /// whose deeper tables (Subprocesses, Extensions) are kept in its Body; any
-    /// other header (service, locations — modelled elsewhere) captures nothing.</summary>
-    private void ParseBlocks(string original)
-    {
-        StringBuilder modules = new();
-        XmipProcess? current = null;
-        bool ownFields = false;
-        Capture capture = Capture.None;
-
-        foreach (string raw in original.Split('\n'))
-        {
-            string line = raw.TrimEnd('\r');
-            string trimmed = line.TrimStart();
-
-            if (trimmed.StartsWith('['))
-            {
-                if (trimmed.StartsWith("[[xmip_processes]]", StringComparison.Ordinal))
-                {
-                    current = new XmipProcess();
-                    Processes.Add(current);
-                    ownFields = true;
-                    capture = Capture.Process;
-                    continue;
-                }
-
-                if (trimmed.StartsWith("[xmip_processes.", StringComparison.Ordinal)
-                    || trimmed.StartsWith("[[xmip_processes.", StringComparison.Ordinal))
-                {
-                    ownFields = false;
-                    current?.AppendBody(line);
-                    capture = Capture.Process;
-                    continue;
-                }
-
-                capture = ModuleHeader(trimmed) ? Capture.Modules : Capture.None;
-                if (capture == Capture.Modules)
-                {
-                    modules.AppendLine(line);
-                }
-                continue;
-            }
-
-            switch (capture)
-            {
-                case Capture.Modules:
-                    modules.AppendLine(line);
-                    break;
-                case Capture.Process when current is not null:
-                    CaptureProcessLine(current, ownFields, line, trimmed);
-                    break;
-                case Capture.None:
-                default:
-                    break;
-            }
+            return service;
         }
 
-        PreservedModules = modules.ToString();
+        TableSyntax created = new();
+        TomlDocument.Insert(_document, created, Service);
+        return created;
     }
 
-    private static void CaptureProcessLine(XmipProcess process, bool ownFields, string line, string trimmed)
+    private List<TableArraySyntax> Rows(string[] key)
     {
-        if (ownFields && trimmed.StartsWith("name", StringComparison.Ordinal))
+        return [.. TomlDocument.Tables<TableArraySyntax>(_document, key)];
+    }
+
+    private void Store(string[] key, List<TableArraySyntax> wanted)
+    {
+        List<TableArraySyntax> present = Rows(key);
+
+        foreach (TableArraySyntax gone in present.Except(wanted))
         {
-            process.Name = Unquote(trimmed);
+            TomlDocument.Remove(_document, gone);
         }
-        else if (ownFields && trimmed.StartsWith("start", StringComparison.Ordinal))
+
+        foreach (TableArraySyntax added in wanted.Except(present))
         {
-            process.Start = trimmed.Contains("true", StringComparison.OrdinalIgnoreCase);
+            TomlDocument.Insert(_document, added, key);
         }
-        else if (ownFields && trimmed.StartsWith("execution_style", StringComparison.Ordinal))
-        {
-            process.ExecutionStyle = NormaliseStyle(Unquote(trimmed));
-        }
-        else
-        {
-            process.AppendBody(line);
-        }
-    }
-
-    private static bool ModuleHeader(string trimmed)
-    {
-        return trimmed.StartsWith("[[modules]]", StringComparison.Ordinal)
-            || trimmed.StartsWith("[modules.", StringComparison.Ordinal)
-            || trimmed.StartsWith("[[modules.", StringComparison.Ordinal);
-    }
-
-    private static string Unquote(string line)
-    {
-        int open = line.IndexOf('"', StringComparison.Ordinal);
-        int close = line.LastIndexOf('"');
-        return open >= 0 && close > open ? line.Substring(open + 1, close - open - 1) : "";
-    }
-
-    private enum Capture
-    {
-        None,
-        Modules,
-        Process,
-    }
-}
-
-internal static class XmipProcessExtensions
-{
-    internal static void AppendBody(this NodeConfiguration.XmipProcess process, string line)
-    {
-        process.Body = string.IsNullOrEmpty(process.Body) ? line : process.Body + "\n" + line;
     }
 }

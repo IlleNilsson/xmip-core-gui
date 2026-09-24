@@ -3,7 +3,6 @@
    canvas is showing and how to read it. Every level drills to the same scope
    in the other two views (ADR-0052, ruling 4), and a node with components
    beneath it can be opened from here. *@
-@using System.Globalization
 @using Xmip.Gui.Surface
 @using static Xmip.Gui.Surface.TopologyWords
 
@@ -48,7 +47,7 @@
             <dt>Protocol</dt><dd>@Value(SelectedLink.Protocol)</dd>
             <dt>State</dt><dd class="@Mood(SelectedLink.State)">@Mood(SelectedLink.State)</dd>
             <dt>Origin</dt><dd>@OriginName(SelectedLink.Origin)</dd>
-            <dt>Volume</dt><dd>@Count(SelectedLink.Volume)</dd>
+            <dt>Volume</dt><dd>@English.Figure(SelectedLink.Volume)</dd>
             <dt>Rate</dt><dd>@($"{SelectedLink.Rate:0.##}/s")</dd>
             <dt>Latency</dt><dd>@($"{SelectedLink.LatencyMilliseconds:0.##} ms")</dd>
             <dt>Progress</dt><dd>@Percent(SelectedLink.Progress)</dd>
@@ -146,7 +145,4 @@
 
     private string NodeLabel(string id) =>
         NodeById.TryGetValue(id, out TopologyNode? node) ? node.Label : id;
-
-    private static string Count(ulong value) =>
-        value.ToString("N0", CultureInfo.InvariantCulture);
 }

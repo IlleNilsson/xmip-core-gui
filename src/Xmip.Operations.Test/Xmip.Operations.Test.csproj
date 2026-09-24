@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The desktop configuration editor's tests (ADR-0052 clause 6). The editor's
+    view of a node configuration is proved here against the runtime that
+    judges it: a document the editor saves is handed to xmip_validate_v1, and
+    what the runtime says is what is asserted.
+
+    Xmip.Operations is a MAUI executable for Windows, which a test host cannot
+    reference; NodeConfiguration depends on nothing of MAUI, so the test
+    compiles that one file where it lives. It is linked, not copied.
+
+    Target framework and the rest come from Directory.Build.props.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>Xmip.Operations.Test</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <!-- Test classes are public for the runner, not for a reader. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <Compile Include="..\Xmip.Operations\Configuration\NodeConfiguration.cs"
+             Link="Configuration\NodeConfiguration.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

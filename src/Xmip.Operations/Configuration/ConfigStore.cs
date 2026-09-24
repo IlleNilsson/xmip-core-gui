@@ -39,8 +39,19 @@ public sealed class ConfigStore(IConfiguration configuration)
             string file = Path.GetFileNameWithoutExtension(path);
             bool isMain = file.Equals("main", StringComparison.OrdinalIgnoreCase)
                 || file.EndsWith(".main", StringComparison.OrdinalIgnoreCase);
-            NodeConfiguration node = NodeConfiguration.Read(path);
-            string name = string.IsNullOrWhiteSpace(node.NodeName) ? file : node.NodeName;
+            // A file that is not TOML is still listed, by its file name, so the
+            // operator can open it and read why rather than lose the list.
+            string node;
+            try
+            {
+                node = NodeConfiguration.Read(path).NodeName;
+            }
+            catch (FormatException)
+            {
+                node = "";
+            }
+
+            string name = string.IsNullOrWhiteSpace(node) ? file : node;
             entries.Add(new Entry(name, path, isMain));
         }
 
