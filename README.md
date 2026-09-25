@@ -44,7 +44,7 @@ that explains it and links to that leaf's row, with the way to it standing
 open. The Topology is always what is configured and what is observed,
 together; there is no switch between them. It opens on the cluster's nodes and
 the traffic between them, and the drill is in the address
-(`/topology?focus=node/alpha`): every node on the canvas is a link, open where
+(`/topology?focus=node/R1`): every node on the canvas is a link, open where
 something is beneath it and its configuration where nothing is, so cluster to
 node to stage to endpoint is a chain of addresses. Every line says what passes
 over it — its volume and rate, or `configured · no traffic observed` on a path
