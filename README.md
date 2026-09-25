@@ -113,6 +113,19 @@ The web GUI monitors and does nothing else (ADR-0014, amendment 2026-09-05):
 it starts no node, offers no Pause or Resume, and its role is Observer, not
 configurable.
 
+It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
+loopback only — the one exception, which the host says in its log and as an
+audit record where it binds it — and any other address in
+`[Kestrel.Endpoints]` is `https://`, presenting the PEM certificate and key
+`xmip.gui.toml` names as `Certificate` and `PrivateKey`. It asks a caller for
+a certificate and checks one presented against `TrustAnchor` (else the
+operating system's trust store); a browser may decline and reads the pages,
+and the surface hub at `/surface` takes no remote surface over TLS without
+one. Plain http beyond loopback, or https with no certificate, is refused
+before the host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the
+one rule in `Xmip.Surface`'s `SurfaceTls`). The TLS is the platform's, through
+Kestrel, not `xmip-core-library-tls`.
+
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
 A native window; needs the maui-windows workload; Windows is the only
 platform it carries. Same screen, same operator boundary, so the two cannot

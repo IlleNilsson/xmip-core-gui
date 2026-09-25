@@ -61,6 +61,22 @@ public sealed class TwoClustersTest : BunitContext
     }
 
     [Fact]
+    public void AMonitorRowNamesTheNodeItsRecordIsOnAndNeverTheCluster()
+    {
+        // Open problem 25, row q: the node column took the first segment,
+        // which is the cluster. The node is observe's reading, asked of the
+        // runtime, and C1's own rollup is on no node.
+        IRenderedComponent<Cluster> page = Render<Cluster>();
+        Dictionary<string, string> nodeOf = page.FindAll("section.list .row").ToDictionary(
+            row => row.QuerySelector(".scope")?.TextContent ?? string.Empty,
+            row => row.QuerySelector(".node")?.TextContent ?? string.Empty);
+
+        Assert.Equal("gamma", nodeOf["gamma/send/tcp/json"]);
+        Assert.Equal(string.Empty, nodeOf["node"]);
+        Assert.DoesNotContain("C1", nodeOf.Values);
+    }
+
+    [Fact]
     public void AViewToldAClusterReadsThatClustersPublicationAndNoOther()
     {
         Address("/configuration?cluster=C2");
