@@ -451,17 +451,16 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .inspect-links a, .crumb-link { color: var(--brand-deep); font-size: 0.9rem; text-decoration: none; }
 .inspect-links a:hover, .crumb-link:hover { text-decoration: underline; }
 .crumb-link { margin-left: auto; }
-.topology-tools button, .topology-trail button, .inspect-action {
+.topology-tools button {
     border: 1px solid var(--line); background: var(--paper); color: var(--ink);
     border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; cursor: pointer;
 }
-.topology-tools button:hover, .topology-trail button:hover, .inspect-action:hover {
+.topology-tools button:hover {
     border-color: var(--brand); color: var(--brand-deep);
 }
 .topology-tools button.active { background: var(--brand); border-color: var(--brand); color: var(--ink); }
 .topology-time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .topology-trail { color: var(--muted); }
-.topology-trail button { border: none; background: transparent; color: var(--muted); }
 .topology-layout {
     display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 1rem;
     padding: 1rem 1.5rem 1.5rem;
@@ -509,13 +508,49 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link.done .link-line { stroke-dasharray: 9 6; }
 .topology-link.retry .link-line { stroke: var(--red); stroke-dasharray: 4 7; }
 .topology-link.session .link-line { stroke: #805ad5; }
-.topology-link.publishconsume .link-line { stroke: var(--orange); }
+.topology-link.publish-consume .link-line { stroke: var(--orange); }
 .topology-link.streaming .link-line { stroke-width: 5; }
 .topology-link .link-hit { fill: none; stroke: transparent; stroke-width: 18; cursor: pointer; }
+/* What passes over a line, written on it: a used line its volume and rate,
+   a configured one that has carried nothing says so (2026-09-25). */
+.topology-link .link-figure {
+    fill: var(--ink); font-size: 11px; font-variant-numeric: tabular-nums;
+    paint-order: stroke; stroke: var(--paper); stroke-width: 4px; pointer-events: none;
+}
+.topology-link.configured .link-figure { fill: var(--muted); font-style: italic; }
+/* The node the view is open at frames its children, and what lies outside it
+   is one marker beyond the frame, said to be outside (2026-09-25). */
+.topology-focus .focus-frame {
+    fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 6;
+}
+.topology-focus .focus-label { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.topology-focus .focus-kind { fill: var(--muted); font-size: 11px; font-weight: 400; }
+.topology-outside .outside-body {
+    fill: var(--paper); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4;
+}
+.topology-outside .node-label { fill: var(--muted); font-size: 13px; font-weight: 700; }
+.topology-outside .node-kind { fill: var(--muted); font-size: 10px; }
+.topology-node-link { cursor: pointer; }
+.topology-node-link:focus-visible .node-body { stroke: var(--brand); stroke-width: 3; }
+.topology-trail a { color: var(--muted); text-decoration: none; }
+.topology-trail a:hover { color: var(--brand-deep); text-decoration: underline; }
+.topology-trail a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.topology-inspector h3 { font-size: 0.85rem; margin: 1rem 0 0.4rem; color: var(--muted); }
+.topology-beneath, .topology-traffic { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; }
+.topology-beneath li, .topology-traffic li {
+    display: flex; flex-wrap: wrap; gap: 0.2rem 0.6rem; padding: 0.3rem 0;
+    border-top: 1px solid var(--line);
+}
+.topology-beneath a { color: var(--brand-deep); text-decoration: none; }
+.topology-beneath a:hover { text-decoration: underline; }
+.topology-beneath .beneath-open { font-weight: 700; font-family: ui-monospace, monospace; }
+.topology-beneath .kind, .topology-traffic .origin { color: var(--muted); font-size: 0.75rem; }
+.topology-traffic .ends { font-family: ui-monospace, monospace; }
+.topology-traffic li.configured .figure { color: var(--muted); font-style: italic; }
 .topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
 .topology-link.retry .flow-particle { fill: var(--red); }
 .topology-link:is(.done, .stressed) .flow-particle { fill: var(--mood); }
-.topology-link.publishconsume .flow-particle { fill: var(--orange); }
+.topology-link.publish-consume .flow-particle { fill: var(--orange); }
 .arrow-head { fill: var(--brand); }
 .topology-legend {
     display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem;
@@ -524,7 +559,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .topology-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
 .topology-legend i { display: inline-block; width: 1.5rem; border-top: 3px solid var(--brand); }
-.topology-legend .publishconsume i { border-color: var(--orange); }
+.topology-legend .publish-consume i { border-color: var(--orange); }
 .topology-legend .session i { border-color: #805ad5; }
 .topology-legend .retry i { border-color: var(--red); border-top-style: dashed; }
 .topology-legend .streaming i { border-top-width: 5px; }

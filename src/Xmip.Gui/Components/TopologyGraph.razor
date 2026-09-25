@@ -4,10 +4,11 @@
    line remains the configured or observed relationship.
 
    What is drawn is what is configured and what is observed, together (the
-   owner, 2026-09-18) — origin is said on what is selected, and is never a
-   filter here. The legend names the patterns. *@
+   owner, 2026-09-18) — origin is never a filter here: a line configured and
+   never used is dashed and says so on itself, a used one says its volume and
+   rate (the owner, 2026-09-25). Every node is a link to its drill; a line is
+   selected by a click. The legend names the patterns. *@
 @using Xmip.Gui.Surface
-@using static Xmip.Gui.Surface.TopologyWords
 
 <div class="topology-canvas">
     <svg viewBox="0 0 1000 620" role="img"
@@ -19,6 +20,32 @@
             </marker>
         </defs>
 
+        @* The node the view is open at frames what is beneath it (ADR-0052,
+           amendment 2026-09-25): the focus and its children, and nothing
+           beside them. Until then the cluster box stood beside a node's own
+           stages with every other node's traffic drawn into it. *@
+        @if (Focus is not null)
+        {
+            <g class="topology-focus">
+                <rect class="focus-frame" x="150" y="8" width="700" height="604" rx="18" />
+                <text class="focus-label" x="170" y="34">
+                    @Focus.Label <tspan class="focus-kind">@English.Name(Focus.Kind)</tspan>
+                </text>
+            </g>
+        }
+
+        @* Where traffic leaves the open node: one marker, outside the frame and
+           said to be, rather than a box of whatever else there is. *@
+        @if (Focus is not null && RenderedLinks.Any(Leaves))
+        {
+            <g class="topology-outside" transform="@Transform(Outside)">
+                <title>Traffic between @Focus.Label and what lies outside it</title>
+                <rect class="outside-body" x="-60" y="-34" width="120" height="68" rx="34" />
+                <text class="node-label" text-anchor="middle" y="-3">outside</text>
+                <text class="node-kind" text-anchor="middle" y="16">beyond @Focus.Label</text>
+            </g>
+        }
+
         @foreach (RenderedLink link in RenderedLinks)
         {
             <g class="@LinkClass(link.Link)">
@@ -26,6 +53,11 @@
                       @onclick="() => OnSelectLink.InvokeAsync(link.Link)" />
                 <path id="@SvgId(link.Link.Id)" class="link-line" d="@Curve(link)"
                       marker-end="url(#topology-arrow)" />
+                @* What passes over it, on the line: the owner, 2026-09-25 — the
+                   topology did not show configured traffic or its usage. A
+                   link configured and never used says so here. *@
+                <text class="link-figure" text-anchor="middle"
+                      x="@Middle(link).X" y="@Middle(link).Y">@English.Traffic(link.Link)</text>
                 @if (!MotionPaused)
                 {
                     @for (int particle = 0; particle < Particles(link.Link); particle++)
@@ -46,42 +78,55 @@
         @foreach (PlacedNode placed in PlacedNodes)
         {
             TopologyNode node = placed.Node;
+            @* Every node is a link to its drill (the owner, 2026-09-25: one
+               can't drill down to nodes): open where something is beneath
+               it, else its configuration. *@
+            <a class="topology-node-link" href="@Drill(node)">
             <g class="@NodeClass(node)"
                transform="@Transform(placed)"
-               style="@NodeStyle(node)"
-               tabindex="0"
-               role="button"
-               @onclick="() => OnSelectNode.InvokeAsync(node)">
+               style="@NodeStyle(node)">
                 <title>@Title(node)</title>
                 <circle class="node-pulse" r="42" />
                 <rect class="node-body" x="-64" y="-34" width="128" height="68" rx="12" />
                 <circle class="node-state" cx="-47" cy="-17" r="6" />
                 <text class="node-label" text-anchor="middle" y="-3">@node.Label</text>
-                <text class="node-kind" text-anchor="middle" y="16">@Kind(node.Kind)</text>
+                <text class="node-kind" text-anchor="middle" y="16">@English.Name(node.Kind)</text>
                 <rect class="node-load-track" x="-48" y="24" width="96" height="4" rx="2" />
                 <rect class="node-load" x="-48" y="24" width="@LoadWidth(node)"
                       height="4" rx="2" />
             </g>
+            </a>
         }
     </svg>
 
     <div class="topology-legend" aria-label="Communication pattern legend">
         @foreach (CommunicationPattern pattern in Enum.GetValues<CommunicationPattern>())
         {
-            <span class="@Pattern(pattern)"><i></i>@PatternName(pattern)</span>
+            <span class="@English.Word(pattern)"><i></i>@English.Name(pattern)</span>
         }
     </div>
 </div>
 
 @code {
 
-    private sealed record PlacedNode(TopologyNode Node, double X, double Y);
+    // A place on the canvas a line may end at: a drawn node, the open node's
+    // frame, or the marker for what lies outside it.
+    private record Spot(double X, double Y);
+
+    private sealed record PlacedNode(TopologyNode Node, double X, double Y) : Spot(X, Y);
 
     private sealed record RenderedLink(
         CommunicationLink Link,
-        PlacedNode From,
-        PlacedNode To,
+        Spot From,
+        Spot To,
         int Index);
+
+    // The open node itself, where a line ends at it rather than at one of its
+    // children: the top of its frame.
+    private static readonly Spot FocusEdge = new(500D, 8D);
+
+    // What lies outside the open node, to the right of its frame.
+    private static readonly Spot Outside = new(920D, 300D);
 
     /// <summary>The configured and observed topology to draw.</summary>
     [Parameter]
@@ -95,9 +140,9 @@
     [Parameter]
     public bool MotionPaused { get; set; }
 
-    /// <summary>Raised with the node the operator clicked.</summary>
+    /// <summary>Where a node leads: its drill, written once by the page.</summary>
     [Parameter]
-    public EventCallback<TopologyNode> OnSelectNode { get; set; }
+    public Func<TopologyNode, string> Drill { get; set; } = _ => string.Empty;
 
     /// <summary>Raised with the communication relationship the operator clicked.</summary>
     [Parameter]
@@ -106,15 +151,18 @@
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
 
+    private TopologyNode? Focus =>
+        FocusId is not null && NodeById.TryGetValue(FocusId, out TopologyNode? node) ? node : null;
+
+    // Open at a node: its children and nothing else. Open at nothing: every
+    // top-level thing.
     private IReadOnlyList<TopologyNode> VisibleNodes
     {
         get
         {
-            IEnumerable<TopologyNode> nodes = FocusId is null
+            IEnumerable<TopologyNode> nodes = Focus is null
                 ? Snapshot.Nodes.Where(node => node.ParentId is null)
-                : Snapshot.Nodes.Where(node => node.ParentId == FocusId)
-                    .Concat(Snapshot.Nodes.Where(node =>
-                        node.ParentId is null && node.Id != FocusId));
+                : Snapshot.Nodes.Where(node => node.ParentId == Focus.Id);
 
             return nodes.Where(Show)
                 .DistinctBy(node => node.Id)
@@ -155,20 +203,24 @@
 
             foreach (CommunicationLink link in Snapshot.Links.Where(Show))
             {
-                string? from = Representative(link.From, positions);
-                string? to = Representative(link.To, positions);
+                Spot? from = Representative(link.From, positions);
+                Spot? to = Representative(link.To, positions);
 
+                // Nothing to draw within one drawn thing, and nothing that
+                // runs entirely outside the open node.
                 if (from is null || to is null || from == to)
                 {
                     continue;
                 }
 
-                links.Add(new RenderedLink(link, positions[from], positions[to], links.Count));
+                links.Add(new RenderedLink(link, from, to, links.Count));
             }
 
             return links;
         }
     }
+
+    private static bool Leaves(RenderedLink link) => link.From == Outside || link.To == Outside;
 
     // The topology is always what is configured and what is observed,
     // together: the owner, 2026-09-18, on a switch between the two that the
@@ -178,9 +230,11 @@
 
     private static bool Show(CommunicationLink link) => link is not null;
 
-    // A link between things that are closed is drawn between the open
+    // A link between things that are closed is drawn between the drawn
     // ancestors that hold them: node to node while the stages are closed.
-    private string? Representative(
+    // Open at a node, an end that is the node itself meets its frame, and an
+    // end that lies outside it meets the outside marker.
+    private Spot? Representative(
         string nodeId,
         IReadOnlyDictionary<string, PlacedNode> positions)
     {
@@ -188,9 +242,14 @@
 
         while (current is not null)
         {
-            if (positions.ContainsKey(current))
+            if (positions.TryGetValue(current, out PlacedNode? placed))
             {
-                return current;
+                return placed;
+            }
+
+            if (current == Focus?.Id)
+            {
+                return FocusEdge;
             }
 
             current = NodeById.TryGetValue(current, out TopologyNode? node)
@@ -198,20 +257,20 @@
                 : null;
         }
 
-        return null;
+        return Focus is null ? null : Outside;
     }
 
     private static string LinkClass(CommunicationLink link) =>
-        $"topology-link {MoodClass.Of(link.State)} {Origin(link.Origin)} {Pattern(link.Pattern)}";
+        $"topology-link {MoodClass.Of(link.State)} {English.Word(link.Origin)} {English.Word(link.Pattern)}";
 
     private static string NodeClass(TopologyNode node) =>
-        $"topology-node {MoodClass.Of(node.State)} {Origin(node.Origin)} "
+        $"topology-node {MoodClass.Of(node.State)} {English.Word(node.Origin)} "
         + (node.Activity > 0.05 ? "active" : "");
 
     private static string Title(TopologyNode node) =>
-        $"{node.Label}: {node.Kind}, {English.Mood(node.State)}. {node.Evidence}";
+        $"{node.Label}: {English.Name(node.Kind)}, {English.Mood(node.State)}. {node.Evidence}";
 
-    private static string Transform(PlacedNode node) =>
+    private static string Transform(Spot node) =>
         FormattableString.Invariant($"translate({node.X:0.##} {node.Y:0.##})");
 
     private static string NodeStyle(TopologyNode node)
@@ -234,24 +293,41 @@
     private static int Stable(string value) =>
         value.Aggregate(17, (hash, character) => unchecked(hash * 31 + character));
 
-    private static string Curve(RenderedLink link)
+    // The curve's control point: bent off the straight line by a stable
+    // amount per link, so two links between one pair do not overlap.
+    private static (double X, double Y) Control(RenderedLink link)
     {
-        double fromX = link.From.X;
-        double fromY = link.From.Y;
-        double toX = link.To.X;
-        double toY = link.To.Y;
-        double middleX = (fromX + toX) / 2D;
-        double middleY = (fromY + toY) / 2D;
-        double dx = toX - fromX;
-        double dy = toY - fromY;
+        double dx = link.To.X - link.From.X;
+        double dy = link.To.Y - link.From.Y;
         double length = Math.Max(Math.Sqrt(dx * dx + dy * dy), 1D);
         uint stable = unchecked((uint)Stable(link.Link.Id));
         double bend = ((stable % 5U) - 2D) * 14D;
-        double controlX = middleX - dy / length * bend;
-        double controlY = middleY + dx / length * bend;
+
+        return (
+            (link.From.X + link.To.X) / 2D - dy / length * bend,
+            (link.From.Y + link.To.Y) / 2D + dx / length * bend);
+    }
+
+    private static string Curve(RenderedLink link)
+    {
+        (double controlX, double controlY) = Control(link);
 
         return FormattableString.Invariant(
-            $"M {fromX:0.##} {fromY:0.##} Q {controlX:0.##} {controlY:0.##} {toX:0.##} {toY:0.##}");
+                $"M {link.From.X:0.##} {link.From.Y:0.##} Q {controlX:0.##} {controlY:0.##} ")
+            + FormattableString.Invariant($"{link.To.X:0.##} {link.To.Y:0.##}");
+    }
+
+    // Where the curve is halfway, for the figure written on it: a quadratic
+    // curve at one half is a quarter of each end and half its control point.
+    private static (string X, string Y) Middle(RenderedLink link)
+    {
+        (double controlX, double controlY) = Control(link);
+        double x = (link.From.X + link.To.X) / 4D + controlX / 2D;
+        double y = (link.From.Y + link.To.Y) / 4D + controlY / 2D - 6D;
+
+        return (
+            x.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+            y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
     }
 
     private static string Motion(RenderedLink link, bool reverse) =>

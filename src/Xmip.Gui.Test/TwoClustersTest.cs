@@ -12,7 +12,7 @@ namespace Xmip.Gui.Test;
 /// One host, two clusters (ADR-0052, amendment 2026-09-20). The amendment of
 /// 2026-09-14 left *one page navigating between them* queued; this is that
 /// page, on all three views. Rendered over the surface library's two cluster
-/// fixtures: C1 with R1, P1 and S1, and C2 with R2 and a done S2.
+/// fixtures: C1 with alpha, beta and gamma, and C2 with delta and a done zeta.
 /// </summary>
 public sealed class TwoClustersTest : BunitContext
 {
@@ -68,13 +68,13 @@ public sealed class TwoClustersTest : BunitContext
 
         Assert.Equal("C2", Current(page));
         Assert.Contains(
-            "RoundTrip · C2 · nodes R2=receive S2=send · online R2 · harsh",
+            "RoundTrip · C2 · nodes delta=receive zeta=send · online delta · harsh",
             page.Find("p.run-line").TextContent,
             StringComparison.Ordinal);
 
         // C2's tree, and nothing of C1's: two clusters are two scope trees.
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C2/node/R2")}"));
-        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/R1")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C2/node/delta")}"));
+        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
     }
 
     [Fact]
@@ -103,10 +103,10 @@ public sealed class TwoClustersTest : BunitContext
         // tree at a scope that is not in it.
         Address("/configuration?cluster=C2");
         IElement row = Render<Configuration>()
-            .Find($"#{ScopeLink.Anchor("xmip:///C2/node/S2/send/tcp/json")}");
+            .Find($"#{ScopeLink.Anchor("xmip:///C2/node/zeta/send/tcp/json")}");
 
         Assert.Equal(
-            ScopeLink.Monitor("xmip:///C2/node/S2/send/tcp/json", "C2"),
+            ScopeLink.Monitor("xmip:///C2/node/zeta/send/tcp/json", "C2"),
             row.QuerySelector("a.tree-link:not(.problem)")?.GetAttribute("href"));
         Assert.Contains(
             "cluster=C2", ScopeLink.Monitor("xmip:///C2", "C2"), StringComparison.Ordinal);
@@ -125,7 +125,7 @@ public sealed class TwoClustersTest : BunitContext
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
         Assert.Equal("C1", Current(page));
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/R1")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
     }
 
     [Fact]
@@ -139,8 +139,8 @@ public sealed class TwoClustersTest : BunitContext
 
         Assert.Empty(page.FindAll("a.cluster-pick"));
         Assert.Equal(
-            ScopeLink.Monitor("xmip:///C1/node/R1"),
-            page.Find($"#{ScopeLink.Anchor("xmip:///C1/node/R1")}")
+            ScopeLink.Monitor("xmip:///C1/node/alpha"),
+            page.Find($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}")
                 .QuerySelector("a.tree-link:not(.problem)")?.GetAttribute("href"));
         Assert.Equal("configuration#s-xmip----C1", ScopeLink.Configuration("xmip:///C1"));
         Assert.Equal("/topology", ScopeLink.Topology());
