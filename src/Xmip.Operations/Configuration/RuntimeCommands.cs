@@ -1,3 +1,4 @@
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Operations.Configuration;
@@ -12,9 +13,11 @@ namespace Xmip.Operations.Configuration;
 /// is loaded here alone, from the library the one discovery rule found. Each
 /// answers with the <see cref="ConfigurationVerdict"/> — the record and the
 /// sentence — so the page decides from the status and shows the words
-/// (ADR-0052 clause 4).
+/// (ADR-0052 clause 4). Both are an operator's acts and are audited, with
+/// what the runtime answered (ADR-0062).
 /// </summary>
-public sealed class RuntimeCommands(IOperatorSurface surface, string libraryPath)
+public sealed class RuntimeCommands(
+    IOperatorSurface surface, string libraryPath, ProgramAudit audit)
 {
     private NativeOperator? _own;
 
@@ -23,13 +26,32 @@ public sealed class RuntimeCommands(IOperatorSurface surface, string libraryPath
     /// answer is the only one the editor gives.</summary>
     public ConfigurationVerdict Validate(string configurationPath, string configuration)
     {
-        return Runtime().Validate(configurationPath, configuration);
+        return Audited("validate", Runtime().Validate(configurationPath, configuration));
     }
 
     /// <summary>Start a node from its configuration through the native runtime.</summary>
     public ConfigurationVerdict Start(string configurationPath)
     {
-        return Runtime().Start(configurationPath);
+        return Audited("start node", Runtime().Start(configurationPath));
+    }
+
+    // The act and what came of it, one record: Finished when the runtime did
+    // what was asked, Failure with its sentence when it did not.
+    private ConfigurationVerdict Audited(string action, ConfigurationVerdict verdict)
+    {
+        audit.Record(
+            action,
+            verdict.Ok ? AuditPhase.Finished : AuditPhase.Failure,
+            verdict.Ok ? AuditSeverity.Information : AuditSeverity.Error,
+            verdict.Said,
+            new Dictionary<string, string>
+            {
+                ["configuration"] = verdict.Path,
+                ["status"] = $"{verdict.Status}",
+                ["problems"] = string.Join("; ", verdict.Problems),
+            });
+
+        return verdict;
     }
 
     private NativeOperator Runtime()

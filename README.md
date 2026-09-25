@@ -132,3 +132,24 @@ on another machine follow it without polling (ADR-0052, amendment
 because Xmip configures nothing in JSON anywhere — the web host's default
 `appsettings.json` sources are removed in `Program.cs` and the TOML reader in
 `Xmip.Surface` takes their place.
+
+## What the hosts audit
+
+Both hosts audit through `xmip-core-audit` (ADR-0062), through
+`Xmip.Surface`'s `ProgramAudit`, as programs `xmip-gui-web` and
+`xmip-operations`, into the directory `[Xmip] AuditDirectory` names in
+`xmip.gui.toml`, else the one `XMIP_AUDIT_DIRECTORY` names, else the
+operating system's log. Each records its start and stop, every exception
+nothing handled, and — through `Xmip.Gui`'s `AuditLoggerProvider`, added to
+each host's logging — every error the host logs, with the exception, the
+category and the event. A Blazor circuit that dies, which the browser shows
+as *An unhandled error has occurred*, is logged by the framework at Error and
+so is a record; the web host's `AuditCircuitHandler` records who was
+connected — each circuit opened, its connection lost and regained, closed. The
+desktop records each validate and start of a node configuration with what
+the runtime answered. A web host that cannot start records why, and when the
+runtime's library cannot be loaded at all the host writes one entry to the
+operating system's log itself, saying so. A Debug build of the web host has
+`/debug/unhandled`, which throws, so the path from a failure to its record
+can be shown on the real host; a Release build has no such route.
+`src/Xmip.Gui.Test`'s `AuditLoggerProviderTest` holds the circuit's case.
