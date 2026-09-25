@@ -1,5 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using Xmip.Abi.Operate;
+using Xmip.Gui.Hosting;
 using Xmip.Gui.Surface;
 using Xmip.Operations.Configuration;
 using Xmip.Surface;
@@ -8,12 +10,16 @@ namespace Xmip.Operations;
 
 public static class MauiProgram
 {
+    /// <summary>The System Process (ADR-0053), and the program every audit
+    /// record of this host names.</summary>
+    public const string Name = "xmip-operations";
+
     public static MauiApp CreateMauiApp()
     {
         // What this process says of itself while it runs (ADR-0053). The
         // desktop configures and monitors a real node: runtime.
         Xmip.Surface.ProcessDeclaration.Declare(
-            "xmip-operations",
+            Name,
             Xmip.Surface.ScopeTree.Root,
             Xmip.Surface.ProcessDeclaration.Runtime);
 
@@ -41,6 +47,15 @@ public static class MauiProgram
         // the runtime's target/debug needs the repo root, not the exe's folder.
         string basePath = RepositoryRoot(here) ?? here;
 
+        // Everything this host does and every failure, audited through the
+        // audit capability (ADR-0062): into the directory xmip.gui.toml names,
+        // else where the capability decides. Every error the host logs is a
+        // record, and so is every exception nothing handled.
+        ProgramAudit audit = new(Name, ProgramAudit.Stated(builder.Configuration, basePath));
+        audit.WatchUnhandled();
+        builder.Logging.AddProvider(new AuditLoggerProvider(audit));
+        builder.Services.AddSingleton(audit);
+
         // The role is assigned, never chosen in the UI (ADR-0009): a person
         // cannot promote themselves. It comes from the config file or the
         // XMIP_ROLE environment variable and defaults to Observer, so a missing
@@ -64,7 +79,16 @@ public static class MauiProgram
 
             if (surface is NativeOperator native && !string.IsNullOrWhiteSpace(node))
             {
-                _ = native.Start(TomlDocument.Resolve(node, basePath));
+                ConfigurationVerdict started = native.Start(TomlDocument.Resolve(node, basePath));
+
+                // Started at launch rather than by a button, and audited the
+                // same way (ADR-0062).
+                audit.Record(
+                    "start node",
+                    started.Ok ? AuditPhase.Finished : AuditPhase.Failure,
+                    started.Ok ? AuditSeverity.Information : AuditSeverity.Error,
+                    started.Said,
+                    new Dictionary<string, string> { ["configuration"] = started.Path });
             }
 
             return surface;
@@ -83,14 +107,18 @@ public static class MauiProgram
         // runtime is found by the one rule and loaded for the commands alone.
         builder.Services.AddSingleton(services => new RuntimeCommands(
             services.GetRequiredService<IOperatorSurface>(),
-            RuntimeLibrary.Find(builder.Configuration, basePath)));
+            RuntimeLibrary.Find(builder.Configuration, basePath),
+            audit));
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        MauiApp app = builder.Build();
+        audit.Record("start", AuditPhase.Begin, AuditSeverity.Information);
+
+        return app;
     }
 
     /// <summary>The repository root above a bin directory, found by walking up

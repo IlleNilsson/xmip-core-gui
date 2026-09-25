@@ -199,6 +199,11 @@
         "resolved": "11.0.0-preview.7.26381.103",
         "contentHash": "Bzm+DP6zeOl4eJ6T8bbsKFkRaYSRBn/r9GzEgKPCVYlSEiU6wOLq/eFxOFGYxIOGn5zak4rQq7Df4U/mm18LRw=="
       },
+      "System.Diagnostics.EventLog": {
+        "type": "Transitive",
+        "resolved": "10.0.0",
+        "contentHash": "uaFRda9NjtbJRkdx311eXlAA3n2em7223c1A8d1VWyl+4FL9vkG7y2lpPfBU9HYdj/9KgdRNdn1vFK8ZYCYT/A=="
+      },
       "Tomlyn": {
         "type": "Transitive",
         "resolved": "2.3.0",
@@ -221,6 +226,7 @@
         "dependencies": {
           "Microsoft.AspNetCore.SignalR.Client": "[10.0.12, )",
           "Microsoft.Extensions.Configuration": "[10.0.6, )",
+          "System.Diagnostics.EventLog": "[10.0.0, )",
           "Tomlyn.Extensions.Configuration": "[2.0.0, )",
           "Xmip.Abi": "[1.0.0, )"
         }

@@ -31,6 +31,12 @@ NodeConfiguration = "module/core/operation/gui/samples/edge-01.xmip.toml"
 # The web host to follow when Surface = "remote".
 # Url = "http://another-host:5087"
 
+# Where this desktop's audit records go (ADR-0062): its start and stop, every
+# validate and start of a node, and every error it logs, as
+# <AuditDirectory>/audit.toml. Unset, the audit capability decides:
+# XMIP_AUDIT_DIRECTORY, else the operating system's log.
+# AuditDirectory = ".local-work/audit"
+
 # The role this desktop runs as (ADR-0009): observer, operator or developer.
 # Assigned here or in XMIP_ROLE, never chosen in the UI; absent, Observer.
 # Role = "operator"

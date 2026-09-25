@@ -1,11 +1,16 @@
 using Microsoft.AspNetCore.Components.WebView.Maui;
+using Xmip.Abi.Operate;
+using Xmip.Surface;
 
 namespace Xmip.Operations;
 
 public partial class App : Application
 {
-    public App()
+    private readonly ProgramAudit _audit;
+
+    public App(ProgramAudit audit)
     {
+        _audit = audit;
         InitializeComponent();
     }
 
@@ -21,6 +26,13 @@ public partial class App : Application
             ComponentType = typeof(Components.Routes),
         });
 
-        return new Window(new ContentPage { Content = view }) { Title = "Xmip Operations" };
+        Window window = new(new ContentPage { Content = view }) { Title = "Xmip Operations" };
+
+        // The desktop stops when its one window goes (ADR-0062: what a
+        // program started and stopped).
+        window.Destroying += (_, _) =>
+            _audit.Record("stop", AuditPhase.Finished, AuditSeverity.Information);
+
+        return window;
     }
 }
