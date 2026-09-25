@@ -35,8 +35,22 @@ RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime
 # ]
 
 # The web host to follow when Surface = "remote". A host that does not answer
-# is said so on the page.
-# Url = "http://another-host:5087"
+# is said so on the page. HTTPS, presenting Certificate below and checking the
+# host's against TrustAnchor; plain http only to this machine (ADR-0063
+# clause 1).
+# Url = "https://another-host:5443"
+
+# Xmip's own traffic is TLS (ADR-0063 clause 1). This host binds plain http on
+# loopback only, and says so in its log and its audit; any other address is
+# https:// and presents this certificate — a PEM chain, leaf first, and its
+# PEM private key — and checks the certificate a remote surface presents
+# against TrustAnchor, a PEM file of anchors (unset: the operating system's
+# trust store). The same keys are what this host presents and trusts when it
+# follows another. Each else XMIP_CERTIFICATE, XMIP_PRIVATE_KEY and
+# XMIP_TRUST_ANCHOR. Where the files come from is provisioning's (ADR-0034).
+# Certificate = "D:/Repos/Xmip/.local-work/tls/node.pem"
+# PrivateKey = "D:/Repos/Xmip/.local-work/tls/node.key"
+# TrustAnchor = "D:/Repos/Xmip/.local-work/tls/anchor.pem"
 
 # Where this host's audit records go (ADR-0062): its start and stop, every
 # error it logs — a circuit that dies among them — and every viewer's
@@ -45,6 +59,8 @@ RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime
 # to .local-work/audit, else the operating system's log.
 # AuditDirectory = "D:/Repos/Xmip/.local-work/audit"
 
+# Where this host listens. Plain http is refused anywhere but loopback; for
+# another machine, https://0.0.0.0:5443 with Certificate and PrivateKey above.
 [Kestrel.Endpoints.Http]
 Url = "http://localhost:5087"
 

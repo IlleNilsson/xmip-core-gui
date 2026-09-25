@@ -105,6 +105,17 @@ try
     // asking (ADR-0052, amendment 2026-09-15). The same surface the pages read.
     builder.Services.AddXmipSurfaceRelay();
 
+    // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host
+    // binds beyond this machine is HTTPS with the certificate xmip.gui.toml
+    // names, asking a caller for one and checking it; plain HTTP beyond
+    // loopback is refused here, before anything listens. Loopback is the one
+    // exception, and it is said below where it is bound.
+    SurfaceTls tls = SurfaceTls.From(builder.Configuration, builder.Environment.ContentRootPath);
+    IReadOnlyList<string> plain = SurfaceBinding.Check(
+        SurfaceBinding.Addresses(builder.Configuration), tls);
+    builder.WebHost.UseXmipTls(tls, why => audit.Record(
+        "tls", AuditPhase.Failure, AuditSeverity.Warning, why));
+
     WebApplication app = builder.Build();
 
     // What this process says of itself while it runs (ADR-0053): the surface it
@@ -135,7 +146,8 @@ try
     app.MapRazorComponents<App>()
         .AddAdditionalAssemblies(typeof(Xmip.Gui.Pages.Cluster).Assembly)
         .AddInteractiveServerRenderMode();
-    app.MapXmipSurfaceHub();
+    app.MapXmipSurfaceHub(why => audit.Record(
+        "tls", AuditPhase.Failure, AuditSeverity.Warning, why));
 
 #if DEBUG
     // A Debug build's own unhandled error, so the path from a failure to its
@@ -154,6 +166,19 @@ try
                 ?? app.Configuration[SurfaceChoice.SurfaceKey] ?? ScopeTree.Root,
             ["purpose"] = ProcessDeclaration.PurposeOf(app.Configuration),
         }));
+    // The one exception, said where it is made (ADR-0063 clause 1): a log
+    // line and an audit record for every plain address, which is loopback.
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        foreach (string address in plain)
+        {
+            app.Logger.PlainLoopback(address);
+            audit.Record(
+                "tls", AuditPhase.Execute, AuditSeverity.Information,
+                $"{address} is plain HTTP on loopback, ADR-0063 clause 1's one exception",
+                new Dictionary<string, string> { ["url"] = address });
+        }
+    });
     app.Lifetime.ApplicationStopping.Register(() => audit.Record(
         "stop", AuditPhase.Finished, AuditSeverity.Information));
 
