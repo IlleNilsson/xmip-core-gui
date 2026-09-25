@@ -151,13 +151,12 @@
     }
     else
     {
-        @foreach (string node in ShownNodes)
+        @foreach (string nodeScope in ShownNodes)
         {
-            IReadOnlyList<HealthRecord> onNode = OnNode(node);
-            string nodeScope = ScopeTree.Root + node;
+            IReadOnlyList<HealthRecord> onNode = OnNode(nodeScope);
             <div class="row @Class(onNode)">
                 <span class="dot"></span>
-                <span class="scope">@node</span>
+                <span class="scope">@ScopeTree.Parts(nodeScope).LastOrDefault()</span>
                 <span class="node">@onNode.Count thing(s)</span>
                 <span class="evidence">@WorstEvidence(onNode)</span>
                 <span class="age">@English.Rollup(onNode)</span>
@@ -215,6 +214,9 @@
     private IReadOnlyDictionary<string, IReadOnlyList<HealthRecord>> ByNode { get; set; } =
         new Dictionary<string, IReadOnlyList<HealthRecord>>(StringComparer.Ordinal);
 
+    // The nodes by their scopes: what the publisher draws as a node, not the
+    // scopes beneath the root, which over a cluster are the cluster itself
+    // (the owner, 2026-09-25: a cluster of three said "1 node(s)").
     private IReadOnlyList<string> Nodes { get; set; } = [];
 
     // The filter narrows what is shown, never what the cluster is: the banner
@@ -225,7 +227,7 @@
     private ScopeFilter Filter { get; set; } = ScopeFilter.None;
 
     private IReadOnlyList<string> ShownNodes =>
-        [.. Nodes.Where(node => Filter.Shows(ScopeTree.Root + node))];
+        [.. Nodes.Where(Filter.Shows)];
 
     private void Filtered(string pattern)
     {
@@ -246,10 +248,10 @@
             Focus = ScopeTree.Root;
         }
 
-        Nodes = Index.Nodes();
+        Nodes = Surface.NodeScopes();
         ByNode = Nodes.ToDictionary(
             node => node,
-            node => Index.Health(ScopeTree.Root + node),
+            node => Index.Health(node),
             StringComparer.Ordinal);
         ByStage = ScopeTree.Stages.ToDictionary(
             stage => stage,

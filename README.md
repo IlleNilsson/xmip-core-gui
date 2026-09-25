@@ -34,12 +34,30 @@ Three views, and three points to drill from: **Configuration**, the classic
 tree, holding still; **Monitor**, the board that follows Receive → Process →
 Send; and **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18). A
 scope reached in one leads to the same scope in the others, written in one
-place, `ScopeLink`: a Configuration row to the Monitor's drill, the Monitor's
-drill to the Configuration row, a node or a link selected on the Topology to
-both. In the tree a branch that is not fine names the leaf that explains it
-and links to that leaf's row, with the way to it standing open. The Topology
-is always what is configured and what is observed, together; there is no
-switch between them.
+place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
+same thing on the Topology, the Monitor's drill to the Configuration row, a
+node on the Topology to its drill and, beside the canvas, to both. The tree's
+first row is the cluster and nothing heads it twice; a row's kind is what the
+publisher's topology says the thing is — cluster, node, stage, endpoint —
+where one is published. In the tree a branch that is not fine names the leaf
+that explains it and links to that leaf's row, with the way to it standing
+open. The Topology is always what is configured and what is observed,
+together; there is no switch between them. It opens on the cluster's nodes and
+the traffic between them, and the drill is in the address
+(`/topology?focus=node/alpha`): every node on the canvas is a link, open where
+something is beneath it and its configuration where nothing is, so cluster to
+node to stage to endpoint is a chain of addresses. Every line says what passes
+over it — its volume and rate, or `configured · no traffic observed` on a path
+configured and never used, drawn dashed — and the inspector lists every link
+within the open node with its origin (ADR-0052, amendment 2026-09-25). Open at a
+node, the canvas is that node framed with what is beneath it, and nothing
+beside it; traffic leaving it runs to one marker labeled *outside*, and the
+inspector names that end the same way. The Monitor counts and lists the nodes
+the publisher draws as nodes (`IOperatorSurface.NodeScopes`), and its crumb at
+the root leads to the tree from its top. What a topology kind, origin or
+pattern is called — its word, which styles it, and its name, which a person
+reads — is `observe::topology`'s, asked of the runtime through `English`;
+the view keeps no word list of its own.
 
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the three views over the surface library's own published fixture, so what is
@@ -55,7 +73,10 @@ decorative packets or an assumed bidirectional flow. The snapshot surface reads
 this model, and a Playground roll publishes it: the cluster, its nodes, the
 stages of the message path each node runs — receive, process, send — one
 endpoint per transport beneath a receive or a send stage, and the handoffs
-between the nodes, R to P to S, each link's volume its hops; the shared store
+between the nodes, receive to process to send — every pair the roster
+configures, and every pair a handoff was delivered over, each link's volume
+its hops and its rate their rise per second since the roll's last
+publication; the shared store
 is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
 ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
 started with — tests, cluster, nodes, which are online, the level — in one line

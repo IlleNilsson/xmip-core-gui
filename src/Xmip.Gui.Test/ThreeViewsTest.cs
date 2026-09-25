@@ -1,4 +1,5 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
@@ -60,14 +61,16 @@ public sealed class ThreeViewsTest : BunitContext
     }
 
     [Fact]
-    public void TheClusterRowLinksToTheWorstLeafInTheCluster()
+    public void NoRowStandsAboveTheTree()
     {
+        // The owner, 2026-09-25: two headers for the cluster. The tree's own
+        // rows are all there is; the first level heads it.
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
-        AngleSharp.Dom.IElement cluster = page.Find(".tree > .tree-row");
-        Assert.Equal(
-            ScopeLink.Configuration(Done),
-            cluster.QuerySelector("a.tree-link.problem")?.GetAttribute("href"));
+        Assert.Empty(page.FindAll(".tree > .tree-row"));
+        Assert.All(
+            page.FindAll(".tree-row"),
+            row => Assert.StartsWith("s-", row.Id ?? string.Empty, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -96,19 +99,28 @@ public sealed class ThreeViewsTest : BunitContext
     [Fact]
     public void TheMonitorsDrillLeadsToTheConfigurationAtTheSameScope()
     {
-        IRenderedComponent<Cluster> page = Render<Cluster>();
+        // At the root the crumb leads to the tree from its top: the root is no
+        // row, and until 2026-09-25 the link named #s-xmip----, which nothing
+        // carries.
+        AngleSharp.Dom.IElement root = Render<Cluster>().Find("nav.crumbs a.crumb-link");
+        Assert.Equal("configuration", root.GetAttribute("href"));
 
-        AngleSharp.Dom.IElement link = page.Find("nav.crumbs a.crumb-link");
-        Assert.StartsWith("configuration#s-", link.GetAttribute("href"), StringComparison.Ordinal);
+        // Beneath the root it lands on the row itself, and the row is there.
+        Services.GetRequiredService<NavigationManager>()
+            .NavigateTo(ScopeLink.Monitor("xmip:///edge-01/receive"));
+        string? deeper = Render<Cluster>().Find("nav.crumbs a.crumb-link").GetAttribute("href");
+        Assert.Equal(ScopeLink.Configuration("xmip:///edge-01/receive"), deeper);
+        Assert.NotNull(
+            Render<Configuration>().Find($"#{ScopeLink.Anchor("xmip:///edge-01/receive")}"));
     }
 
     [Fact]
     public void AScopeIsWrittenTheSameWayByEveryView()
     {
-        Assert.Equal("s-xmip----C1-node-R1", ScopeLink.Anchor("xmip:///C1/node/R1"));
+        Assert.Equal("s-xmip----C1-node-alpha", ScopeLink.Anchor("xmip:///C1/node/alpha"));
         Assert.Equal(
-            "configuration#s-xmip----C1-node-R1",
-            ScopeLink.Configuration("xmip:///C1/node/R1"));
+            "configuration#s-xmip----C1-node-alpha",
+            ScopeLink.Configuration("xmip:///C1/node/alpha"));
         Assert.Equal("/?scope=xmip%3A%2F%2F%2FC1", ScopeLink.Monitor("xmip:///C1"));
     }
 }

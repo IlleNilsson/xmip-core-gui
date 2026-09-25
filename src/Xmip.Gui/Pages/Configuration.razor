@@ -38,22 +38,13 @@
     }
     else
     {
-        <div class="tree-row @MoodClass.Of(RootState)">
-            <span class="dot"></span>
-            <span class="kind">cluster</span>
-            <span class="label">@ClusterName</span>
-            <span class="mood">@English.Mood(RootState)</span>
-            <span class="evidence">@RootEvidence</span>
-            <span class="tree-links">
-                @if (RootWorst is { } worst && RootState != HealthState.Fine)
-                {
-                    <a class="tree-link problem"
-                       href="@ScopeLink.Configuration(worst.Scope, Carried)">problem</a>
-                }
-                <a class="tree-link" href="@ScopeLink.Topology(Carried)">topology</a>
-            </span>
-        </div>
-        @Level(ScopeTree.Root, 1, RootWorst?.Scope, Carried)
+        @* The cluster is the tree's first row and nothing else heads it. Until
+           2026-09-25 a row of its own stood above the tree saying the cluster
+           again — its name, its mood, its worst leaf — and the tree's first
+           row said the same beneath it (the owner: *two headers for the
+           cluster*). That row is the tree's cluster row now, and the links
+           it carried are on it. *@
+        @Level(ScopeTree.Root, 1, RootWorst?.Scope, Carried, null)
     }
 </section>
 
@@ -82,28 +73,32 @@
     // segment, so one more level than a configured cluster would need.
     private const int OpenDepth = 4;
 
-    private HealthState RootState => ScopeTree.Rollup(All) ?? HealthState.Working;
-
     // The leaf that explains the cluster's mood: the worst beneath the root.
     private HealthRecord? RootWorst => ScopeTree.Worst(All);
 
-    private string RootEvidence => RootWorst is { } worst && RootState != HealthState.Fine
-        ? $"{All.Count} observed — worst {Relative(ScopeTree.Root, worst.Scope)}: " +
-            worst.Evidence
-        : $"{All.Count} thing(s) observed";
+    // What the publisher says each drawn thing is, by its scope: the
+    // topology's own kinds (observe::topology), read with the rest of the
+    // publication. A row takes its kind from here where the publisher said
+    // one, and its place in the topology — a node on it opens there.
+    private IReadOnlyDictionary<string, TopologyNode> Drawn { get; set; } =
+        new Dictionary<string, TopologyNode>();
 
-    // The cluster is the first segment beneath the root — one publication is
-    // one cluster's, and the host's other clusters are its own publications
-    // (ADR-0052, amendment 2026-09-20), reached from the run line.
-    private string ClusterName =>
-        All.Select(record => ScopeTree.Segment(record.Scope, 0))
-            .FirstOrDefault(name => !string.IsNullOrEmpty(name)) ?? "cluster";
+    private IReadOnlySet<string> Opens { get; set; } = new HashSet<string>();
 
     protected override void Read()
     {
         Index = Surface.Index();
         All = Index.Health(ScopeTree.Root);
         Filter = ScopeFilter.Over(Index, Pattern);
+
+        TopologySnapshot topology = Surface.Topology();
+        Drawn = topology.Nodes
+            .GroupBy(node => node.Scope, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        Opens = topology.Nodes
+            .Where(node => node.ParentId is not null)
+            .Select(node => node.ParentId!)
+            .ToHashSet(StringComparer.Ordinal);
     }
 
     // One level of the tree beneath a scope. Configuration order, not trouble
@@ -111,7 +106,8 @@
     // everything else by name. A branch with children is a details element,
     // open down to the stage, and open beyond it where it lies on the way to
     // `trouble`, the leaf that explains its parent; a leaf is its row.
-    private RenderFragment Level(string scope, int depth, string? trouble, string? cluster) =>
+    private RenderFragment Level(
+        string scope, int depth, string? trouble, string? cluster, string? above) =>
         __builder =>
     {
         IReadOnlyList<Branch> branches =
@@ -132,17 +128,18 @@
                 <li class="tree-item">
                     @if (branch.IsLeaf)
                     {
-                        @Row(branch, cluster)
+                        @Row(branch, cluster, Kind(branch.Scope, above))
                     }
                     else
                     {
+                        string kind = Kind(branch.Scope, above);
                         @* A filtered tree stands open to what it kept: the
                            rows are few, and the operator asked for them. *@
                         <details open="@(Filter.Filtering
                                          || depth < OpenDepth
                                          || OnTheWay(branch.Scope, trouble))">
-                            <summary>@Row(branch, cluster)</summary>
-                            @Level(branch.Scope, depth + 1, TroubleBeneath(branch), cluster)
+                            <summary>@Row(branch, cluster, kind)</summary>
+                            @Level(branch.Scope, depth + 1, TroubleBeneath(branch), cluster, kind)
                         </details>
                     }
                 </li>
@@ -150,13 +147,13 @@
         </ul>
     };
 
-    private static RenderFragment Row(Branch branch, string? cluster) => __builder =>
+    private RenderFragment Row(Branch branch, string? cluster, string kind) => __builder =>
     {
         string mood = English.Mood(branch.State);
         bool troubled = !branch.IsLeaf && branch.State != HealthState.Fine;
         <div class="tree-row @MoodClass.Of(branch.State)" id="@ScopeLink.Anchor(branch.Scope)">
             <span class="dot" title="severity @branch.Worst.Severity"></span>
-            <span class="kind">@Kind(branch.Scope)</span>
+            <span class="kind">@kind</span>
             <span class="label">@branch.Label</span>
             <span class="mood">@mood</span>
             <span class="evidence" title="@Said(branch, troubled)">@Said(branch, troubled)</span>
@@ -167,9 +164,30 @@
                        href="@ScopeLink.Configuration(branch.Worst.Scope, cluster)">problem</a>
                 }
                 <a class="tree-link" href="@ScopeLink.Monitor(branch.Scope, cluster)">monitor</a>
+                @if (Topology(branch.Scope, cluster) is { } drawn)
+                {
+                    <a class="tree-link" href="@drawn">topology</a>
+                }
             </span>
         </div>
     };
+
+    // The same scope on the Topology, where the publisher drew it: opened
+    // there when something is beneath it, else its parent opened, so the
+    // thing is on the canvas. Nothing where it drew no such thing.
+    private string? Topology(string scope, string? cluster)
+    {
+        if (!Drawn.TryGetValue(scope, out TopologyNode? node))
+        {
+            return null;
+        }
+
+        return Opens.Contains(node.Id)
+            ? ScopeLink.TopologyAt(node.Id, cluster)
+            : node.ParentId is { } parent
+                ? ScopeLink.TopologyAt(parent, cluster)
+                : ScopeLink.Topology(cluster);
+    }
 
     // A leaf says its evidence; a fine branch how much is beneath it; a
     // troubled branch where the trouble is and what it says.
@@ -198,20 +216,37 @@
     private static string Relative(string from, string scope) =>
         string.Join('/', ScopeTree.Parts(scope).Skip(ScopeTree.Parts(from).Length));
 
-    // What a scope is, from where it sits: the record names cluster, node and
-    // the three stages; beneath a stage sits the Location or Xmip Process and
-    // beneath that the technology (ADR-0027; ADR-0028 for the playground).
-    private static string Kind(string scope)
+    // What a scope is. What a node declares it can do is the node's own
+    // statement (ADR-0056); where a node publishes it is observe's to say, not
+    // a leaf's name. Then what the publisher's topology says the thing is —
+    // cluster, node, stage, endpoint — and beneath an endpoint, the
+    // technology. Until 2026-09-25 the kind was read from the depth alone,
+    // which a Playground cluster, its nodes beneath a `node` segment, put one
+    // level off: the rollup branch said NODE, the node said SCOPE and the
+    // receive stage said RECEIVE LOCATION. Where no topology is published the
+    // depth is all there is: the record names cluster, node and the three
+    // stages; beneath a stage sits the Location or Xmip Process and beneath
+    // that the technology (ADR-0027).
+    private string Kind(string scope, string? above)
     {
-        string[] parts = ScopeTree.Parts(scope);
-
-        // What a node declares it can do is not a technology beneath it
-        // (ADR-0056): it is the node's own statement, and it says so. Where a
-        // node publishes it is observe's to say, not a leaf's name.
         if (NodeCapability.Declared(scope, string.Empty) is not null)
         {
             return "capability";
         }
+
+        if (Drawn.TryGetValue(scope, out TopologyNode? drawn))
+        {
+            return English.Name(drawn.Kind);
+        }
+
+        string beneathEndpoint = English.Name(TopologyNodeKind.Endpoint);
+
+        if (Drawn.Count > 0)
+        {
+            return above == beneathEndpoint || above == "technology" ? "technology" : "scope";
+        }
+
+        string[] parts = ScopeTree.Parts(scope);
 
         return parts.Length switch
         {

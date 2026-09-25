@@ -22,12 +22,23 @@
     <span class="topology-time">@English.Age(Snapshot.Observed)</span>
 </section>
 
+@* The way back up, each step an address (ADR-0052, amendment 2026-09-25):
+   the drill is in the address, so the trail is links, not buttons a
+   prerendered page cannot press. Infrastructure — every top-level thing —
+   is a level of its own only where there is more than one of them. *@
 <nav class="topology-trail" aria-label="Topology drill-down">
-    <button @onclick="ShowInfrastructure">Infrastructure</button>
+    @if (Roots.Count > 1)
+    {
+        <a href="@ScopeLink.Topology(Carried)">Infrastructure</a>
+    }
     @foreach (TopologyNode node in Trail)
     {
-        <span>/</span>
-        <button @onclick="() => Focus(node)">@node.Label</button>
+        @if (Roots.Count > 1 || node != Trail[0])
+        {
+            <span>/</span>
+        }
+        <a href="@ScopeLink.TopologyAt(node.Id, Carried)"
+           aria-current="@(node.Id == FocusId ? "page" : null)">@node.Label</a>
     }
 </nav>
 
@@ -59,17 +70,16 @@ else
         <TopologyGraph Snapshot="Snapshot"
                        FocusId="@FocusId"
                        MotionPaused="MotionPaused"
-                       OnSelectNode="@(node => Select(node))"
-                       OnSelectLink="@(link => Select(link))" />
+                       Drill="Drill"
+                       OnSelectLink="@(link => SelectedLink = link)" />
 
         <TopologyInspector Snapshot="Snapshot"
                            Index="Index"
                            Run="Run"
                            Cluster="@Carried"
-                           SelectedNode="SelectedNode"
                            SelectedLink="SelectedLink"
                            FocusNode="FocusNode"
-                           OnOpen="@(node => Focus(node))" />
+                           Drill="Drill" />
     </section>
 }
 
@@ -88,6 +98,11 @@ else
 
     private ScopeFilter Filter { get; set; } = ScopeFilter.None;
 
+    /// <summary>The node the address opened, by its id; null where it
+    /// opened none.</summary>
+    [SupplyParameterFromQuery(Name = ScopeLink.Focus)]
+    public string? Opened { get; set; }
+
     private void Filtered(string pattern)
     {
         Pattern = pattern;
@@ -101,17 +116,23 @@ else
 
     private RunHeader Run { get; set; } = RunHeader.None;
 
-
     private bool MotionPaused { get; set; }
 
+    // The node whose components are drawn: the one the address opened, else
+    // the one top-level thing there is. On 2026-09-25 the canvas opened on a
+    // cluster alone, one box and no line, and the only way down was a click
+    // on it and a button in the inspector, which nothing linked to (the
+    // owner: *one can't drill down to nodes*). A cluster is opened at once,
+    // so its nodes and the traffic between them are what the view shows.
     private string? FocusId { get; set; }
-
-    private TopologyNode? SelectedNode { get; set; }
 
     private CommunicationLink? SelectedLink { get; set; }
 
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
+
+    private IReadOnlyList<TopologyNode> Roots =>
+        [.. Snapshot.Nodes.Where(node => node.ParentId is null)];
 
     private TopologyNode? FocusNode =>
         FocusId is not null && NodeById.TryGetValue(FocusId, out TopologyNode? node)
@@ -139,6 +160,14 @@ else
         }
     }
 
+    // Where a node on the canvas leads: open, where something is beneath it;
+    // a leaf ends at the view of its actual configuration (ADR-0052, ruling
+    // 4 of 2026-09-14). Written once, for the canvas and the inspector.
+    private string Drill(TopologyNode node) =>
+        Snapshot.Nodes.Any(child => child.ParentId == node.Id)
+            ? ScopeLink.TopologyAt(node.Id, Carried)
+            : ScopeLink.Configuration(node.Scope, Carried);
+
     protected override void Read()
     {
         Whole = Surface.Topology();
@@ -147,35 +176,13 @@ else
         Snapshot = Filter.Only(Whole);
         Run = Surface.Run();
 
-        if (FocusId is not null && !Snapshot.Nodes.Any(node => node.Id == FocusId))
+        FocusId = Opened is not null && NodeById.ContainsKey(Opened)
+            ? Opened
+            : Roots.Count == 1 ? Roots[0].Id : null;
+
+        if (SelectedLink is not null && !Snapshot.Links.Any(link => link.Id == SelectedLink.Id))
         {
-            ShowInfrastructure();
+            SelectedLink = null;
         }
-    }
-
-    private void Select(TopologyNode node)
-    {
-        SelectedNode = node;
-        SelectedLink = null;
-    }
-
-    private void Select(CommunicationLink link)
-    {
-        SelectedLink = link;
-        SelectedNode = null;
-    }
-
-    private void Focus(TopologyNode node)
-    {
-        FocusId = node.Id;
-        SelectedNode = null;
-        SelectedLink = null;
-    }
-
-    private void ShowInfrastructure()
-    {
-        FocusId = null;
-        SelectedNode = null;
-        SelectedLink = null;
     }
 }

@@ -1,3 +1,5 @@
+using Xmip.Surface;
+
 namespace Xmip.Gui.Surface;
 
 /// <summary>
@@ -17,10 +19,15 @@ namespace Xmip.Gui.Surface;
 /// </remarks>
 public static class ScopeLink
 {
-    /// <summary>The scope's row in the Configuration tree, on this cluster.</summary>
+    /// <summary>The scope's row in the Configuration tree, on this cluster. The
+    /// root is no row — the tree begins beneath it — so the root is the tree
+    /// itself, from its top: until 2026-09-25 the Monitor's crumb at the root
+    /// linked to <c>#s-xmip----</c>, an anchor nothing carries.</summary>
     public static string Configuration(string scope, string? cluster = null)
     {
-        return "configuration" + Asking(cluster) + "#" + Anchor(scope);
+        string page = "configuration" + Asking(cluster);
+
+        return ScopeTree.Parts(scope).Length == 0 ? page : page + "#" + Anchor(scope);
     }
 
     /// <summary>The Monitor's drill at the scope, on this cluster.</summary>
@@ -29,10 +36,25 @@ public static class ScopeLink
         return "/?scope=" + Uri.EscapeDataString(scope) + Also(cluster);
     }
 
+    /// <summary>The name the address gives the Topology's open node.</summary>
+    public const string Focus = "focus";
+
     /// <summary>The Topology, on this cluster.</summary>
     public static string Topology(string? cluster = null)
     {
         return "/topology" + Asking(cluster);
+    }
+
+    /// <summary>
+    /// The Topology opened at a node — what is beneath it drawn, and what
+    /// runs between those — on this cluster. The drill is in the address
+    /// (ADR-0052, amendment 2026-09-25), so a node on the canvas is a link, a
+    /// reload keeps where the operator was, and cluster to node to stage is
+    /// three addresses rather than three clicks nothing remembers.
+    /// </summary>
+    public static string TopologyAt(string node, string? cluster = null)
+    {
+        return "/topology?" + Focus + "=" + Uri.EscapeDataString(node) + Also(cluster);
     }
 
     /// <summary>

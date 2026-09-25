@@ -1,24 +1,45 @@
-@* What the operator has selected in the topology, said in full: a node, a
-   communication relationship, or — until something is selected — what the
-   canvas is showing and how to read it. Every level drills to the same scope
-   in the other two views (ADR-0052, ruling 4), and a node with components
-   beneath it can be opened from here. *@
+@* Beside the canvas, said in full: a communication relationship the operator
+   selected, else the node the topology is open at. Beneath it every thing
+   the canvas draws, each a link to its drill and to the same scope in the
+   other two views (ADR-0052, ruling 4), and every link that runs within or
+   out of the open node with what passes over it — configured, observed or
+   both, and a path configured and never used named as such (ADR-0052, amendment
+   2026-09-25). The lists are what a page prerendered without a circuit, a
+   reader of the page, and a test can all follow. *@
 @using Xmip.Gui.Surface
-@using static Xmip.Gui.Surface.TopologyWords
 
 <aside class="topology-inspector">
-    @if (SelectedNode is not null)
+    @if (SelectedLink is not null)
     {
-        <h2>@SelectedNode.Label</h2>
+        <h2>@English.Name(SelectedLink.Pattern)</h2>
         <dl>
-            <dt>Kind</dt><dd>@Kind(SelectedNode.Kind)</dd>
-            <dt>State</dt><dd class="@MoodClass.Of(SelectedNode.State)">@Mood(SelectedNode.State)</dd>
-            <dt>Evidence</dt><dd>@Value(SelectedNode.Evidence)</dd>
+            <dt>From</dt><dd>@NodeLabel(SelectedLink.From)</dd>
+            <dt>To</dt><dd>@NodeLabel(SelectedLink.To)</dd>
+            <dt>Protocol</dt><dd>@English.Value(SelectedLink.Protocol)</dd>
+            <dt>State</dt><dd class="@MoodClass.Of(SelectedLink.State)">@English.Mood(SelectedLink.State)</dd>
+            <dt>Origin</dt><dd>@English.Name(SelectedLink.Origin)</dd>
+            <dt>Traffic</dt><dd>@English.Traffic(SelectedLink)</dd>
+            <dt>Volume</dt><dd>@English.Figure(SelectedLink.Volume)</dd>
+            <dt>Rate</dt><dd>@English.Rate(SelectedLink.Rate)</dd>
+            <dt>Latency</dt><dd>@($"{SelectedLink.LatencyMilliseconds:0.##} ms")</dd>
+            <dt>Progress</dt><dd>@English.Percent(SelectedLink.Progress)</dd>
+            <dt>Attempts</dt><dd>@SelectedLink.Attempts</dd>
+            <dt>Evidence</dt><dd>@English.Value(SelectedLink.Evidence)</dd>
+        </dl>
+        @Across(ScopeOf(SelectedLink.From))
+    }
+    else if (FocusNode is not null)
+    {
+        <h2>@FocusNode.Label</h2>
+        <dl>
+            <dt>Kind</dt><dd>@English.Name(FocusNode.Kind)</dd>
+            <dt>State</dt><dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
+            <dt>Evidence</dt><dd>@English.Value(FocusNode.Evidence)</dd>
             @* What the node declared it can do (ADR-0056), where an
                operator has drilled to the node itself. One row: the
                stages and the route, with the publisher's own words —
                including the kinds it does not model — on the row. *@
-            @if (Declared(SelectedNode) is { Said: true } capability)
+            @if (Declared(FocusNode) is { Said: true } capability)
             {
                 <dt>Capability</dt>
                 <dd class="capability" title="@capability.Evidence">
@@ -26,53 +47,58 @@
                     <small>@capability.Origin</small>
                 </dd>
             }
-            <dt>Origin</dt><dd>@OriginName(SelectedNode.Origin)</dd>
-            <dt>Load</dt><dd>@Percent(SelectedNode.Load)</dd>
-            <dt>Activity</dt><dd>@Percent(SelectedNode.Activity)</dd>
-            <dt>Scope</dt><dd class="mono">@Value(SelectedNode.Scope)</dd>
+            <dt>Origin</dt><dd>@English.Name(FocusNode.Origin)</dd>
+            <dt>Load</dt><dd>@English.Percent(FocusNode.Load)</dd>
+            <dt>Activity</dt><dd>@English.Percent(FocusNode.Activity)</dd>
+            <dt>Scope</dt><dd class="mono">@English.Value(FocusNode.Scope)</dd>
         </dl>
-        @Drill(SelectedNode.Scope)
-        @if (HasChildren(SelectedNode.Id))
-        {
-            <button class="inspect-action"
-                    @onclick="() => OnOpen.InvokeAsync(SelectedNode)">Open components</button>
-        }
-    }
-    else if (SelectedLink is not null)
-    {
-        <h2>@PatternName(SelectedLink.Pattern)</h2>
-        <dl>
-            <dt>From</dt><dd>@NodeLabel(SelectedLink.From)</dd>
-            <dt>To</dt><dd>@NodeLabel(SelectedLink.To)</dd>
-            <dt>Protocol</dt><dd>@Value(SelectedLink.Protocol)</dd>
-            <dt>State</dt><dd class="@MoodClass.Of(SelectedLink.State)">@Mood(SelectedLink.State)</dd>
-            <dt>Origin</dt><dd>@OriginName(SelectedLink.Origin)</dd>
-            <dt>Volume</dt><dd>@English.Figure(SelectedLink.Volume)</dd>
-            <dt>Rate</dt><dd>@($"{SelectedLink.Rate:0.##}/s")</dd>
-            <dt>Latency</dt><dd>@($"{SelectedLink.LatencyMilliseconds:0.##} ms")</dd>
-            <dt>Progress</dt><dd>@Percent(SelectedLink.Progress)</dd>
-            <dt>Attempts</dt><dd>@SelectedLink.Attempts</dd>
-            <dt>Evidence</dt><dd>@Value(SelectedLink.Evidence)</dd>
-        </dl>
-        @Drill(ScopeOf(SelectedLink.From))
+        @Across(FocusNode.Scope)
     }
     else
     {
-        <h2>@(FocusNode?.Label ?? "Infrastructure")</h2>
+        <h2>Infrastructure</h2>
         <p>
-            Select a node or communication relationship. Open a node to reveal
-            the components beneath it.
-        </p>
-        <p>
-            Animation represents application movement. The line remains the
+            Open a node to draw what is beneath it and what runs between those.
+            Animation represents application movement; the line remains the
             configured or observed relationship.
         </p>
+    }
+
+    @if (Beneath.Count > 0)
+    {
+        <h3>Beneath</h3>
+        <ul class="topology-beneath">
+            @foreach (TopologyNode child in Beneath)
+            {
+                <li class="@MoodClass.Of(child.State)">
+                    <a class="beneath-open" href="@Drill(child)">@child.Label</a>
+                    <span class="kind">@English.Name(child.Kind)</span>
+                    <a href="@ScopeLink.Configuration(child.Scope, Cluster)">configuration</a>
+                    <a href="@ScopeLink.Monitor(child.Scope, Cluster)">monitor</a>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (Traffic.Count > 0)
+    {
+        <h3>Traffic</h3>
+        <ul class="topology-traffic">
+            @foreach (CommunicationLink link in Traffic)
+            {
+                <li class="@English.Word(link.Origin) @MoodClass.Of(link.State)" title="@link.Evidence">
+                    <span class="ends">@Within(link.From) → @Within(link.To)</span>
+                    <span class="figure">@English.Traffic(link)</span>
+                    <span class="origin">@English.Name(link.Origin)</span>
+                </li>
+            }
+        </ul>
     }
 </aside>
 
 @code {
 
-    /// <summary>The topology the selection was made in.</summary>
+    /// <summary>The topology the view draws.</summary>
     [Parameter]
     public TopologySnapshot Snapshot { get; set; } = TopologySnapshot.Empty("no topology read");
 
@@ -84,21 +110,17 @@
     [Parameter]
     public RunHeader Run { get; set; } = RunHeader.None;
 
-    /// <summary>The selected node, or null.</summary>
-    [Parameter]
-    public TopologyNode? SelectedNode { get; set; }
-
     /// <summary>The selected communication relationship, or null.</summary>
     [Parameter]
     public CommunicationLink? SelectedLink { get; set; }
 
-    /// <summary>The node whose components are open, named when nothing is selected.</summary>
+    /// <summary>The node the topology is open at, or null for infrastructure.</summary>
     [Parameter]
     public TopologyNode? FocusNode { get; set; }
 
-    /// <summary>Raised with the node whose components the operator opened.</summary>
+    /// <summary>Where a node leads, written once by the page.</summary>
     [Parameter]
-    public EventCallback<TopologyNode> OnOpen { get; set; }
+    public Func<TopologyNode, string> Drill { get; set; } = _ => string.Empty;
 
     /// <summary>The cluster the links out of here carry, where the host holds
     /// more than one (ADR-0052, amendment 2026-09-20); null where it holds
@@ -108,6 +130,71 @@
 
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
+
+    // What the canvas draws at this level: the open node's children, or every
+    // top-level thing where none is open.
+    private IReadOnlyList<TopologyNode> Beneath =>
+    [
+        .. Snapshot.Nodes
+            .Where(node => node.ParentId == FocusNode?.Id)
+            .OrderBy(node => node.Label, StringComparer.Ordinal),
+    ];
+
+    // Every link with an end inside the open node: within it, the ones the
+    // canvas draws and the ones within one of its children alike — a path
+    // configured between two stages of one node is traffic too — and the
+    // ones leaving it, whose other end reads as outside, as the canvas draws
+    // it (ADR-0052, amendment 2026-09-25).
+    private IReadOnlyList<CommunicationLink> Traffic =>
+    [
+        .. Snapshot.Links.Where(link => Inside(link.From) || Inside(link.To)),
+    ];
+
+    private bool Inside(string id)
+    {
+        if (FocusNode is null)
+        {
+            return true;
+        }
+
+        string? current = id;
+
+        while (current is not null)
+        {
+            if (current == FocusNode.Id)
+            {
+                return true;
+            }
+
+            current = NodeById.TryGetValue(current, out TopologyNode? node) ? node.ParentId : null;
+        }
+
+        return false;
+    }
+
+    // A thing as it reads from the open node: the labels between them, the
+    // open node by its own name, and anything beyond it as outside.
+    private string Within(string id)
+    {
+        if (!Inside(id))
+        {
+            return "outside";
+        }
+
+        List<string> labels = [];
+        string? current = id;
+
+        while (current is not null
+            && current != FocusNode?.Id
+            && NodeById.TryGetValue(current, out TopologyNode? node))
+        {
+            labels.Add(node.Label);
+            current = node.ParentId;
+        }
+
+        labels.Reverse();
+        return labels.Count == 0 ? FocusNode?.Label ?? id : string.Join('/', labels);
+    }
 
     // A node's own declaration wins; a node that published none falls back to
     // what the run started it with, and NodeCapability.Origin says which.
@@ -127,7 +214,7 @@
     // From what is selected to the same scope in the other two views: the
     // topology is one of three points to drill from, and a node or a link
     // ends at the actual configuration (ADR-0052, ruling 4).
-    private RenderFragment Drill(string? scope) => __builder =>
+    private RenderFragment Across(string? scope) => __builder =>
     {
         if (!string.IsNullOrWhiteSpace(scope))
         {
@@ -140,8 +227,6 @@
 
     private string? ScopeOf(string nodeId) =>
         Snapshot.Nodes.FirstOrDefault(node => node.Id == nodeId)?.Scope;
-
-    private bool HasChildren(string id) => Snapshot.Nodes.Any(node => node.ParentId == id);
 
     private string NodeLabel(string id) =>
         NodeById.TryGetValue(id, out TopologyNode? node) ? node.Label : id;

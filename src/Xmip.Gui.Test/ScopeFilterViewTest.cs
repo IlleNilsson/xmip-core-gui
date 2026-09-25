@@ -9,7 +9,7 @@ namespace Xmip.Gui.Test;
 
 /// <summary>
 /// The filter the three views gained on 2026-09-19, over the surface library's
-/// cluster fixture: C1 with R1, P1 and S1. The pattern is the estate's, matched
+/// cluster fixture: C1 with alpha, beta and gamma. The pattern is the estate's, matched
 /// by <see cref="ScopePattern"/> — the same one the prompt and the executable
 /// match with (ADR-0052 clause 1; ADR-0059 clauses 7 and 8) — and what it
 /// narrows, what it never narrows, and what it says when it names nothing are
@@ -49,12 +49,13 @@ public sealed class ScopeFilterViewTest : BunitContext
         string banner = page.Find("section.cluster .state").TextContent;
         int before = page.FindAll("section.list .row").Count;
 
-        page.Find("#filter-monitor").Change("*/S1*");
+        page.Find("#filter-monitor").Change("*/gamma*");
 
         IReadOnlyList<IElement> rows = page.FindAll("section.list .row");
         Assert.NotEmpty(rows);
         Assert.True(rows.Count < before, "the filter narrowed nothing");
-        Assert.All(rows, row => Assert.Contains("S1", row.TextContent, StringComparison.Ordinal));
+        Assert.All(
+            rows, row => Assert.Contains("gamma", row.TextContent, StringComparison.Ordinal));
         Assert.Equal(banner, page.Find("section.cluster .state").TextContent);
         Assert.Contains("of ", page.Find(".scope-filter-said").TextContent,
             StringComparison.Ordinal);
@@ -74,33 +75,34 @@ public sealed class ScopeFilterViewTest : BunitContext
     {
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/R1")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
 
-        page.Find("#filter-configuration").Change("*/S1/send/tcp");
+        page.Find("#filter-configuration").Change("*/gamma/send/tcp");
 
         Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node")}"));
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/S1")}"));
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/S1/send/tcp")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/tcp")}"));
 
         // What it matched shows what is beneath it, and nothing else stays.
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/S1/send/tcp/json")}"));
-        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/R1")}"));
-        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/S1/send/file")}"));
+        Assert.NotEmpty(
+            page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/tcp/json")}"));
+        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
+        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/file")}"));
     }
 
     /// <summary>
     /// The topology filters its nodes, and a link is drawn only where both of
-    /// its ends are still shown: the handoffs R1 to P1 to S1 go when P1 does.
+    /// its ends are still shown: the handoffs alpha to beta to gamma go when beta does.
     /// </summary>
     [Fact]
     public void TheTopologyNarrowsItsNodesAndDropsALinkWithAHiddenEnd()
     {
         IRenderedComponent<Topology> page = Render<Topology>();
 
-        page.Find("#filter-topology").Change("*/R1");
-        Open(page, "C1");
+        // The cluster stands open by itself, filtered or not (2026-09-25).
+        page.Find("#filter-topology").Change("*/alpha");
 
-        Assert.Equal(["R1"], Labels(page));
+        Assert.Equal(["alpha"], Labels(page));
         Assert.Empty(page.FindAll("g.topology-link"));
     }
 
@@ -163,12 +165,5 @@ public sealed class ScopeFilterViewTest : BunitContext
     private static List<string> Labels(IRenderedComponent<Topology> page)
     {
         return [.. page.FindAll("g.topology-node .node-label").Select(label => label.TextContent)];
-    }
-
-    private static void Open(IRenderedComponent<Topology> page, string label)
-    {
-        page.FindAll("g.topology-node").Single(candidate =>
-            candidate.QuerySelector(".node-label")?.TextContent == label).Click();
-        page.Find("button.inspect-action").Click();
     }
 }
