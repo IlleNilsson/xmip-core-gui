@@ -4,13 +4,7 @@
 
 <PageTitle>Xmip — Communication topology</PageTitle>
 
-<header class="bar">
-    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
-    <span class="crumb">communication topology</span>
-    <span class="source">@Surface.Source</span>
-</header>
-
-<RunLine Run="Surface.Run()" Cluster="@Cluster" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
 
 <ScopeFilterBox Id="filter-topology" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />

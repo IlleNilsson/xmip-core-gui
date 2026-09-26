@@ -35,6 +35,14 @@
             <dt>Kind</dt><dd>@English.Name(FocusNode.Kind)</dd>
             <dt>State</dt><dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
             <dt>Evidence</dt><dd>@English.Value(FocusNode.Evidence)</dd>
+            @* Where the trouble is, not only what it says: the worst leaf
+               beneath the node, one click from its record (ADR-0052
+               clause 2). The topology draws down to an endpoint; the leaf
+               beneath it is the drill's. *@
+            @if (Index.Worst(FocusNode.Scope) is { State: not HealthState.Fine } problem)
+            {
+                <dt>Problem</dt><dd><Why Leaf="problem" Cluster="@Cluster" Linked="true" /></dd>
+            }
             @* What the node declared it can do (ADR-0056), where an
                operator has drilled to the node itself. One row: the
                stages and the route, with the publisher's own words —
@@ -75,6 +83,7 @@
                     <span class="kind">@English.Name(child.Kind)</span>
                     <a href="@ScopeLink.Configuration(child.Scope, Cluster)">configuration</a>
                     <a href="@ScopeLink.Monitor(child.Scope, Cluster)">monitor</a>
+                    <Why Leaf="Index.Worst(child.Scope)" Cluster="@Cluster" Linked="true" />
                 </li>
             }
         </ul>

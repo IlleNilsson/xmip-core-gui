@@ -2,15 +2,9 @@
 @using Xmip.Gui.Surface
 @inherits ClusterView
 
-<PageTitle>Xmip — Cluster</PageTitle>
+<PageTitle>Xmip — Monitor</PageTitle>
 
-<header class="bar">
-    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
-    <span class="crumb">cluster</span>
-    <span class="source">@Surface.Source</span>
-</header>
-
-<RunLine Run="Surface.Run()" Cluster="@Cluster" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
 
 <ScopeFilterBox Id="filter-monitor" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -19,27 +13,37 @@
    path — Receive, Process, Send — and looks at a node only when a stage is
    not Fine. So the stages are the landing page and the nodes are at the
    bottom. A scope that is Holding says why on the spot: the worst leaf
-   beneath it and that leaf's evidence (ADR-0052 clause 2). *@
+   beneath it and that leaf's evidence, and the leaf is a link to its place
+   in the drill (ADR-0052 clause 2). *@
 <section class="cluster @Class(All)">
     <span class="dot"></span>
     <span class="state">@English.Rollup(All)</span>
-    <Why Leaf="ScopeTree.Worst(All)" />
+    <Why Leaf="Index.Worst(Top)" Cluster="@Carried" Linked="true" />
     <span class="detail">@Nodes.Count node(s) · @All.Count thing(s) observed</span>
 </section>
 
+@* A card per stage: what that stage counted — the figures taken on it and
+   nothing else (IOperatorSurface.Stage) — and what is configured at it, each
+   Receive Location, Xmip Process or Send Location once. Until 2026-09-26 the
+   card summed the whole cluster, so Receive counted the daily backlog's
+   drain as received, and called every leaf beneath the stage, each contract
+   and identity step, a thing configured. *@
 <section class="stages">
     @foreach (Stage stage in Stages)
     {
         IReadOnlyList<HealthRecord> inStage = InStage(stage);
-        Seen seen = Flow(stage.Counted);
-        string items = inStage.Count == 0
+        Seen seen = Flow(stage);
+        int locations = Surface.Locations(stage.Segment).Count;
+        string items = locations == 0
             ? "none configured"
-            : $"{inStage.Count} configured · {English.Rollup(inStage)}";
+            : $"{stage.Location} ×{locations} · {English.Rollup(inStage)}";
         <button class="stage @Class(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
             <span class="name"><span class="dot"></span>@stage.Name</span>
-            <span class="value">@English.Count(seen.Measured)</span>
-            <span class="kind">@stage.Counted.ToString().ToLowerInvariant() · @English.Flow(seen.Delta, seen.Over)</span>
+            <span class="value">@English.Figure(seen.Value)</span>
+            <span class="kind">
+                @English.Kind(stage.Counted) · @English.Flow(seen.Delta, seen.Over)
+            </span>
             <span class="items">@items</span>
             <Why Leaf="ScopeTree.Worst(inStage)" />
         </button>
@@ -47,23 +51,39 @@
 </section>
 
 @* Drill from the cluster down the scope tree to the leaf that owns the
-   trouble. The breadcrumb is the path to here and each step climbs back; the
-   rows are what sits directly beneath, worst first, and clicking one
-   descends. There is no shortcut to the error: a Holding row already says
-   which leaf and why, and the operator drills, or reads the audit. *@
+   trouble. The drill is in the address (/?scope=…), so every step is a link
+   the other views and the leaf of any Why can land on: the breadcrumb is the
+   path from the cluster, each step climbing back; the rows are what sits
+   directly beneath, worst first, each with its figures, and a row that is
+   not fine names the leaf that explains it. At a leaf the drill ends on the
+   leaf's own record. *@
 <section class="drill">
     <nav class="crumbs">
-        @foreach (Crumb crumb in ScopeTree.Trail(Focus))
+        @foreach (Crumb crumb in ScopeTree.Trail(Focus, Top))
         {
-            <button class="crumb-btn" @onclick="() => Focus = crumb.Scope">@crumb.Label</button>
+            <a class="crumb-btn" href="@ScopeLink.Monitor(crumb.Scope, Carried)">@crumb.Label</a>
             <span class="sep">/</span>
         }
-        <a class="crumb-link" href="@ScopeLink.Configuration(Focus, Cluster)">configuration</a>
+        <a class="crumb-link" href="@ScopeLink.Configuration(Focus, Carried)">configuration</a>
     </nav>
     @{
         IReadOnlyList<Branch> branches = Filter.Only(Index.Branches(Focus));
+        HealthRecord? own = Index.Own(Focus);
     }
-    @if (branches.Count == 0)
+    @if (own is not null)
+    {
+        @* The record published at the scope itself, whole: the bottom of the
+           drill, or a Location's own verdict above what is beneath it. *@
+        <div class="drill-leaf @MoodClass.Of(own.State)">
+            <span class="dot" title="severity @own.Severity"></span>
+            <span class="label">@ScopeTree.Name(own.Scope)</span>
+            <span class="worst">@English.Mood(own.State) · severity @own.Severity</span>
+            <span class="evidence">@Evidence(own)</span>
+            <span class="age">@English.Age(own.Observed)</span>
+            <span class="figures">@English.Figures(Surface.Figures(own.Scope))</span>
+        </div>
+    }
+    @if (branches.Count == 0 && own is null)
     {
         <p class="empty">
             @(Filter.Filtering
@@ -71,7 +91,7 @@
                 : "Nothing beneath this point.")
         </p>
     }
-    else
+    else if (branches.Count > 0)
     {
         <div class="branches">
             @foreach (Branch branch in branches)
@@ -79,8 +99,8 @@
                 string worst = branch.IsLeaf
                     ? English.Mood(branch.State)
                     : $"{branch.Count} beneath · {English.Mood(branch.State)}";
-                <button class="branch @MoodClass.Of(branch.State)"
-                        @onclick="() => Focus = branch.Scope">
+                <a class="branch @MoodClass.Of(branch.State)"
+                   href="@ScopeLink.Monitor(branch.Scope, Carried)">
                     <span class="dot" title="severity @branch.Worst.Severity"></span>
                     <span class="label">@branch.Label</span>
                     <span class="worst">@worst</span>
@@ -92,7 +112,8 @@
                     {
                         <Why Leaf="branch.Worst" />
                     }
-                </button>
+                    <span class="figures">@English.Figures(Surface.Figures(branch.Scope))</span>
+                </a>
             }
         </div>
     }
@@ -114,7 +135,8 @@
         <Virtualize Items="shown" Context="record" ItemSize="34">
             <div class="row @MoodClass.Of(record.State)">
                 <span class="dot" title="severity @record.Severity"></span>
-                <span class="scope">@ScopeTree.Name(record.Scope)</span>
+                <a class="scope"
+                   href="@ScopeLink.Monitor(record.Scope, Carried)">@ScopeTree.Name(record.Scope)</a>
                 <span class="node">@ScopeTree.Node(record.Scope)</span>
                 <span class="evidence">@Evidence(record)</span>
                 <span class="age">@English.Age(record.Observed)</span>
@@ -156,10 +178,12 @@
             IReadOnlyList<HealthRecord> onNode = OnNode(nodeScope);
             <div class="row @Class(onNode)">
                 <span class="dot"></span>
-                <span class="scope">@ScopeTree.Parts(nodeScope).LastOrDefault()</span>
-                <span class="node">@onNode.Count thing(s)</span>
+                <a class="scope" href="@ScopeLink.Monitor(nodeScope, Carried)">
+                    @ScopeTree.Parts(nodeScope).LastOrDefault()
+                </a>
+                <span class="node">@onNode.Count thing(s) · @English.Rollup(onNode)</span>
                 <span class="evidence">@WorstEvidence(onNode)</span>
-                <span class="age">@English.Rollup(onNode)</span>
+                <span class="age">@English.Figures(Surface.Figures(nodeScope))</span>
                 @* An Operator can pause a whole node: it pauses everything
                    beneath the scope (ADR-0027). An Observer is shown nothing. *@
                 @if (Role.MayOperate())
@@ -183,17 +207,19 @@
 </section>
 
 @code {
-    /// <summary>A stage of the message path, and what it counts — the count
-    /// is the tree's own (ADR-0027 clause 5), read from ScopeTree, so the tile
-    /// and the figures cannot name different things.</summary>
-    private sealed record Stage(string Name, string Segment, Counted Counted);
+    /// <summary>A stage of the message path, what it counts — the tree's own
+    /// (ADR-0027 clause 5), read from ScopeTree, so the card and the figures
+    /// cannot name different things — and what a thing configured at it is
+    /// called.</summary>
+    private sealed record Stage(string Name, string Segment, Counted Counted, string Location);
 
     private static readonly Stage[] Stages =
     [
         .. ScopeTree.Stages.Select(segment => new Stage(
             string.Concat(segment[..1].ToUpperInvariant(), segment[1..]),
             segment,
-            ScopeTree.CountedAt(segment))),
+            ScopeTree.CountedAt(segment),
+            ScopeTree.Location(segment) ?? segment)),
     ];
 
     // The role decides whether actions are even offered (ADR-0009): an Observer
@@ -229,6 +255,10 @@
     private IReadOnlyList<string> ShownNodes =>
         [.. Nodes.Where(Filter.Shows)];
 
+    // Where the drill starts: the scope the publisher publishes at, the
+    // cluster, and never the root above it (IOperatorSurface.Root).
+    private string Top { get; set; } = ScopeTree.Root;
+
     private void Filtered(string pattern)
     {
         Pattern = pattern;
@@ -238,15 +268,15 @@
     protected override void Read()
     {
         Index = Surface.Index();
+        Top = Surface.Root();
         Filter = ScopeFilter.Over(Index, Pattern);
         All = Index.Health(ScopeTree.Root);
 
-        // A scope of the cluster being left is in no tree here, so the drill
-        // starts at the root rather than at a point that says nothing.
-        if (!Index.Contains(Focus))
-        {
-            Focus = ScopeTree.Root;
-        }
+        // The address says where the drill is. A scope of the cluster being
+        // left, or none, is the cluster itself.
+        Focus = !string.IsNullOrWhiteSpace(RequestedScope) && Index.Contains(RequestedScope)
+            ? RequestedScope
+            : Top;
 
         Nodes = Surface.NodeScopes();
         ByNode = Nodes.ToDictionary(
@@ -264,49 +294,45 @@
 
     private string Focus { get; set; } = ScopeTree.Root;
 
-    // A link from the configuration tree or the topology lands the drill at
-    // that scope (ADR-0052 amendment 2026-09-14: links end where the thing is).
+    // A link from any view, a crumb, a row or the leaf of a Why lands the
+    // drill at that scope (ADR-0052 amendment 2026-09-14: links end where the
+    // thing is).
     [SupplyParameterFromQuery(Name = "scope")]
     public string? RequestedScope { get; set; }
 
-    /// <summary>A count as the board last saw it change: the value, when, by how
-    /// much and over how long — the flow an operator watches, not a total.</summary>
-    private sealed record Seen(MeasurementRecord? Measured, DateTimeOffset At, ulong Delta, TimeSpan Over);
+    /// <summary>A stage's count as the board last saw it change: the value,
+    /// when, by how much and over how long — the flow an operator watches, not
+    /// a total.</summary>
+    private sealed record Seen(ulong? Value, DateTimeOffset At, ulong Delta, TimeSpan Over);
 
-    private readonly Dictionary<Counted, Seen> _flow = [];
+    private readonly Dictionary<string, Seen> _flow = new(StringComparer.Ordinal);
 
-    private Seen Flow(Counted counted)
+    private Seen Flow(Stage stage)
     {
-        MeasurementRecord? measured = Surface.Measure(ScopeTree.Root, counted);
-        ulong value = measured?.Value ?? 0;
+        Figures figures = Surface.Stage(stage.Segment);
+        ulong? value = stage.Counted switch
+        {
+            Counted.Streams => figures.Streams,
+            Counted.Journeys => figures.Journeys,
+            Counted.Messages => figures.Messages,
+            _ => null,
+        };
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        if (!_flow.TryGetValue(counted, out Seen? seen))
+        if (!_flow.TryGetValue(stage.Segment, out Seen? seen))
         {
-            seen = new Seen(measured, now, 0, TimeSpan.Zero);
-            _flow[counted] = seen;
+            seen = new Seen(value, now, 0, TimeSpan.Zero);
+            _flow[stage.Segment] = seen;
         }
-        else if (value != (seen.Measured?.Value ?? 0))
+        else if ((value ?? 0) != (seen.Value ?? 0))
         {
-            ulong before = seen.Measured?.Value ?? 0;
-            seen = new Seen(measured, now, value >= before ? value - before : 0, now - seen.At);
-            _flow[counted] = seen;
+            ulong before = seen.Value ?? 0;
+            ulong after = value ?? 0;
+            seen = new Seen(value, now, after >= before ? after - before : 0, now - seen.At);
+            _flow[stage.Segment] = seen;
         }
 
         return seen;
-    }
-
-    // The base reads the cluster in view and follows its change feed; the
-    // drill is this page's own, and a link that named a scope lands on it.
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-
-        if (!string.IsNullOrWhiteSpace(RequestedScope) && RequestedScope != Focus
-            && Index.Contains(RequestedScope))
-        {
-            Focus = RequestedScope;
-        }
     }
 
     private void Select(Stage stage)
@@ -351,11 +377,15 @@
     private static string Evidence(HealthRecord record) =>
         string.IsNullOrEmpty(record.Evidence) ? "—" : record.Evidence;
 
+    // A fine node has nothing to explain (Why says nothing for Fine either);
+    // until 2026-09-26 its row showed whichever fine leaf stood first, as if
+    // it were the reason for something.
     private static string WorstEvidence(IReadOnlyList<HealthRecord> records)
     {
         HealthRecord? worst = ScopeTree.Worst(records);
 
-        return worst is null || string.IsNullOrEmpty(worst.Evidence)
+        return worst is null || worst.State == HealthState.Fine
+            || string.IsNullOrEmpty(worst.Evidence)
             ? "—"
             : $"{ScopeTree.Name(worst.Scope)}: {worst.Evidence}";
     }

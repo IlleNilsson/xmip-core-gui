@@ -4,13 +4,7 @@
 
 <PageTitle>Xmip — Configuration</PageTitle>
 
-<header class="bar">
-    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
-    <span class="crumb">configuration</span>
-    <span class="source">@Surface.Source</span>
-</header>
-
-<RunLine Run="Surface.Run()" Cluster="@Cluster" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
 
 <ScopeFilterBox Id="filter-configuration" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -198,9 +192,14 @@
             return branch.Worst.Evidence;
         }
 
+        // A row whose own record is the worst says so rather than naming an
+        // empty path to itself.
+        string where = branch.Worst.Scope == branch.Scope
+            ? "its own"
+            : $"worst {Relative(branch.Scope, branch.Worst.Scope)}";
+
         return troubled
-            ? $"{branch.Count} beneath — worst " +
-                $"{Relative(branch.Scope, branch.Worst.Scope)}: {branch.Worst.Evidence}"
+            ? $"{branch.Count} beneath — {where}: {branch.Worst.Evidence}"
             : $"{branch.Count} beneath";
     }
 

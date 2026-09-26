@@ -71,7 +71,7 @@ public sealed class TwoClustersTest : BunitContext
             row => row.QuerySelector(".scope")?.TextContent ?? string.Empty,
             row => row.QuerySelector(".node")?.TextContent ?? string.Empty);
 
-        Assert.Equal("gamma", nodeOf["gamma/send/tcp/json"]);
+        Assert.Equal("gamma", nodeOf["node/gamma/send/tcp/json"]);
         Assert.Equal(string.Empty, nodeOf["node"]);
         Assert.DoesNotContain("C1", nodeOf.Values);
     }

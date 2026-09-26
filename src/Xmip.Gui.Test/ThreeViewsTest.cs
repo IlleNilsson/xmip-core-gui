@@ -91,9 +91,16 @@ public sealed class ThreeViewsTest : BunitContext
     {
         // The line is the run's (the owner, 2026-09-19); a snapshot with no
         // [run] table reads as it always did, and no view invents one.
-        Assert.Empty(Render<Cluster>().FindAll("p.run-line"));
-        Assert.Empty(Render<Configuration>().FindAll("p.run-line"));
-        Assert.Empty(Render<Topology>().FindAll("p.run-line"));
+        Assert.Empty(Render<Cluster>().FindAll("p.run-line .run-said"));
+        Assert.Empty(Render<Configuration>().FindAll("p.run-line .run-said"));
+        Assert.Empty(Render<Topology>().FindAll("p.run-line .run-said"));
+
+        // The line itself stays: where the records come from is always said
+        // (ADR-0052 clause 3), and since 2026-09-26 it is said there.
+        Assert.Contains(
+            "SNAPSHOT",
+            Render<Cluster>().Find("p.run-line .source").TextContent,
+            StringComparison.Ordinal);
     }
 
     [Fact]

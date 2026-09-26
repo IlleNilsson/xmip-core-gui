@@ -36,9 +36,9 @@ public sealed class ClusterTopologyTest : BunitContext
     [Fact]
     public void EveryViewSaysWhatTheRunWasStartedWith()
     {
-        Assert.Equal(RunLine, Render<Cluster>().Find("p.run-line").TextContent.Trim());
-        Assert.Equal(RunLine, Render<Configuration>().Find("p.run-line").TextContent.Trim());
-        Assert.Equal(RunLine, Render<Topology>().Find("p.run-line").TextContent.Trim());
+        Assert.Equal(RunLine, Render<Cluster>().Find("p.run-line .run-said").TextContent.Trim());
+        Assert.Equal(RunLine, Render<Configuration>().Find("p.run-line .run-said").TextContent.Trim());
+        Assert.Equal(RunLine, Render<Topology>().Find("p.run-line .run-said").TextContent.Trim());
     }
 
     [Fact]
