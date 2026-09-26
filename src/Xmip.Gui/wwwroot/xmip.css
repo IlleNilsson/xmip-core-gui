@@ -58,27 +58,15 @@ body {
     background: var(--ground);
 }
 
-/* Centered, not baseline. The logo is a block image, so under baseline
-   alignment its bottom edge is the baseline the words sit on: the bar then
-   carries the text's descender as height it does not need, and the logo
-   rides high of the word beside it. The owner, 2026-09-19: too much air
-   between the logo and the text. */
-.bar {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.5rem 1.5rem;
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
-    box-shadow: inset 0 3px 0 var(--brand);
-}
+/* The logo heads the navigation, centered rather than on the baseline, which
+   would carry the descender as air it does not need (the owner, 2026-09-19).
+   Until 2026-09-26 it sat on a bar of its own under the navigation, beside
+   the view named a second time (the owner: *too many headers*). */
+.topnav { align-items: center; }
+.topnav .logo { height: 1.5rem; width: auto; display: block; margin-right: 0.5rem; }
 
-.bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.04em; }
-.bar .logo { height: 1.75rem; width: auto; display: block; }
-.bar .crumb { color: var(--muted); }
-.bar .source { margin-left: auto; color: var(--muted); font-size: 0.85rem; }
-
-/* What the run was started with: one quiet line under the bar, on every view. */
+/* The one line above every view's data: the cluster in view, what the run
+   was started with, and where the records come from, at its end. */
 .run-line {
     margin: 0;
     padding: 0.35rem 1.5rem;
@@ -87,6 +75,8 @@ body {
     background: var(--paper);
     border-bottom: 1px solid var(--line);
 }
+.run-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 0.6rem; }
+.run-line .source { margin-left: auto; }
 
 /* Which cluster the view is on, and the way to the others (ADR-0052,
    amendment 2026-09-20). It sits at the head of the run line rather than on a
@@ -355,23 +345,34 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-bottom: 0.75rem; }
 .crumbs .crumb-btn {
     border: none; background: none; color: var(--muted); cursor: pointer;
-    font: inherit; padding: 0.1rem 0.3rem; border-radius: 4px;
+    font: inherit; padding: 0.1rem 0.3rem; border-radius: 4px; text-decoration: none;
 }
 .crumbs .crumb-btn:hover { color: var(--brand-deep); background: var(--brand-tint); }
 .crumbs .sep { color: var(--line); }
 .branches { display: grid; gap: 0.4rem; }
-.branch {
+.branch, .drill-leaf {
     display: grid; grid-template-columns: auto 1fr auto 2fr; align-items: center;
     gap: 0.75rem; text-align: left; width: 100%;
     background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
     padding: 0.6rem 0.9rem; cursor: pointer; font: inherit;
+    color: inherit; text-decoration: none; box-sizing: border-box;
 }
 .branch:hover { border-color: var(--brand); }
-.branch .label { font-weight: 600; }
-.branch .worst { color: var(--muted); font-size: 0.85rem; }
+.branch .label, .drill-leaf .label { font-weight: 600; }
+.branch .worst, .drill-leaf .worst { color: var(--muted); font-size: 0.85rem; }
 .branch .evidence { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .branch:not(.fine) .worst, .branch.done .label { color: var(--mood); }
-.branch .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
+.branch .dot, .drill-leaf .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
+/* A row's figures on a line of their own beneath it, and the bottom of the
+   drill — one record, whole — with its evidence unclipped. */
+.branch .figures, .drill-leaf .figures, .drill-leaf .evidence, .drill-leaf .age {
+    grid-column: 2 / -1; color: var(--muted); font-size: 0.8rem;
+}
+.drill-leaf { cursor: default; }
+.drill-leaf .evidence { font-size: 0.9rem; color: var(--ink); white-space: normal; }
+.drill-leaf:not(.fine) .worst { color: var(--mood); }
+.row a.scope { color: inherit; text-decoration: none; }
+.row a.scope:hover, .why a.leaf:hover { text-decoration: underline; }
 
 /* Desktop navigation and the configuration editor (desktop only). */
 /* Lime on ink is the brand's own contrast: the bar is ink, the chosen view is
@@ -398,8 +399,6 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .role-pick:hover { background: rgba(117,201,59,0.14); color: var(--brand); }
 .role-pick.active { border-color: var(--brand); color: var(--brand); cursor: default; }
-.bar .crumb-link { margin-left: auto; color: var(--muted); text-decoration: none; }
-.bar .crumb-link:hover { color: var(--brand-deep); }
 
 .cfg { padding: 1.5rem; display: grid; gap: 1.5rem; }
 .cfg .path { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }

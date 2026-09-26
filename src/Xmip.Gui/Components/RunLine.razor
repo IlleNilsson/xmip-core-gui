@@ -2,33 +2,33 @@
 @inject ClusterSurfaces Surfaces
 @inject NavigationManager Nav
 
-@* What the run was started with, one line at the top of every view (the
-   owner, 2026-09-19): the tests, the cluster, the nodes, which of them are
-   online, how hard. Renders nothing when the publisher says nothing of its
-   run — a node run from configuration has no such thing to say.
-
-   Where the host holds more than one cluster (ADR-0052, amendment 2026-09-20)
-   the clusters stand at the head of this same line, the one in view marked.
-   On this line and not on a line of its own: the views are crowded (the
-   owner, twice), there is a run line and a filter line already, and what a
-   view is showing belongs beside what that run was started with. A host with
-   one cluster draws nothing new, so nothing changes for it. *@
-@if (Surfaces.Several || Said.Length > 0)
-{
-    <p class="run-line" aria-label="What this run was started with">
-        @if (Surfaces.Several)
-        {
-            <span class="run-clusters" aria-label="Cluster">
-                @foreach (string held in Surfaces.Clusters)
-                {
-                    <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
-                       title="@Title(held)" href="@ScopeLink.Cluster(Path, held)">@held</a>
-                }
-            </span>
-        }
-        @Said
-    </p>
-}
+@* The one line above every view's data (the owner, 2026-09-26: *too many
+   headers*): which cluster is in view where the host holds more than one
+   (ADR-0052, amendment 2026-09-20), what the run was started with (the
+   owner, 2026-09-19) — the tests, the cluster, the nodes, which of them are
+   online, how hard — and where the records come from, so nobody mistakes a
+   stale file for a node (ADR-0052 clause 3). Until 2026-09-26 each view had a
+   bar of its own above this line naming the view a second time beside the
+   navigation that already marks it, and the source sat there. What the
+   publisher does not say of its run is left out; a node run from
+   configuration has no run to say. *@
+<p class="run-line" aria-label="What this view reads">
+    @if (Surfaces.Several)
+    {
+        <span class="run-clusters" aria-label="Cluster">
+            @foreach (string held in Surfaces.Clusters)
+            {
+                <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
+                   title="@Title(held)" href="@ScopeLink.Cluster(Path, held)">@held</a>
+            }
+        </span>
+    }
+    @if (Said.Length > 0)
+    {
+        <span class="run-said" aria-label="What this run was started with">@Said</span>
+    }
+    <span class="source">@Source</span>
+</p>
 
 @code {
     /// <summary>What the surface says of its run.</summary>
@@ -38,6 +38,10 @@
     /// <summary>Which cluster the view is on, so the chooser marks it.</summary>
     [Parameter]
     public string? Cluster { get; set; }
+
+    /// <summary>Where the records come from: the surface's own words.</summary>
+    [Parameter]
+    public string Source { get; set; } = string.Empty;
 
     private string Said => Run is { Said: true } run ? run.Line() : string.Empty;
 

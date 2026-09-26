@@ -59,6 +59,24 @@ pattern is called — its word, which styles it, and its name, which a person
 reads — is `observe::topology`'s, asked of the runtime through `English`;
 the view keeps no word list of its own.
 
+**Every view drills to the problem, and the drill is in the address** (the
+owner, 2026-09-26: *it is all about solving the problem*). The Monitor's drill
+is `/?scope=<scope>`: it starts at the cluster the publisher publishes at
+(`IOperatorSurface.Root`) and never at the root above it, its crumbs, rows,
+node rows and *Needs attention* rows are links, each row carries its figures,
+and at a scope that has a record of its own — a Location's verdict, or the
+leaf at the bottom — that record stands whole above what is beneath it. A
+Holding scope's `Why` names its worst leaf as a link to that address, on the
+banner and in the Topology's inspector (its open node's *Problem* and each
+thing beneath it), so the cause is one click from wherever it is named; the
+Configuration tree's *problem* link opens the tree down to the same leaf. A
+stage card counts what was taken on its own stage (`IOperatorSurface.Stage`)
+and names the Locations configured there (`Locations`), never the cluster's
+sum or the leaves beneath it. Each view has one line above its data — the
+cluster chooser, what the run was started with, and the source — beneath the
+navigation, which carries the logo; the bar that named the view a second time
+is gone.
+
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the three views over the surface library's own published fixture, so what is
 asserted is what an operator sees and no surface is faked.
