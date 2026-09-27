@@ -16,9 +16,9 @@
             <button class="config-item @(entry.Path == _path ? "selected" : "")"
                     @onclick="() => Open(entry.Path)">
                 <span class="config-name">@entry.Name</span>
-                @if (entry.IsMain)
+                @if (entry.Started)
                 {
-                    <span class="badge">main</span>
+                    <span class="badge" title="the NodeConfiguration xmip.gui.toml names">started here</span>
                 }
             </button>
         }

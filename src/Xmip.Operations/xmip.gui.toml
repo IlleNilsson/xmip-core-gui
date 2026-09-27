@@ -22,6 +22,11 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 # (ADR-0014, amendment of 2026-09-05). Remove the line to start nothing.
 NodeConfiguration = "module/core/operation/gui/samples/edge-01.xmip.toml"
 
+# The directory the Configure page lists node configurations from, a file per
+# node. Unset, a directory under the app's data. The one NodeConfiguration
+# names is marked as the one this desktop starts, whatever the file is called.
+# ConfigDirectory = "module/core/operation/gui/samples"
+
 # The file to read when Surface = "snapshot". The Playground writes
 # <cluster>-snapshot.toml, named for whatever the roll's cluster was called;
 # name the file yours writes. A path with no file behind it is said so on the

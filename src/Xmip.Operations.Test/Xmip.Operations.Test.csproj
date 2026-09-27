@@ -35,6 +35,8 @@
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
     <Compile Include="..\Xmip.Operations\Configuration\NodeConfiguration.cs"
              Link="Configuration\NodeConfiguration.cs" />
+    <Compile Include="..\Xmip.Operations\Configuration\ConfigStore.cs"
+             Link="Configuration\ConfigStore.cs" />
     <Using Include="Xunit" />
   </ItemGroup>
 

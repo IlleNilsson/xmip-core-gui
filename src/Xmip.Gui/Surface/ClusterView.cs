@@ -52,6 +52,31 @@ public abstract class ClusterView : ComponentBase, IDisposable
     /// cluster writes the addresses it always wrote.</summary>
     protected string? Carried => Surfaces.Several ? Cluster : null;
 
+    /// <summary>What the view's filter box says: a pattern over the scopes,
+    /// empty for none.</summary>
+    protected string Pattern { get; private set; } = string.Empty;
+
+    /// <summary>The filter over the publication last read. It narrows what is
+    /// shown, never what the cluster is: a banner or a tile says the whole
+    /// cluster whatever is typed, so no pattern can make a troubled estate
+    /// look fine (ADR-0052, amendment 2026-09-19).</summary>
+    protected ScopeFilter Filter { get; private set; } = ScopeFilter.None;
+
+    /// <summary>The filter box changed: read again under the new
+    /// pattern.</summary>
+    protected void Filtered(string pattern)
+    {
+        Pattern = pattern;
+        Read();
+    }
+
+    /// <summary>Set <see cref="Filter"/> over a publication just read; each
+    /// view calls it from <see cref="Read"/> with its index.</summary>
+    protected void Refilter(ScopeIndex index)
+    {
+        Filter = ScopeFilter.Over(index, Pattern);
+    }
+
     /// <summary>Read the publication into whatever this view renders. Called
     /// on every parameter change and on every notice from the cluster in
     /// view; a view reads its index once here and answers from it.</summary>

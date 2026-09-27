@@ -32,7 +32,8 @@
     @foreach (Stage stage in Stages)
     {
         IReadOnlyList<HealthRecord> inStage = InStage(stage);
-        Seen seen = Flow(stage);
+        Figures counted = Surface.Stage(stage.Segment);
+        FigureFlow moving = Watch(stage).Flow;
         int locations = Surface.Locations(stage.Segment).Count;
         string items = locations == 0
             ? "none configured"
@@ -40,9 +41,9 @@
         <button class="stage @Class(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
             <span class="name"><span class="dot"></span>@stage.Name</span>
-            <span class="value">@English.Figure(seen.Value)</span>
+            <span class="value">@English.Figure(counted.Of(stage.Counted))</span>
             <span class="kind">
-                @English.Kind(stage.Counted) · @English.Flow(seen.Delta, seen.Over)
+                @English.Kind(stage.Counted) · @English.Flow(moving.Of(stage.Counted))
             </span>
             <span class="items">@items</span>
             <Why Leaf="ScopeTree.Worst(inStage)" />
@@ -216,7 +217,7 @@
     private static readonly Stage[] Stages =
     [
         .. ScopeTree.Stages.Select(segment => new Stage(
-            string.Concat(segment[..1].ToUpperInvariant(), segment[1..]),
+            English.Stage(segment),
             segment,
             ScopeTree.CountedAt(segment),
             ScopeTree.Location(segment) ?? segment)),
@@ -245,13 +246,6 @@
     // (the owner, 2026-09-25: a cluster of three said "1 node(s)").
     private IReadOnlyList<string> Nodes { get; set; } = [];
 
-    // The filter narrows what is shown, never what the cluster is: the banner
-    // and the tiles say the whole cluster whatever is typed, so no pattern can
-    // make a troubled estate look fine (ADR-0052, amendment 2026-09-19).
-    private string Pattern { get; set; } = string.Empty;
-
-    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
-
     private IReadOnlyList<string> ShownNodes =>
         [.. Nodes.Where(Filter.Shows)];
 
@@ -259,17 +253,11 @@
     // cluster, and never the root above it (IOperatorSurface.Root).
     private string Top { get; set; } = ScopeTree.Root;
 
-    private void Filtered(string pattern)
-    {
-        Pattern = pattern;
-        Read();
-    }
-
     protected override void Read()
     {
         Index = Surface.Index();
         Top = Surface.Root();
-        Filter = ScopeFilter.Over(Index, Pattern);
+        Refilter(Index);
         All = Index.Health(ScopeTree.Root);
 
         // The address says where the drill is. A scope of the cluster being
@@ -288,6 +276,7 @@
             stage => (IReadOnlyList<HealthRecord>)
                 [.. All.Where(record => ScopeTree.Stage(record.Scope) == stage)],
             StringComparer.Ordinal);
+        Watch();
     }
 
     private Stage? Selected { get; set; }
@@ -300,39 +289,39 @@
     [SupplyParameterFromQuery(Name = "scope")]
     public string? RequestedScope { get; set; }
 
-    /// <summary>A stage's count as the board last saw it change: the value,
-    /// when, by how much and over how long — the flow an operator watches, not
-    /// a total.</summary>
-    private sealed record Seen(ulong? Value, DateTimeOffset At, ulong Delta, TimeSpan Over);
+    // What each stage of the cluster in view is moving, per second: the one
+    // watch every surface keeps between two reads (FigureWatch), never a
+    // last value and a delta of the board's own. A drill redraws the same
+    // publication and is no interval; another cluster starts over.
+    private readonly Dictionary<string, FigureWatch> _watches = new(StringComparer.Ordinal);
 
-    private readonly Dictionary<string, Seen> _flow = new(StringComparer.Ordinal);
+    private string _watching = string.Empty;
 
-    private Seen Flow(Stage stage)
+    private FigureWatch Watch(Stage stage)
     {
-        Figures figures = Surface.Stage(stage.Segment);
-        ulong? value = stage.Counted switch
+        if (!_watches.TryGetValue(stage.Segment, out FigureWatch? watch))
         {
-            Counted.Streams => figures.Streams,
-            Counted.Journeys => figures.Journeys,
-            Counted.Messages => figures.Messages,
-            _ => null,
-        };
+            watch = new FigureWatch();
+            _watches[stage.Segment] = watch;
+        }
+
+        return watch;
+    }
+
+    private void Watch()
+    {
+        if (!string.Equals(_watching, Cluster, StringComparison.Ordinal))
+        {
+            _watches.Clear();
+            _watching = Cluster;
+        }
+
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        if (!_flow.TryGetValue(stage.Segment, out Seen? seen))
+        foreach (Stage stage in Stages)
         {
-            seen = new Seen(value, now, 0, TimeSpan.Zero);
-            _flow[stage.Segment] = seen;
+            Watch(stage).See(Surface.Stage(stage.Segment), now, Index.Revision);
         }
-        else if ((value ?? 0) != (seen.Value ?? 0))
-        {
-            ulong before = seen.Value ?? 0;
-            ulong after = value ?? 0;
-            seen = new Seen(value, now, after >= before ? after - before : 0, now - seen.At);
-            _flow[stage.Segment] = seen;
-        }
-
-        return seen;
     }
 
     private void Select(Stage stage)
@@ -342,7 +331,7 @@
 
     private void Pause(string scope)
     {
-        Surface.PauseScope(scope, "operator");
+        Surface.PauseScope(scope, ScopeOperation.Who(null));
         Read();
     }
 

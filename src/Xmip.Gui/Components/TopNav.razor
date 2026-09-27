@@ -1,0 +1,28 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Xmip.Gui.Surface
+@inject RoleContext Role
+
+@* The bar every host shows, once: the three views this library draws, what
+   the host adds after them, and the role it runs as — assigned, not chosen
+   here (ADR-0009), described in one set of words (Roles.Describe). The web
+   host adds nothing, being monitoring only (ADR-0014, amendment of
+   2026-09-05); the desktop adds Configure for a role that may configure.
+   Until 2026-09-27 each host wrote its own bar and worded the roles its own
+   way. *@
+<nav class="topnav">
+    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
+    <NavLink class="topnav-link" href="/configuration">Configuration</NavLink>
+    <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
+    <NavLink class="topnav-link" href="/topology">Topology</NavLink>
+    @ChildContent
+    <div class="role">
+        <span class="role-label">role</span>
+        <span class="role-pick active" title="@Role.Role.Describe()">@Role.Role</span>
+    </div>
+</nav>
+
+@code {
+    /// <summary>What the host adds after the three views.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -88,20 +88,10 @@ else
     private TopologySnapshot Snapshot { get; set; } =
         TopologySnapshot.Empty("no topology read");
 
-    private string Pattern { get; set; } = string.Empty;
-
-    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
-
     /// <summary>The node the address opened, by its id; null where it
     /// opened none.</summary>
     [SupplyParameterFromQuery(Name = ScopeLink.Focus)]
     public string? Opened { get; set; }
-
-    private void Filtered(string pattern)
-    {
-        Pattern = pattern;
-        Read();
-    }
 
     // The publication as its tree, read with the topology: what each node
     // declared it can do is a lookup in it, never a second parse of the file
@@ -166,7 +156,7 @@ else
     {
         Whole = Surface.Topology();
         Index = Surface.Index();
-        Filter = ScopeFilter.Over(Index, Pattern);
+        Refilter(Index);
         Snapshot = Filter.Only(Whole);
         Run = Surface.Run();
 
