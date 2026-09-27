@@ -40,9 +40,16 @@ public static class Roles
         return role >= Role.Operator;
     }
 
-    /// <summary>The role's own name, for a badge.</summary>
-    public static string Label(this Role role)
+    /// <summary>What the role may do, in the words every host's badge uses:
+    /// the one description, so the web and the desktop say the same.</summary>
+    public static string Describe(this Role role)
     {
-        return role.ToString();
+        return role switch
+        {
+            Role.Observer => "watches — monitoring only",
+            Role.Operator => "also configures",
+            Role.Developer => "also builds",
+            _ => string.Empty,
+        };
     }
 }

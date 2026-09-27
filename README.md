@@ -72,10 +72,18 @@ thing beneath it), so the cause is one click from wherever it is named; the
 Configuration tree's *problem* link opens the tree down to the same leaf. A
 stage card counts what was taken on its own stage (`IOperatorSurface.Stage`)
 and names the Locations configured there (`Locations`), never the cluster's
-sum or the leaves beneath it. Each view has one line above its data — the
+sum or the leaves beneath it. What a card says a stage is moving is the rate
+per second the one `FigureWatch` in `Xmip.Surface` gives between two
+publications, the prompt's own, and written by `English.Flow`; until
+2026-09-27 the board kept its own last value and delta. Each view has one line
+above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone.
+is gone. The navigation is one component for both hosts, `TopNav`: the three
+views, what the host adds after them — the desktop's Configure, for a role
+that may configure — and the role it runs as, described once
+(`Roles.Describe`). The filter box and what it narrows are the three views'
+base, `ClusterView`, once.
 
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the three views over the surface library's own published fixture, so what is
@@ -171,12 +179,17 @@ against the runtime's own build: a saved document validates, a missing
 round-trips, a Process added with only a name and `start` validates, and
 comments and layout survive an edit and a save.
 
+The page lists every document in `ConfigDirectory` (else a directory under
+the app's data), and marks as *started here* the one the desktop's
+`NodeConfiguration` names — declared, never read from a file's name. An empty
+directory is an empty list: nothing is written into it unasked.
+
 Configuration is each host's `xmip.gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
 the page — `Url = <web host>` when the surface is remote, and, on the desktop
-only, `NodeConfiguration` and `Role`. The web host serves its own surface at
+only, `NodeConfiguration`, `ConfigDirectory` and `Role`. The web host serves its own surface at
 `/surface`: a SignalR hub every remote surface follows and is told through
 when this host's surface changes, so the CLI, the PowerShell module and a GUI
 on another machine follow it without polling (ADR-0052, amendment

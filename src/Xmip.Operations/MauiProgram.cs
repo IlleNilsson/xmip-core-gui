@@ -16,13 +16,6 @@ public static class MauiProgram
 
     public static MauiApp CreateMauiApp()
     {
-        // What this process says of itself while it runs (ADR-0053). The
-        // desktop configures and monitors a real node: runtime.
-        Xmip.Surface.ProcessDeclaration.Declare(
-            Name,
-            Xmip.Surface.ScopeTree.Root,
-            Xmip.Surface.ProcessDeclaration.Runtime);
-
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
@@ -47,6 +40,15 @@ public static class MauiProgram
         // the runtime's target/debug needs the repo root, not the exe's folder.
         string basePath = RepositoryRoot(here) ?? here;
 
+        // What this process says of itself while it runs (ADR-0053), through
+        // the runtime library this desktop was told to load. The desktop
+        // configures and monitors a real node: runtime.
+        ProcessDeclaration.Declare(
+            Name,
+            ScopeTree.Root,
+            ProcessDeclaration.Runtime,
+            RuntimeLibrary.Find(builder.Configuration, basePath));
+
         // Everything this host does and every failure, audited through the
         // audit capability (ADR-0062): into the directory xmip.gui.toml names,
         // else where the capability decides. Every error the host logs is a
@@ -65,7 +67,16 @@ public static class MauiProgram
             builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
         builder.Services.AddSingleton(new RoleContext(RoleContext.Parse(assignedRole)));
 
-        builder.Services.AddSingleton<ConfigStore>();
+        // The configurations the Configure page lists: the directory
+        // xmip.gui.toml names, else one under app data; the one the desktop
+        // starts is the NodeConfiguration it declares, never a file's name.
+        string? configured = builder.Configuration["Xmip:ConfigDirectory"];
+        string? starts = builder.Configuration["Xmip:NodeConfiguration"];
+        builder.Services.AddSingleton(new ConfigStore(
+            string.IsNullOrWhiteSpace(configured)
+                ? Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "xmip", "config")
+                : TomlDocument.Resolve(configured, basePath),
+            string.IsNullOrWhiteSpace(starts) ? null : TomlDocument.Resolve(starts, basePath)));
 
         // The one surface every screen reads, chosen in xmip.gui.toml and never
         // guessed (ADR-0052 clause 3): the same selection as the web host, from

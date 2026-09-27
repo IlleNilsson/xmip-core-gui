@@ -1,25 +1,17 @@
 @inherits LayoutComponentBase
 @inject RoleContext Role
 
-@* The desktop does both, so it navigates: monitoring (Cluster) and, unlike the
-   web, configuration (ADR-0014). What it offers follows the role (ADR-0009),
-   which is assigned, not chosen here: an Observer watches — monitoring only — and
-   is not shown Configure at all. A real identity will gate this
-   (ADR-0022/ADR-0027); until then the role is assigned at launch. *@
-<nav class="topnav">
-    <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
-    <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
-    <NavLink class="topnav-link" href="/topology">Topology</NavLink>
+@* The desktop does both, so beside the shared bar's views it offers
+   configuring (ADR-0014). What it offers follows the role (ADR-0009), which is
+   assigned, not chosen here: an Observer watches and is not shown Configure
+   at all. A real identity will gate this (ADR-0022/ADR-0027); until then the
+   role is assigned at launch. *@
+<TopNav>
     @if (Role.MayConfigure())
     {
         <NavLink class="topnav-link" href="/configure">Configure</NavLink>
     }
-
-    <div class="role">
-        <span class="role-label">role</span>
-        <span class="role-pick active" title="@Describe(Role.Role)">@Role.Role.Label()</span>
-    </div>
-</nav>
+</TopNav>
 
 @Body
 
@@ -28,16 +20,3 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
-
-@code {
-    private static string Describe(Xmip.Gui.Surface.Role role)
-    {
-        return role switch
-        {
-            Xmip.Gui.Surface.Role.Observer => "watches — monitoring only",
-            Xmip.Gui.Surface.Role.Operator => "also configures",
-            Xmip.Gui.Surface.Role.Developer => "also builds",
-            _ => "",
-        };
-    }
-}

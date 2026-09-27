@@ -49,19 +49,6 @@
     // 2026-09-15): every level here is a lookup, put into configuration order.
     private ScopeIndex Index { get; set; } = ScopeIndex.Empty("nothing read yet");
 
-    // The tree keeps the path down to what matched, however deep, so a row a
-    // pattern names can still be reached; a row that matched shows everything
-    // beneath it, because a node named whole is a node with its own tree.
-    private string Pattern { get; set; } = string.Empty;
-
-    private ScopeFilter Filter { get; set; } = ScopeFilter.None;
-
-    private void Filtered(string pattern)
-    {
-        Pattern = pattern;
-        Read();
-    }
-
     // Levels that stand open without a click: the cluster, its nodes and the
     // stage beneath each; the playground puts its nodes under a `node`
     // segment, so one more level than a configured cluster would need.
@@ -83,7 +70,11 @@
     {
         Index = Surface.Index();
         All = Index.Health(ScopeTree.Root);
-        Filter = ScopeFilter.Over(Index, Pattern);
+        // The tree keeps the path down to what matched, however deep, so a
+        // row a pattern names can still be reached; a row that matched shows
+        // everything beneath it, because a node named whole is a node with
+        // its own tree.
+        Refilter(Index);
 
         TopologySnapshot topology = Surface.Topology();
         Drawn = topology.Nodes

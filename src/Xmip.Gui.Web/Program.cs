@@ -120,14 +120,16 @@ try
 
     // What this process says of itself while it runs (ADR-0053): the surface it
     // reads, and the purpose what started it stated. Start-XmipOperationWeb says
-    // test where it follows a Playground roll.
+    // test where it follows a Playground roll. Declared through the node, in
+    // the runtime library this host was told to load.
     ProcessDeclaration.Declare(
         Name,
         Located(SurfaceChoice.Snapshots(app.Configuration))
             ?? app.Configuration[SurfaceChoice.UrlKey]
             ?? app.Configuration[SurfaceChoice.SurfaceKey]
             ?? ScopeTree.Root,
-        ProcessDeclaration.PurposeOf(app.Configuration));
+        ProcessDeclaration.PurposeOf(app.Configuration),
+        RuntimeLibrary.Find(app.Configuration, app.Environment.ContentRootPath));
 
     if (!app.Environment.IsDevelopment())
     {
