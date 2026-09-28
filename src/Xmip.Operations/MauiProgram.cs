@@ -34,11 +34,10 @@ public static class MauiProgram
         TomlDocument.Add(
             builder.Configuration, Path.Combine(here, "xmip.gui.toml"), optional: true);
 
-        // Relative paths in the config resolve against the repository root in a
-        // development build, and against the app's own directory once packaged.
-        // A developer runs from a bin folder several levels down, so pointing at
-        // the runtime's target/debug needs the repo root, not the exe's folder.
-        string basePath = RepositoryRoot(here) ?? here;
+        // Relative paths in the config resolve by the one rule the web host
+        // shares: the estate root in a development build, the app's own
+        // directory once packaged.
+        string basePath = TomlDocument.BasePath(here);
 
         // What this process says of itself while it runs (ADR-0053), through
         // the runtime library this desktop was told to load. The desktop
@@ -130,25 +129,5 @@ public static class MauiProgram
         audit.Record("start", AuditPhase.Begin, AuditSeverity.Information);
 
         return app;
-    }
-
-    /// <summary>The repository root above a bin directory, found by walking up
-    /// to the folder that holds <c>architecture.toml</c>. Null when packaged,
-    /// where there is no repository and paths resolve against the app instead.</summary>
-    private static string? RepositoryRoot(string start)
-    {
-        DirectoryInfo? directory = new(start);
-
-        while (directory is not null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "architecture.toml")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        return null;
     }
 }

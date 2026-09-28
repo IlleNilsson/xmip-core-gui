@@ -54,13 +54,19 @@ try
     builder.Configuration.AddEnvironmentVariables();
     builder.Configuration.AddCommandLine(args);
 
+    // Relative paths in the file resolve by the one rule the desktop shares:
+    // the estate root in a development build, the host's own directory once
+    // published — not the content root, which is the bin folder when the
+    // built host is started and the project under `dotnet run`.
+    string basePath = TomlDocument.BasePath(builder.Environment.ContentRootPath);
+
     // Everything this host does and every failure, audited through the audit
     // capability (ADR-0062): into the directory xmip.gui.toml names, else where
     // the capability decides. Every error the host logs is a record — a circuit
     // that dies, which the browser shows as "an unhandled error has occurred",
     // among them — and so is every exception nothing handled.
     audit = new ProgramAudit(
-        Name, ProgramAudit.Stated(builder.Configuration, builder.Environment.ContentRootPath));
+        Name, ProgramAudit.Stated(builder.Configuration, basePath));
     audit.WatchUnhandled();
     builder.Logging.AddProvider(new AuditLoggerProvider(audit));
     builder.Services.AddSingleton(audit);
@@ -80,13 +86,11 @@ try
     // path — or, since the amendment of 2026-09-20, one snapshot per cluster, so
     // one host serves two rolls and the views move between them. This host loads
     // no node and starts nothing — a node is started from the desktop or the CLI.
-    // Relative paths in the file resolve against the content root, which is where
-    // the file itself is: the project directory under `dotnet run`, the
-    // application's own directory once published.
+    // Relative paths in the file resolve against basePath, above.
     builder.Services.AddSingleton(services =>
     {
         ClusterSurfaces held = SurfaceChoice.OpenAll(
-            services.GetRequiredService<IConfiguration>(), builder.Environment.ContentRootPath);
+            services.GetRequiredService<IConfiguration>(), basePath);
 
         services.GetRequiredService<ILogger<Program>>().ReadingSurface(held.Source);
 
@@ -110,7 +114,7 @@ try
     // names, asking a caller for one and checking it; plain HTTP beyond
     // loopback is refused here, before anything listens. Loopback is the one
     // exception, and it is said below where it is bound.
-    SurfaceTls tls = SurfaceTls.From(builder.Configuration, builder.Environment.ContentRootPath);
+    SurfaceTls tls = SurfaceTls.From(builder.Configuration, basePath);
     IReadOnlyList<string> plain = SurfaceBinding.Check(
         SurfaceBinding.Addresses(builder.Configuration), tls);
     builder.WebHost.UseXmipTls(tls, why => audit.Record(
@@ -129,7 +133,7 @@ try
             ?? app.Configuration[SurfaceChoice.SurfaceKey]
             ?? ScopeTree.Root,
         ProcessDeclaration.PurposeOf(app.Configuration),
-        RuntimeLibrary.Find(app.Configuration, app.Environment.ContentRootPath));
+        RuntimeLibrary.Find(app.Configuration, basePath));
 
     if (!app.Environment.IsDevelopment())
     {
