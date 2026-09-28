@@ -54,7 +54,7 @@ public sealed class ConfigStore(string directory, string? started)
             entries.Add(new Entry(name, path, Starts(path)));
         }
 
-        return
+        return (Entry[])
         [
             .. entries
                 .OrderByDescending(entry => entry.Started)
