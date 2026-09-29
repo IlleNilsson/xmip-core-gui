@@ -82,7 +82,7 @@ public sealed class ClusterTopologyTest : BunitContext
     {
         IRenderedComponent<Topology> page = Render<Topology>();
 
-        Assert.Equal(["alpha", "beta", "gamma", "partner-x", "partner-x"], Labels(page));
+        Assert.Equal(["alpha", "beta", "gamma", "party-x", "party-x"], Labels(page));
         Assert.Equal(
             ["node", "node", "node", "party", "party"],
             page.FindAll("g.topology-node .node-kind").Select(kind => kind.TextContent));
@@ -108,8 +108,8 @@ public sealed class ClusterTopologyTest : BunitContext
                 ScopeLink.TopologyAt("node/alpha"),
                 ScopeLink.TopologyAt("node/beta"),
                 ScopeLink.TopologyAt("node/gamma"),
-                ScopeLink.TopologyAt("party/sending/partner-x"),
-                ScopeLink.TopologyAt("party/receiving/partner-x"),
+                ScopeLink.TopologyAt("party/sending/party-x"),
+                ScopeLink.TopologyAt("party/receiving/party-x"),
             ],
             Hrefs(page));
 
@@ -173,9 +173,9 @@ public sealed class ClusterTopologyTest : BunitContext
                 ("alpha/receive → beta/process", "6 · 1.5/s", "configured and observed"),
                 ("beta/process → beta/send", "configured · no traffic observed", "configured"),
                 ("beta/process → gamma/send", "6 · 1.5/s", "configured and observed"),
-                ("partner-x → alpha/receive", "6 · 1.5/s", "configured and observed"),
-                ("beta/send → partner-x", "configured · no traffic observed", "configured"),
-                ("gamma/send → partner-x", "6 · 1.5/s", "configured and observed"),
+                ("party-x → alpha/receive", "6 · 1.5/s", "configured and observed"),
+                ("beta/send → party-x", "configured · no traffic observed", "configured"),
+                ("gamma/send → party-x", "6 · 1.5/s", "configured and observed"),
             ],
             traffic);
 
@@ -240,20 +240,20 @@ public sealed class ClusterTopologyTest : BunitContext
             link => link.GetAttribute("href") ?? string.Empty,
             link => Across(link.QuerySelector("g.topology-node")?.GetAttribute("transform")));
 
-        double sender = x[ScopeLink.TopologyAt("party/sending/partner-x")];
-        double receiver = x[ScopeLink.TopologyAt("party/receiving/partner-x")];
+        double sender = x[ScopeLink.TopologyAt("party/sending/party-x")];
+        double receiver = x[ScopeLink.TopologyAt("party/receiving/party-x")];
         Assert.True(sender < x[ScopeLink.TopologyAt("node/alpha")], "the sender stands left");
         Assert.True(x[ScopeLink.TopologyAt("node/alpha")] < x[ScopeLink.TopologyAt("node/beta")]);
         Assert.True(x[ScopeLink.TopologyAt("node/beta")] < x[ScopeLink.TopologyAt("node/gamma")]);
         Assert.True(receiver > x[ScopeLink.TopologyAt("node/gamma")], "the receiver stands right");
 
-        Address(ScopeLink.TopologyAt("party/receiving/partner-x"));
+        Address(ScopeLink.TopologyAt("party/receiving/party-x"));
         IRenderedComponent<Topology> party = Render<Topology>();
 
-        Assert.Equal(["alpha", "beta", "gamma", "partner-x", "partner-x"], Labels(party));
+        Assert.Equal(["alpha", "beta", "gamma", "party-x", "party-x"], Labels(party));
         IElement selected = party.Find("g.topology-node.selected");
         Assert.Equal("party", selected.QuerySelector(".node-kind")?.TextContent);
-        Assert.Equal("partner-x", party.Find(".topology-inspector h2").TextContent);
+        Assert.Equal("party-x", party.Find(".topology-inspector h2").TextContent);
         Assert.Equal(
             ["beta · send", "gamma · send"],
             party.FindAll(".topology-inspector h4.topology-facing").Select(h => h.TextContent));
