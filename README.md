@@ -30,9 +30,11 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Three views, and three points to drill from: **Configuration**, the classic
+Four views, and four points to drill from: **Configuration**, the classic
 tree, holding still; **Monitor**, the board that follows Receive → Process →
-Send; and **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18). A
+Send; **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18); and,
+since 2026-09-29, **Audit**, what every Xmip program recorded (ADR-0062,
+amendment 2026-09-29), described below. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -84,15 +86,39 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the three
+is gone. The navigation is one component for both hosts, `TopNav`: the four
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
-(`Roles.Describe`). The filter box and what it narrows are the three views'
+(`Roles.Describe`). The filter box and what it narrows are the views'
 base, `ClusterView`, once.
 
+**The Audit view** (`/audit`; the owner, 2026-09-29: *audited entries in the
+clusters. Drill-down, sorting and filtering*) reads the records every Xmip
+program audited, through `ProgramAudit.Read` in `Xmip.Surface` and the audit
+capability's one reader and query behind `xmip_audit_read_v1` — the page
+filters, sorts and pages nothing itself. Who a record is, is the location its
+process declared (ADR-0053 clause 3): the drill runs cluster → node → program
+→ one record, and a program that declared none — a cmdlet, this host — stands
+under its host; nothing is read out of a program's name. Each level lists the
+groups one step down with their counts, errors and warnings, then the records:
+time (UTC), node, program, action, phase, severity and summary, newest first,
+a column's head sorting by it and again the other way. The filters are the
+scope pattern box every view has — the one wildcard, `observe::wildcard`,
+over each record's location — and severity, action and a time range beside
+it. Everything is in the address (`/audit?location=xmip:///C1/node/R1&
+severity=error&sort=action&order=ascending`), so a link reproduces the view;
+a page draws 200 rows and links the next and the previous (no `Virtualize`,
+which prerendered a blank spacer). A record opens whole, every property with
+it. The view reads the audit of the machine its host runs on — the directory
+`Xmip:AuditDirectory` names, else `XMIP_AUDIT_DIRECTORY` — and says so in
+words where there is none, where the runtime's library cannot be loaded, and
+over a remote surface, whose cluster's audit stays on its own machine. The
+Monitor's drill links each scope to its audit beside its configuration.
+
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
-the three views over the surface library's own published fixture, so what is
-asserted is what an operator sees and no surface is faked.
+the views over the surface library's own published fixture, and the Audit view
+over an audit file in the capability's shape, so what is asserted is what an
+operator sees and no surface is faked.
 
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
@@ -111,7 +137,7 @@ publication; the shared store
 is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
 ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
 started with — tests, cluster, nodes, which are online, the level — in one line
-at the top of all three views.
+at the top of every view.
 The native operator boundary does not publish topology yet, so over that
 surface the view says so plainly; a node run from configuration is queue item
 1. Xmip draws what is configured and what is observed and infers nothing from

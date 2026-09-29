@@ -66,6 +66,7 @@
             <span class="sep">/</span>
         }
         <a class="crumb-link" href="@ScopeLink.Configuration(Focus, Carried)">configuration</a>
+        <a class="crumb-link" href="@ScopeLink.Audit(new() { Location = Focus }, Carried)">audit</a>
     </nav>
     @{
         IReadOnlyList<Branch> branches = Filter.Only(Index.Branches(Focus));

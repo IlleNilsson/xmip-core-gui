@@ -3,11 +3,12 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the three views. The web GUI is three
-/// points to drill from — Configuration, Monitor and Topology — and from any
-/// of them a scope leads to the same scope in the others (the owner,
-/// 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link from any view
-/// ends at the view of the actual configuration). One place writes the
+/// Where a scope is reached in each of the views. The web GUI is four points
+/// to drill from — Configuration, Monitor, Topology and, since 2026-09-29,
+/// Audit — and from any of them a scope leads to the same scope in the others
+/// (the owner, 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link
+/// from any view ends at the view of the actual configuration). One place
+/// writes the
 /// links, so a row, a node and a crumb cannot disagree about where a scope is.
 /// </summary>
 /// <remarks>
@@ -55,6 +56,29 @@ public static class ScopeLink
     public static string TopologyAt(string node, string? cluster = null)
     {
         return "/topology?" + Focus + "=" + Uri.EscapeDataString(node) + Also(cluster);
+    }
+
+    /// <summary>
+    /// The Audit view asking <paramref name="query"/>, on this cluster: every
+    /// word the query carries is in the address by the name the audit
+    /// capability gives it, so a link reproduces the view — who, the filters,
+    /// the sort and the page (ADR-0062, amendment 2026-09-29).
+    /// </summary>
+    public static string Audit(AuditQuery query, string? cluster = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        List<string> said =
+        [
+            .. query.Pairs().Select(pair => pair.Key + "=" + Uri.EscapeDataString(pair.Value)),
+        ];
+
+        if (!string.IsNullOrEmpty(cluster))
+        {
+            said.Add(ClusterView.Query + "=" + Uri.EscapeDataString(cluster));
+        }
+
+        return said.Count == 0 ? "/audit" : "/audit?" + string.Join('&', said);
     }
 
     /// <summary>
