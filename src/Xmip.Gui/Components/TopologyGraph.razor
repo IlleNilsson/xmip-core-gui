@@ -1,4 +1,6 @@
-@* The topology's canvas: every visible node placed on a ring, the
+@* The topology's canvas: every visible node placed on a ring — or, where
+   Parties are drawn, in columns as the streams run, a Party that sends on the
+   left and one delivered to on the right (ADR-0052, amendment 2026-09-29) — the
    communication between them drawn as a curve, and application movement as
    particles running along it. Animation represents application movement; the
    line remains the configured or observed relationship.
@@ -27,8 +29,9 @@
         @if (Focus is not null)
         {
             <g class="topology-focus">
-                <rect class="focus-frame" x="150" y="8" width="700" height="604" rx="18" />
-                <text class="focus-label" x="170" y="34">
+                <rect class="focus-frame" x="@Frame.Left" y="8" width="@Frame.Width"
+                      height="604" rx="18" />
+                <text class="focus-label" x="@(Frame.Left + 20)" y="34">
                     @Focus.Label <tspan class="focus-kind">@English.Name(Focus.Kind)</tspan>
                 </text>
             </g>
@@ -121,6 +124,15 @@
         Spot To,
         int Index);
 
+    // The open node's frame: wide, or narrowed where Parties are drawn so they
+    // stand outside it — a Party is not part of what it sends to or is
+    // delivered by (ADR-0052, amendment 2026-09-29).
+    private sealed record Span(int Left, int Width);
+
+    private Span Frame => HasParties ? new Span(170, 660) : new Span(150, 700);
+
+    private bool HasParties => VisibleNodes.Any(node => node.Kind == TopologyNodeKind.Party);
+
     // The open node itself, where a line ends at it rather than at one of its
     // children: the top of its frame.
     private static readonly Spot FocusEdge = new(500D, 8D);
@@ -135,6 +147,11 @@
     /// <summary>The node whose components are open, or null for infrastructure.</summary>
     [Parameter]
     public string? FocusId { get; set; }
+
+    /// <summary>The node the inspector shows, drawn as selected: a Party the
+    /// operator opened, drawn among the things beside it.</summary>
+    [Parameter]
+    public string? SelectedId { get; set; }
 
     /// <summary>Whether the operator has paused the movement along the lines.</summary>
     [Parameter]
@@ -171,25 +188,107 @@
         }
     }
 
-    private IReadOnlyList<PlacedNode> PlacedNodes
+    private IReadOnlyList<PlacedNode> PlacedNodes =>
+        HasParties ? Flowing(VisibleNodes) : Ring(VisibleNodes);
+
+    // Where Parties are drawn the canvas reads left to right, as the streams
+    // run (the owner, 2026-09-29: *something is sending streams to a Xmip
+    // Node; a Xmip Node sends streams to somethings*): a Party that sends,
+    // left of the frame; the things inside it in columns, each after what
+    // its links say feeds it; a Party delivered to, right of the frame. The
+    // links decide, never a name.
+    private IReadOnlyList<PlacedNode> Flowing(IReadOnlyList<TopologyNode> nodes)
     {
-        get
+        HashSet<string> visible = [.. nodes.Select(node => node.Id)];
+        List<(string From, string To)> edges = [];
+
+        foreach (CommunicationLink link in Snapshot.Links.Where(Show))
         {
-            IReadOnlyList<TopologyNode> nodes = VisibleNodes;
-            List<PlacedNode> placed = [];
-
-            for (int index = 0; index < nodes.Count; index++)
+            if (Holder(link.From, visible) is { } from
+                && Holder(link.To, visible) is { } to
+                && from != to)
             {
-                double angle = -Math.PI / 2D + (2D * Math.PI * index / Math.Max(nodes.Count, 1));
-                double radius = nodes.Count <= 2 ? 185D : 235D;
-                placed.Add(new PlacedNode(
-                    nodes[index],
-                    500D + Math.Cos(angle) * radius,
-                    300D + Math.Sin(angle) * radius));
+                edges.Add((from, to));
             }
-
-            return placed;
         }
+
+        HashSet<string> parties = [
+            .. nodes.Where(node => node.Kind == TopologyNodeKind.Party).Select(node => node.Id),
+        ];
+        List<(string From, string To)> within = [
+            .. edges.Where(edge => !parties.Contains(edge.From) && !parties.Contains(edge.To)),
+        ];
+        Dictionary<string, int> column =
+            nodes.ToDictionary(node => node.Id, _ => 0, StringComparer.Ordinal);
+
+        // Longest path among the things inside, bounded by their number so a
+        // cycle ends.
+        for (int pass = 0; pass < nodes.Count; pass++)
+        {
+            foreach ((string from, string to) in within)
+            {
+                column[to] = Math.Max(column[to], Math.Min(column[from] + 1, nodes.Count));
+            }
+        }
+
+        List<TopologyNode> inside = [.. nodes.Where(node => !parties.Contains(node.Id))];
+        int columns = inside.Count == 0 ? 1 : inside.Max(node => column[node.Id]) + 1;
+        List<PlacedNode> placed = [];
+
+        foreach (IGrouping<int, TopologyNode> group in inside.GroupBy(node => column[node.Id]))
+        {
+            // Inset from the frame, so the figure on a Party's line has room.
+            double x = Frame.Left + 30D + (Frame.Width - 60D) * (group.Key + 0.5D) / columns;
+            placed.AddRange(Stacked(group.ToList(), x));
+        }
+
+        ILookup<bool, TopologyNode> sends = nodes
+            .Where(node => parties.Contains(node.Id))
+            .ToLookup(party => edges.Any(edge => edge.From == party.Id));
+        placed.AddRange(Stacked([.. sends[true]], 78D));
+        placed.AddRange(Stacked([.. sends[false]], 922D));
+
+        return placed;
+    }
+
+    // One column of things, spread about the middle of the canvas.
+    private static IEnumerable<PlacedNode> Stacked(IReadOnlyList<TopologyNode> nodes, double x)
+    {
+        double spacing = nodes.Count <= 1 ? 0D : Math.Min(140D, 480D / (nodes.Count - 1));
+
+        return nodes.Select((node, index) =>
+            new PlacedNode(node, x, 320D + (index - (nodes.Count - 1) / 2D) * spacing));
+    }
+
+    // The drawn thing that holds a node: itself, or its nearest ancestor that
+    // is drawn; null where none is.
+    private string? Holder(string id, HashSet<string> visible)
+    {
+        string? current = id;
+
+        while (current is not null && !visible.Contains(current))
+        {
+            current = NodeById.TryGetValue(current, out TopologyNode? node) ? node.ParentId : null;
+        }
+
+        return current;
+    }
+
+    private static IReadOnlyList<PlacedNode> Ring(IReadOnlyList<TopologyNode> nodes)
+    {
+        List<PlacedNode> placed = [];
+
+        for (int index = 0; index < nodes.Count; index++)
+        {
+            double angle = -Math.PI / 2D + (2D * Math.PI * index / Math.Max(nodes.Count, 1));
+            double radius = nodes.Count <= 2 ? 185D : 235D;
+            placed.Add(new PlacedNode(
+                nodes[index],
+                500D + Math.Cos(angle) * radius,
+                300D + Math.Sin(angle) * radius));
+        }
+
+        return placed;
     }
 
     private IReadOnlyList<RenderedLink> RenderedLinks
@@ -263,9 +362,10 @@
     private static string LinkClass(CommunicationLink link) =>
         $"topology-link {MoodClass.Of(link.State)} {English.Word(link.Origin)} {English.Word(link.Pattern)}";
 
-    private static string NodeClass(TopologyNode node) =>
-        $"topology-node {MoodClass.Of(node.State)} {English.Word(node.Origin)} "
-        + (node.Activity > 0.05 ? "active" : "");
+    private string NodeClass(TopologyNode node) =>
+        $"topology-node {English.Word(node.Kind)} {MoodClass.Of(node.State)} {English.Word(node.Origin)}"
+        + (node.Activity > 0.05 ? " active" : "")
+        + (node.Id == SelectedId ? " selected" : "");
 
     private static string Title(TopologyNode node) =>
         $"{node.Label}: {English.Name(node.Kind)}, {English.Mood(node.State)}. {node.Evidence}";

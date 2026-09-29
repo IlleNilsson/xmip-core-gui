@@ -82,15 +82,16 @@ public sealed class ClusterTopologyTest : BunitContext
     {
         IRenderedComponent<Topology> page = Render<Topology>();
 
-        Assert.Equal(["alpha", "beta", "gamma"], Labels(page));
-        Assert.All(
-            page.FindAll("g.topology-node .node-kind"),
-            kind => Assert.Equal("node", kind.TextContent));
+        Assert.Equal(["alpha", "beta", "gamma", "partner-x", "partner-x"], Labels(page));
+        Assert.Equal(
+            ["node", "node", "node", "party", "party"],
+            page.FindAll("g.topology-node .node-kind").Select(kind => kind.TextContent));
 
         // alpha to beta and beta to gamma: the links run between stages, and are drawn
-        // between the nodes that hold them while the stages are closed.
+        // between the nodes that hold them while the stages are closed; the
+        // Party sends into alpha and beta and gamma deliver to it.
         IReadOnlyList<IElement> links = page.FindAll("g.topology-link");
-        Assert.Equal(2, links.Count);
+        Assert.Equal(5, links.Count);
         Assert.All(links, link => Assert.Contains("send-receive", link.ClassName ?? string.Empty,
             StringComparison.Ordinal));
         Assert.Contains(links, link => (link.ClassName ?? string.Empty).Contains(
@@ -107,6 +108,8 @@ public sealed class ClusterTopologyTest : BunitContext
                 ScopeLink.TopologyAt("node/alpha"),
                 ScopeLink.TopologyAt("node/beta"),
                 ScopeLink.TopologyAt("node/gamma"),
+                ScopeLink.TopologyAt("party/sending/partner-x"),
+                ScopeLink.TopologyAt("party/receiving/partner-x"),
             ],
             Hrefs(page));
 
@@ -150,10 +153,11 @@ public sealed class ClusterTopologyTest : BunitContext
     {
         IRenderedComponent<Topology> cluster = Render<Topology>();
 
-        // What passes over a used link is on the line: its volume and rate.
-        Assert.All(
-            cluster.FindAll("g.topology-link"),
-            link => Assert.Equal("6 · 1.5/s", link.QuerySelector(".link-figure")?.TextContent));
+        // What passes over a used link is on the line: its volume and rate;
+        // beta's send stage has reported on no transport, and says so.
+        Assert.Equal(
+            ["6 · 1.5/s", "6 · 1.5/s", "6 · 1.5/s", "configured · no traffic observed", "6 · 1.5/s"],
+            cluster.FindAll("g.topology-link .link-figure").Select(figure => figure.TextContent));
 
         // Within the cluster, every path and what it carried — beta's own
         // process to its send stage is configured and has carried nothing.
@@ -169,20 +173,25 @@ public sealed class ClusterTopologyTest : BunitContext
                 ("alpha/receive → beta/process", "6 · 1.5/s", "configured and observed"),
                 ("beta/process → beta/send", "configured · no traffic observed", "configured"),
                 ("beta/process → gamma/send", "6 · 1.5/s", "configured and observed"),
+                ("partner-x → alpha/receive", "6 · 1.5/s", "configured and observed"),
+                ("beta/send → partner-x", "configured · no traffic observed", "configured"),
+                ("gamma/send → partner-x", "6 · 1.5/s", "configured and observed"),
             ],
             traffic);
 
-        // Opened, beta draws the configured link between its two stages,
-        // dashed by its class and saying so on itself, beside the two used
-        // ones that reach its process stage from the rest of the cluster.
+        // Opened, beta draws the configured links — between its two stages,
+        // and from its send stage to the Party — dashed by their class and
+        // saying so on themselves, beside the two used ones that reach its
+        // process stage from the rest of the cluster.
         Address(ScopeLink.TopologyAt("node/beta"));
         IReadOnlyList<IElement> links = Render<Topology>().FindAll("g.topology-link");
-        Assert.Equal(3, links.Count);
-        IElement idle = Assert.Single(links, link =>
-            (link.ClassName ?? string.Empty).Split(' ').Contains("configured"));
-        Assert.Equal(
+        Assert.Equal(4, links.Count);
+        IReadOnlyList<IElement> idle = [.. links.Where(link =>
+            (link.ClassName ?? string.Empty).Split(' ').Contains("configured"))];
+        Assert.Equal(2, idle.Count);
+        Assert.All(idle, link => Assert.Equal(
             "configured · no traffic observed",
-            idle.QuerySelector(".link-figure")?.TextContent);
+            link.QuerySelector(".link-figure")?.TextContent));
     }
 
     /// <summary>
@@ -207,13 +216,57 @@ public sealed class ClusterTopologyTest : BunitContext
         Assert.Equal("beyond beta", outside.QuerySelector(".node-kind")?.TextContent);
 
         Assert.Equal(
-            ["outside → process", "process → send", "process → outside"],
+            ["outside → process", "process → send", "process → outside", "send → outside"],
             beta.FindAll(".topology-traffic li .ends").Select(ends => ends.TextContent));
 
         // The cluster open at its root sends nothing outside it, and says so by
         // drawing no marker.
         Address(ScopeLink.Topology());
         Assert.Empty(Render<Topology>().FindAll("g.topology-outside"));
+    }
+
+    /// <summary>
+    /// The owner, 2026-09-29: *Something is sending streams to a Xmip Node. A
+    /// Xmip Node sends streams to somethings.* The Party that sends stands
+    /// left of the node it sends into, the one delivered to right of the nodes
+    /// that deliver to it; opened, a Party is drawn where it stands, selected,
+    /// and the inspector lists the transports it uses and their state.
+    /// </summary>
+    [Fact]
+    public void APartySendsFromTheLeftIsDeliveredToOnTheRightAndOpensToItsTransports()
+    {
+        IRenderedComponent<Topology> cluster = Render<Topology>();
+        Dictionary<string, double> x = cluster.FindAll("a.topology-node-link").ToDictionary(
+            link => link.GetAttribute("href") ?? string.Empty,
+            link => Across(link.QuerySelector("g.topology-node")?.GetAttribute("transform")));
+
+        double sender = x[ScopeLink.TopologyAt("party/sending/partner-x")];
+        double receiver = x[ScopeLink.TopologyAt("party/receiving/partner-x")];
+        Assert.True(sender < x[ScopeLink.TopologyAt("node/alpha")], "the sender stands left");
+        Assert.True(x[ScopeLink.TopologyAt("node/alpha")] < x[ScopeLink.TopologyAt("node/beta")]);
+        Assert.True(x[ScopeLink.TopologyAt("node/beta")] < x[ScopeLink.TopologyAt("node/gamma")]);
+        Assert.True(receiver > x[ScopeLink.TopologyAt("node/gamma")], "the receiver stands right");
+
+        Address(ScopeLink.TopologyAt("party/receiving/partner-x"));
+        IRenderedComponent<Topology> party = Render<Topology>();
+
+        Assert.Equal(["alpha", "beta", "gamma", "partner-x", "partner-x"], Labels(party));
+        IElement selected = party.Find("g.topology-node.selected");
+        Assert.Equal("party", selected.QuerySelector(".node-kind")?.TextContent);
+        Assert.Equal("partner-x", party.Find(".topology-inspector h2").TextContent);
+        Assert.Equal(
+            ["beta · send", "gamma · send"],
+            party.FindAll(".topology-inspector h4.topology-facing").Select(h => h.TextContent));
+        List<string> transports =
+        [
+            .. party.FindAll(".topology-transports li .beneath-open")
+                .Select(item => item.TextContent),
+        ];
+        Assert.Equal(["tcp", "file"], transports);
+        Assert.Contains(
+            party.FindAll(".topology-transports a"),
+            link => link.GetAttribute("href")
+                == ScopeLink.Monitor("xmip:///C1/node/gamma/send/tcp"));
     }
 
     /// <summary>
@@ -317,6 +370,14 @@ public sealed class ClusterTopologyTest : BunitContext
     private static List<string?> Hrefs(IRenderedComponent<Topology> page)
     {
         return [.. page.FindAll("a.topology-node-link").Select(link => link.GetAttribute("href"))];
+    }
+
+    private static double Across(string? transform)
+    {
+        string inside = (transform ?? "translate(0 0)")["translate(".Length..].TrimEnd(')');
+
+        return double.Parse(
+            inside.Split(' ')[0], System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static List<string> Trail(IRenderedComponent<Topology> page)

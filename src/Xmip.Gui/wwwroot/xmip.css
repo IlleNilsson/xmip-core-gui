@@ -549,6 +549,11 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-beneath a:hover { text-decoration: underline; }
 .topology-beneath .beneath-open { font-weight: 700; font-family: ui-monospace, monospace; }
 .topology-beneath .kind, .topology-traffic .origin { color: var(--muted); font-size: 0.75rem; }
+/* A Party stands outside the cluster: a pill, not a box; the one opened is
+   outlined in the accent. */
+.topology-node.party .node-body { rx: 34px; }
+.topology-node.selected .node-body { stroke: var(--brand); stroke-width: 3.5; }
+.topology-inspector h4.topology-facing { font-size: 0.8rem; margin: 0.6rem 0 0.25rem; }
 .topology-traffic .ends { font-family: ui-monospace, monospace; }
 .topology-traffic li.configured .figure { color: var(--muted); font-style: italic; }
 .topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
