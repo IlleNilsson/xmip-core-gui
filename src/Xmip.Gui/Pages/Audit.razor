@@ -1,0 +1,270 @@
+@page "/audit"
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject ProgramAudit Audited
+@inject NavigationManager Nav
+
+<PageTitle>Xmip — Audit</PageTitle>
+
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+
+<ScopeFilterBox Id="filter-audit" Pattern="@(Asking.Pattern ?? string.Empty)"
+                PatternChanged="Patterned" Said="@PatternSaid" />
+
+<AuditFilters Query="Asking" Severities="@(Found?.Severities ?? [])"
+              Actions="@(Found?.Actions ?? [])" Changed="Go" Cleared="@Link(Unfiltered)" />
+
+@* What the audit capability recorded, who made it and what became of it
+   (ADR-0062, amendment 2026-09-29). Who a record is, is the location its
+   process declared — a cluster, a node — and a program that declared none,
+   a cmdlet or a web host, stands under its host: nothing is read out of a
+   program's name. The drill is in the address, as the Monitor's is: every
+   step, every filter, the sort and the page are a link that reproduces the
+   view. *@
+<section class="drill audit">
+    <nav class="crumbs" aria-label="Audit drill-down">
+        @foreach ((string label, string href) in Trail)
+        {
+            <a class="crumb-btn" href="@href">@label</a>
+            <span class="sep">/</span>
+        }
+        @if (Asking.Location is { Length: > 0 } scope)
+        {
+            <a class="crumb-link" href="@ScopeLink.Monitor(scope, Carried)">monitor</a>
+        }
+    </nav>
+
+    @if (Said.Length > 0)
+    {
+        <p class="audit-said @(Refused ? "refused" : "")">
+            @Said
+        </p>
+    }
+
+    @if (Found is { } found)
+    {
+        <p class="audit-count">
+            @Count(found)
+            · <span class="audit-file">@found.File</span>
+        </p>
+
+        @if (Detail is { } entry)
+        {
+            <AuditDetail Entry="entry" />
+        }
+        else
+        {
+            @if (found.Groups.Count > 0)
+            {
+                <div class="branches audit-groups">
+                    @foreach (AuditGroup group in found.Groups)
+                    {
+                        <a class="branch audit-group @Worst(group)" href="@Link(Into(group))">
+                            <span class="dot"></span>
+                            <span class="label">@Label(group)</span>
+                            <span class="worst">@group.Kind · @group.Count record(s)</span>
+                            <span class="evidence">@Counted(group)</span>
+                            <span class="figures">latest @Time(group.Latest)</span>
+                        </a>
+                    }
+                </div>
+            }
+
+            <AuditTable Records="found.Records" Query="Asking" Carried="@Carried"
+                        Matched="found.Matched" />
+        }
+    }
+</section>
+
+@code {
+    /// <summary>How many records a page draws.</summary>
+    public const int Shown = 200;
+
+    [SupplyParameterFromQuery(Name = "pattern")] public string? AskedPattern { get; set; }
+    [SupplyParameterFromQuery(Name = "location")] public string? AskedLocation { get; set; }
+    [SupplyParameterFromQuery(Name = "host")] public string? AskedHost { get; set; }
+    [SupplyParameterFromQuery(Name = "program")] public string? AskedProgram { get; set; }
+    [SupplyParameterFromQuery(Name = "record")] public string? AskedRecord { get; set; }
+    [SupplyParameterFromQuery(Name = "severity")] public string? AskedSeverity { get; set; }
+    [SupplyParameterFromQuery(Name = "action")] public string? AskedAction { get; set; }
+    [SupplyParameterFromQuery(Name = "from")] public string? AskedFrom { get; set; }
+    [SupplyParameterFromQuery(Name = "to")] public string? AskedTo { get; set; }
+    [SupplyParameterFromQuery(Name = "sort")] public string? AskedSort { get; set; }
+    [SupplyParameterFromQuery(Name = "order")] public string? AskedOrder { get; set; }
+    [SupplyParameterFromQuery(Name = "offset")] public int AskedOffset { get; set; }
+
+    private AuditQuery Asking { get; set; } = new();
+
+    private AuditRead? Found { get; set; }
+
+    private string Said { get; set; } = string.Empty;
+
+    private bool Refused => Said.StartsWith("REFUSED", StringComparison.Ordinal);
+
+    private static string Count(AuditRead found) =>
+        $"{English.Figure((ulong)found.Matched)} of {English.Figure((ulong)found.Read)} record(s)";
+
+    private AuditEntry? Detail =>
+        Asking.Record is { Length: > 0 } && Found is { Records.Count: > 0 } found
+            ? found.Records[0]
+            : null;
+
+    private AuditQuery Unfiltered =>
+        Asking with { Pattern = null, Severity = null, Action = null, From = null, To = null };
+
+    private string PatternSaid =>
+        Found is { } found && !string.IsNullOrEmpty(Asking.Pattern)
+            ? $"{English.Figure((ulong)found.Matched)} record(s) match {Asking.Pattern}"
+            : string.Empty;
+
+    protected override void Read()
+    {
+        // A view asked for a cluster, and for no one in it, stands at that
+        // cluster: the scope its publisher publishes at, never a name.
+        string? location = AskedLocation;
+        if (location is null && AskedHost is null && Asked is not null)
+        {
+            location = Surface.Root();
+        }
+
+        Asking = new AuditQuery
+        {
+            Pattern = AskedPattern, Location = location, Host = AskedHost,
+            Program = AskedProgram, Record = AskedRecord, Severity = AskedSeverity,
+            Action = AskedAction, From = AskedFrom, To = AskedTo, Sort = AskedSort,
+            Order = AskedOrder, Offset = Math.Max(AskedOffset, 0),
+        };
+
+        try
+        {
+            Found = Audited.Read(Asking with { Limit = Shown });
+            Said = Found.File.Length == 0 ? English.NoAuditDirectory() : Remote;
+        }
+        catch (ArgumentException refused)
+        {
+            Found = null;
+            Said = English.Refusal(refused);
+        }
+        catch (Exception unread) when (unread is IOException or InvalidOperationException)
+        {
+            Found = null;
+            Said = $"NATIVE — the audit cannot be read here: {unread.Message}";
+        }
+    }
+
+    // A remote surface's cluster runs on another machine, and its audit stays
+    // there: what this view reads is this machine's, and it says so.
+    private string Remote =>
+        Surface is RemoteOperator
+            ? "REMOTE — the cluster in view is read from another machine, whose audit stays "
+              + "there; what is shown is the audit of the machine this host runs on."
+            : string.Empty;
+
+    private IEnumerable<(string Label, string Href)> Trail
+    {
+        get
+        {
+            AuditQuery top = Asking with
+            {
+                Location = null, Host = null, Program = null, Record = null, Offset = 0,
+            };
+            yield return ("audit", ScopeLink.Audit(top));
+
+            if (Asking.Host is { Length: > 0 } host)
+            {
+                yield return ($"host {host}", Link(top with { Host = host }));
+            }
+
+            if (Asking.Location is { Length: > 0 } location)
+            {
+                foreach ((string label, string scope) in Steps(location))
+                {
+                    yield return (label, Link(top with { Location = scope }));
+                }
+            }
+
+            if (Asking.Program is { Length: > 0 } program)
+            {
+                yield return (program, Link(Asking with { Program = program, Record = null }));
+            }
+
+            if (Detail is { } entry)
+            {
+                yield return (Time(entry.At), Link(Asking));
+            }
+        }
+    }
+
+    // The steps down to a location: its cluster, the node it is on, and the
+    // scope itself where it sits deeper — by the one scope rule, so the node
+    // marker is never a step of its own.
+    private static IEnumerable<(string Label, string Scope)> Steps(string location)
+    {
+        string[] parts = ScopeTree.Parts(location);
+        if (parts.Length == 0)
+        {
+            yield break;
+        }
+
+        string cluster = ScopeTree.Join([parts[0]]);
+        yield return ($"cluster {parts[0]}", cluster);
+
+        string node = ScopeTree.Node(location);
+        string nodeScope = node.Length > 0 ? $"{cluster}/node/{node}" : cluster;
+        if (node.Length > 0)
+        {
+            yield return ($"node {node}", nodeScope);
+        }
+
+        string whole = ScopeTree.Join(parts);
+        if (!string.Equals(whole, nodeScope, StringComparison.Ordinal))
+        {
+            yield return (ScopeTree.Name(location), whole);
+        }
+    }
+
+    // One step down: a program narrows where the view stands; a host, a
+    // cluster, a node or a deeper scope is where it stands next.
+    private AuditQuery Into(AuditGroup group)
+    {
+        AuditQuery here = Asking with { Offset = 0, Record = null };
+
+        return group.Kind switch
+        {
+            "program" => here with { Program = group.Who },
+            "host" => here with { Host = group.Who, Location = null, Program = null },
+            _ => here with { Location = group.Who, Host = null, Program = null },
+        };
+    }
+
+    private string Link(AuditQuery query) => ScopeLink.Audit(query, Carried);
+
+    private void Go(AuditQuery query) => Nav.NavigateTo(Link(query));
+
+    private void Patterned(string pattern) =>
+        Go(Asking with { Pattern = pattern.Length == 0 ? null : pattern, Offset = 0 });
+
+    // A scope's group is named by its last segment beside its kind: cluster
+    // C1, node R1.
+    private static string Label(AuditGroup group) =>
+        group.Kind is not ("program" or "host") && ScopeTree.Parts(group.Who) is [.., var last]
+            ? last
+            : group.Who;
+
+    private static string Counted(AuditGroup group) =>
+        (group.Errors, group.Warnings) switch
+        {
+            (0, 0) => "no warning, no error",
+            (var errors, var warnings) => $"{errors} error(s) · {warnings} warning(s)",
+        };
+
+    private static string Worst(AuditGroup group) =>
+        group.Errors > 0 ? "severity-error"
+        : group.Warnings > 0 ? "severity-warning"
+        : "severity-information";
+
+    /// <summary>A written time as a row shows it: the date and the time to
+    /// the millisecond, UTC.</summary>
+    public static string Time(string at) =>
+        at.Length >= 23 ? $"{at[..10]} {at[11..23]}" : at;
+}

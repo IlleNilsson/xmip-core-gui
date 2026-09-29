@@ -1,0 +1,93 @@
+@using Xmip.Abi.Operate
+
+@* The filters beside the scope pattern on the Audit view (ADR-0062, amendment
+   2026-09-29): severity, action and a time range. Each is the audit
+   capability's word, and each change becomes the address, so a link
+   reproduces the view. The choices are the capability's too: the severities
+   it names, and the actions there are where the view stands. A time with no
+   zone is read as UTC, and the box says so. *@
+<div class="audit-filters" aria-label="Audit filters">
+    <label>
+        severity
+        <select value="@(Query.Severity ?? string.Empty)" @onchange="Severity">
+            <option value="">any</option>
+            @foreach (string severity in Severities)
+            {
+                <option value="@severity">@severity</option>
+            }
+        </select>
+    </label>
+    <label>
+        action
+        <select value="@(Query.Action ?? string.Empty)" @onchange="Action">
+            <option value="">any</option>
+            @foreach (string action in Offered)
+            {
+                <option value="@action">@action</option>
+            }
+        </select>
+    </label>
+    <label>
+        from
+        <input type="datetime-local" step="1" value="@Query.From" @onchange="From" />
+    </label>
+    <label>
+        to
+        <input type="datetime-local" step="1" value="@Query.To" @onchange="To" />
+    </label>
+    <span class="audit-utc">UTC</span>
+    @if (Filtering)
+    {
+        <a class="audit-clear" href="@Cleared">clear filters</a>
+    }
+</div>
+
+@code {
+    /// <summary>What the view asks now.</summary>
+    [Parameter, EditorRequired]
+    public AuditQuery Query { get; set; } = new();
+
+    /// <summary>The severities the capability names, least first.</summary>
+    [Parameter]
+    public IReadOnlyList<string> Severities { get; set; } = [];
+
+    /// <summary>The actions there are where the view stands.</summary>
+    [Parameter]
+    public IReadOnlyList<string> Actions { get; set; } = [];
+
+    /// <summary>The address of the view with every filter taken off.</summary>
+    [Parameter]
+    public string Cleared { get; set; } = "/audit";
+
+    /// <summary>Raised with the query a change asks for, from its first
+    /// page.</summary>
+    [Parameter]
+    public EventCallback<AuditQuery> Changed { get; set; }
+
+    // The action asked for stays offered when nothing else carries it, so the
+    // box never shows a choice it does not hold.
+    private IEnumerable<string> Offered =>
+        Query.Action is { Length: > 0 } asked && !Actions.Contains(asked)
+            ? [asked, .. Actions]
+            : Actions;
+
+    private bool Filtering =>
+        !string.IsNullOrEmpty(Query.Severity) || !string.IsNullOrEmpty(Query.Action)
+        || !string.IsNullOrEmpty(Query.From) || !string.IsNullOrEmpty(Query.To)
+        || !string.IsNullOrEmpty(Query.Pattern);
+
+    private Task Severity(ChangeEventArgs changed) =>
+        Changed.InvokeAsync(Query with { Severity = Text(changed), Offset = 0 });
+
+    private Task Action(ChangeEventArgs changed) =>
+        Changed.InvokeAsync(Query with { Action = Text(changed), Offset = 0 });
+
+    private Task From(ChangeEventArgs changed) =>
+        Changed.InvokeAsync(Query with { From = Text(changed), Offset = 0 });
+
+    private Task To(ChangeEventArgs changed) =>
+        Changed.InvokeAsync(Query with { To = Text(changed), Offset = 0 });
+
+    private static string? Text(ChangeEventArgs changed) =>
+        changed.Value?.ToString() is { Length: > 0 } text ? text : null;
+}

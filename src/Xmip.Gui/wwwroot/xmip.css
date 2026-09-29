@@ -578,3 +578,87 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     .topology-inspector { order: -1; }
     .topology-canvas svg { min-height: 26rem; }
 }
+
+/* The Audit view (ADR-0062, amendment 2026-09-29). A severity is a word and
+   a color, never the color alone: every row prints its severity beside its
+   dot. Severity is not a mood, and these are not the mood's paint: an error
+   in red, a warning in yellow, information in the muted ink. */
+.severity-error { --mood: var(--red); }
+.severity-warning { --mood: var(--yellow); }
+.severity-information { --mood: var(--muted); }
+
+.audit-filters {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem;
+    padding: 0 1.5rem 0.5rem; color: var(--muted); font-size: 0.85rem;
+}
+.audit-filters label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.audit-filters select, .audit-filters input {
+    font: inherit; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0.15rem 0.35rem;
+}
+.audit-filters select:focus, .audit-filters input:focus { outline: none; border-color: var(--brand); }
+.audit-filters .audit-clear { color: var(--brand-deep); text-decoration: none; }
+.audit-filters .audit-clear:hover { text-decoration: underline; }
+
+.audit-said { margin: 0 0 0.75rem; color: var(--muted); }
+.audit-said.refused { color: var(--red); font-weight: 600; }
+.audit-count { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.85rem; }
+.audit-file { font-family: ui-monospace, monospace; font-size: 0.8rem; }
+.audit-groups { margin-bottom: 1rem; gap: 0.3rem; }
+/* A group is one line: who, what kind and how many, its errors and
+   warnings, and when it last recorded. */
+.audit-group {
+    grid-template-columns: 1rem minmax(12rem, 1.4fr) 11rem minmax(10rem, 1fr) 13rem;
+    padding: 0.45rem 0.9rem;
+}
+.audit-group .label { font-family: ui-monospace, monospace; }
+.audit-group .figures { grid-column: auto; text-align: right; white-space: nowrap; }
+
+/* The records: one grid per row, the head the same grid, in the view's own
+   scroll box so the pager stays near. */
+.audit-records { padding-bottom: 1.5rem; }
+.audit-row {
+    display: grid;
+    grid-template-columns: 1rem 12.5rem 5rem 16rem 9rem 5rem 6rem minmax(0, 1fr);
+    align-items: center; gap: 0.6rem;
+    padding: 0.4rem 0.9rem; background: var(--paper);
+    border: 1px solid var(--line); border-top: none;
+    color: inherit; text-decoration: none; font-size: 0.85rem;
+}
+.audit-row:hover:not(.audit-head) { background: var(--brand-tint); }
+.audit-head {
+    border-top: 1px solid var(--line); border-radius: 6px 6px 0 0;
+    background: var(--ground); position: sticky; top: 0;
+}
+.audit-sort { color: var(--muted); text-decoration: none; white-space: nowrap; font-weight: 500; }
+.audit-sort:hover { color: var(--brand-deep); }
+.audit-sort.sorted { color: var(--ink); font-weight: 700; }
+.audit-row .audit-at, .audit-row .audit-node, .audit-row .audit-program {
+    font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.audit-row .audit-node, .audit-row .audit-phase { color: var(--muted); }
+.audit-row .audit-action { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.audit-row .audit-severity { color: var(--mood); }
+.audit-row.severity-information .audit-severity { color: var(--muted); }
+.audit-row .audit-summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.audit-pages {
+    display: flex; gap: 1rem; align-items: center; justify-content: flex-end;
+    padding: 0.5rem 0.2rem; color: var(--muted); font-size: 0.85rem;
+}
+.audit-pages a { color: var(--brand-deep); text-decoration: none; }
+.audit-pages a:hover { text-decoration: underline; }
+
+/* One record, whole. */
+.audit-detail {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+}
+.audit-detail h2 { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; font-size: 1.1rem; }
+.audit-detail h2 small { color: var(--mood); font-weight: 600; }
+.audit-detail.severity-information h2 small { color: var(--muted); }
+.audit-detail h3 { margin: 1rem 0 0.4rem; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.audit-message { margin: 0 0 0.75rem; white-space: pre-wrap; }
+.audit-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0; }
+.audit-fields dt { color: var(--muted); }
+.audit-fields dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.85rem; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -1,0 +1,70 @@
+@using Xmip.Abi.Operate
+
+@* The bottom of the Audit view's drill: one record whole (ADR-0062,
+   amendment 2026-09-29) — who made it, where it belongs, what it did, what
+   it said, and every property it carries, each as written. Nothing is
+   shortened here: a summary is for a row, and this is the record. *@
+<section class="audit-detail severity-@Entry.Severity" aria-label="Audit record">
+    <h2>
+        <span class="dot" title="severity @Entry.Severity"></span>
+        @Entry.Action <small>@Entry.Phase · @Entry.Severity</small>
+    </h2>
+    @if (Entry.Message is { Length: > 0 } message)
+    {
+        <p class="audit-message">@message</p>
+    }
+    <dl class="audit-fields">
+        @foreach ((string name, string? value) in Fields)
+        {
+            <dt>@name</dt>
+            <dd>@(string.IsNullOrEmpty(value) ? "—" : value)</dd>
+        }
+    </dl>
+    @if (Entry.Properties.Count > 0)
+    {
+        <h3>properties</h3>
+        <dl class="audit-fields">
+            @foreach ((string name, string value) in Ordered(Entry.Properties))
+            {
+                <dt>@name</dt>
+                <dd>@value</dd>
+            }
+        </dl>
+    }
+    @if (Entry.Scope.Count > 0)
+    {
+        <h3>the Message execution it belongs to</h3>
+        <dl class="audit-fields">
+            @foreach ((string name, string value) in Ordered(Entry.Scope))
+            {
+                <dt>@name</dt>
+                <dd>@value</dd>
+            }
+        </dl>
+    }
+</section>
+
+@code {
+    /// <summary>The record.</summary>
+    [Parameter, EditorRequired]
+    public AuditEntry Entry { get; set; } = default!;
+
+    private IEnumerable<(string Name, string? Value)> Fields =>
+    [
+        ("at", Entry.At),
+        ("program", Entry.Program),
+        ("host", Entry.Host),
+        ("process", Entry.Process),
+        ("location", Entry.Location),
+        ("cluster", Entry.Cluster),
+        ("node", Entry.Node),
+        ("action", Entry.Action),
+        ("phase", Entry.Phase),
+        ("severity", Entry.Severity),
+        ("audit id", Entry.AuditId),
+    ];
+
+    private static IEnumerable<KeyValuePair<string, string>> Ordered(
+        IReadOnlyDictionary<string, string> said) =>
+        said.OrderBy(pair => pair.Key, StringComparer.Ordinal);
+}

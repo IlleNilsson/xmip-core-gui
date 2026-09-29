@@ -1,0 +1,114 @@
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Pages
+@using Xmip.Gui.Surface
+
+@* The Audit view's records (ADR-0062, amendment 2026-09-29): a bounded page
+   of plain rows — never a Virtualize, which prerendered an empty spacer the
+   height of every row (Pages/Cluster.razor) — and the rest counted, with the
+   way to the next page and back. A column's head is a link that sorts by it,
+   and again the other way; the sorting, like the filtering, is the audit
+   capability's, and the page only asks. A row is a link to its record. *@
+<section class="audit-records" aria-label="Audit records">
+    @if (Records.Count == 0)
+    {
+        <p class="empty">Nothing here matches.</p>
+    }
+    else
+    {
+        <div class="audit-row audit-head" role="row">
+            <span></span>
+            @foreach ((string column, string heading) in Columns)
+            {
+                <a class="audit-sort @(Sorted(column) ? "sorted" : "")" role="columnheader"
+                   aria-sort="@AriaSort(column)" href="@Sort(column)">
+                    @heading@Arrow(column)
+                </a>
+            }
+        </div>
+        @foreach (AuditEntry entry in Records)
+        {
+            <a class="audit-row severity-@entry.Severity" role="row"
+               href="@ScopeLink.Audit(Query with { Record = entry.AuditId }, Carried)">
+                <span class="dot" title="severity @entry.Severity"></span>
+                <span class="audit-at">@Audit.Time(entry.At)</span>
+                <span class="audit-node">@(entry.Node ?? "—")</span>
+                <span class="audit-program">@entry.Program</span>
+                <span class="audit-action">@entry.Action</span>
+                <span class="audit-phase">@entry.Phase</span>
+                <span class="audit-severity">@entry.Severity</span>
+                <span class="audit-summary">@Summary(entry)</span>
+            </a>
+        }
+        <nav class="audit-pages" aria-label="Pages">
+            @if (Query.Offset > 0)
+            {
+                <a href="@Page(Math.Max(Query.Offset - Size, 0))">previous @Size</a>
+            }
+            <span>
+                @(Query.Offset + 1)–@(Query.Offset + Records.Count) of @Matched
+            </span>
+            @if (Query.Offset + Records.Count < Matched)
+            {
+                <a href="@Page(Query.Offset + Size)">
+                    next @Math.Min(Size, Matched - Query.Offset - Records.Count)
+                </a>
+            }
+        </nav>
+    }
+</section>
+
+@code {
+    /// <summary>The page of records.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AuditEntry> Records { get; set; } = [];
+
+    /// <summary>What the view asked for them.</summary>
+    [Parameter, EditorRequired]
+    public AuditQuery Query { get; set; } = new();
+
+    /// <summary>How many matched, of which this is a page.</summary>
+    [Parameter]
+    public int Matched { get; set; }
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public string? Carried { get; set; }
+
+    // The columns shown, by the capability's words: which of them a page
+    // shows is the page's to choose, what each sorts by is the capability's.
+    private static readonly (string Column, string Heading)[] Columns =
+    [
+        ("at", "time (UTC)"), ("node", "node"), ("program", "program"), ("action", "action"),
+        ("phase", "phase"), ("severity", "severity"), ("summary", "summary"),
+    ];
+
+    private int Size => Query.Limit > 0 ? Query.Limit : Audit.Shown;
+
+    private bool Sorted(string column) =>
+        string.Equals(Query.Sort ?? "at", column, StringComparison.Ordinal);
+
+    private string Arrow(string column) =>
+        Sorted(column) ? Query.Descending ? " ▾" : " ▴" : string.Empty;
+
+    private string? AriaSort(string column) =>
+        Sorted(column) ? Query.Descending ? "descending" : "ascending" : null;
+
+    // The column sorted already turns the other way; another starts newest,
+    // or greatest, first for a time and a severity, and from the start of the
+    // alphabet for words.
+    private string Sort(string column)
+    {
+        string order = Sorted(column)
+            ? Query.Descending ? "ascending" : "descending"
+            : column is "at" or "severity" ? "descending" : "ascending";
+
+        return ScopeLink.Audit(
+            Query with { Sort = column, Order = order, Offset = 0 }, Carried);
+    }
+
+    private static string Summary(AuditEntry entry) =>
+        entry.Summary.Length == 0 ? "—" : entry.Summary;
+
+    private string Page(int offset) =>
+        ScopeLink.Audit(Query with { Offset = offset }, Carried);
+}
