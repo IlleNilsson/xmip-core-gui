@@ -16,7 +16,7 @@ namespace Xmip.Gui.Test;
 /// </summary>
 public sealed class ThreeViewsTest : BunitContext
 {
-    private const string Done = "xmip:///edge-01/receive/partner";
+    private const string Done = "xmip:///edge-01/receive/party";
 
     public ThreeViewsTest()
     {
@@ -37,7 +37,7 @@ public sealed class ThreeViewsTest : BunitContext
             ?? throw new InvalidOperationException("no problem link on a troubled node");
 
         Assert.Equal(ScopeLink.Configuration(Done), problem.GetAttribute("href"));
-        Assert.Contains("receive/partner", node.TextContent, StringComparison.Ordinal);
+        Assert.Contains("receive/party", node.TextContent, StringComparison.Ordinal);
         Assert.Contains("connection refused", node.TextContent, StringComparison.Ordinal);
         Assert.NotNull(page.Find($"#{ScopeLink.Anchor(Done)}"));
     }
