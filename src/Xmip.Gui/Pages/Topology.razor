@@ -53,8 +53,10 @@ else if (Snapshot.Nodes.Count == 0)
         <p>
             Xmip draws what is configured and what is observed: a node run from
             configuration publishes its Locations and Processes, and a Playground
-            cluster publishes its nodes, the stages each runs, their endpoints and
-            the handoffs between them. Nothing is inferred from a socket.
+            cluster publishes its nodes, the stages each runs, their endpoints, the
+            handoffs between them, and the Parties outside: the one that sends into
+            its receive stages and the one its send stages deliver to. Nothing is
+            inferred from a socket.
         </p>
     </section>
 }
@@ -62,7 +64,8 @@ else
 {
     <section class="topology-layout">
         <TopologyGraph Snapshot="Snapshot"
-                       FocusId="@FocusId"
+                       FocusId="@CanvasId"
+                       SelectedId="@FocusId"
                        MotionPaused="MotionPaused"
                        Drill="Drill"
                        OnSelectLink="@(link => SelectedLink = link)" />
@@ -112,6 +115,12 @@ else
 
     private CommunicationLink? SelectedLink { get; set; }
 
+    // What the canvas frames: the open node, but a Party opened is drawn
+    // where it stands, beside what it sends to or is delivered by, and said
+    // in full in the inspector (ADR-0052, amendment 2026-09-29).
+    private string? CanvasId =>
+        FocusNode is { Kind: TopologyNodeKind.Party } party ? party.ParentId : FocusId;
+
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
 
@@ -146,9 +155,12 @@ else
 
     // Where a node on the canvas leads: open, where something is beneath it;
     // a leaf ends at the view of its actual configuration (ADR-0052, ruling
-    // 4 of 2026-09-14). Written once, for the canvas and the inspector.
+    // 4 of 2026-09-14). A Party is configured nowhere Xmip draws; it opens
+    // here, its transports and their state in the inspector (amendment
+    // 2026-09-29). Written once, for the canvas and the inspector.
     private string Drill(TopologyNode node) =>
-        Snapshot.Nodes.Any(child => child.ParentId == node.Id)
+        node.Kind == TopologyNodeKind.Party
+            || Snapshot.Nodes.Any(child => child.ParentId == node.Id)
             ? ScopeLink.TopologyAt(node.Id, Carried)
             : ScopeLink.Configuration(node.Scope, Carried);
 

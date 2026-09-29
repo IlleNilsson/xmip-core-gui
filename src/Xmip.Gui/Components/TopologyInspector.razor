@@ -60,7 +60,10 @@
             <dt>Activity</dt><dd>@English.Percent(FocusNode.Activity)</dd>
             <dt>Scope</dt><dd class="mono">@English.Value(FocusNode.Scope)</dd>
         </dl>
-        @Across(FocusNode.Scope)
+        @if (FocusNode.Kind != TopologyNodeKind.Party)
+        {
+            @Across(FocusNode.Scope)
+        }
     }
     else
     {
@@ -70,6 +73,30 @@
             Animation represents application movement; the line remains the
             configured or observed relationship.
         </p>
+    }
+
+    @* A Party opened: the transports it uses, as the endpoints of every stage
+       it sends into or is delivered by, each in its state and one click from
+       its record (ADR-0052, amendment 2026-09-29). Its links say which stages;
+       nothing is read from a name. *@
+    @if (FocusNode is { Kind: TopologyNodeKind.Party } && Facing.Count > 0)
+    {
+        <h3>Transports</h3>
+        @foreach ((TopologyNode stage, IReadOnlyList<TopologyNode> endpoints) in Facing)
+        {
+            <h4 class="topology-facing">@NodeLabel(stage.ParentId ?? stage.Id) · @stage.Label</h4>
+            <ul class="topology-beneath topology-transports">
+                @foreach (TopologyNode endpoint in endpoints)
+                {
+                    <li class="@MoodClass.Of(endpoint.State)" title="@endpoint.Evidence">
+                        <span class="beneath-open">@endpoint.Label</span>
+                        <span class="kind">@English.Mood(endpoint.State)</span>
+                        <a href="@ScopeLink.Monitor(endpoint.Scope, Cluster)">monitor</a>
+                        <Why Leaf="Index.Worst(endpoint.Scope)" Cluster="@Cluster" Linked="true" />
+                    </li>
+                }
+            </ul>
+        }
     }
 
     @if (Beneath.Count > 0)
@@ -148,6 +175,41 @@
             .Where(node => node.ParentId == FocusNode?.Id)
             .OrderBy(node => node.Label, StringComparer.Ordinal),
     ];
+
+    // The stages at the far end of the open node's links, each with its
+    // endpoints worst first: what a Party talks to, and over what.
+    private IReadOnlyList<(TopologyNode Stage, IReadOnlyList<TopologyNode> Endpoints)> Facing =>
+    [
+        .. Snapshot.Links
+            .Where(link => link.From == FocusNode?.Id || link.To == FocusNode?.Id)
+            .Select(link => link.From == FocusNode?.Id ? link.To : link.From)
+            .Distinct(StringComparer.Ordinal)
+            .Select(id => NodeById.GetValueOrDefault(id))
+            .OfType<TopologyNode>()
+            .Select(stage => (stage, WorstFirst(stage))),
+    ];
+
+    // A stage's endpoints by the worst leaf beneath each, in the runtime's
+    // worst-first order; an endpoint with nothing published last.
+    private IReadOnlyList<TopologyNode> WorstFirst(TopologyNode stage)
+    {
+        List<(TopologyNode Endpoint, HealthRecord? Worst)> endpoints =
+        [
+            .. Snapshot.Nodes
+                .Where(node => node.ParentId == stage.Id)
+                .OrderBy(node => node.Label, StringComparer.Ordinal)
+                .Select(node => (node, Index.Worst(node.Scope))),
+        ];
+        List<HealthRecord> order =
+            [.. ScopeTree.WorstFirst(endpoints.Select(item => item.Worst).OfType<HealthRecord>())];
+
+        return
+        [
+            .. endpoints
+                .OrderBy(item => item.Worst is null ? int.MaxValue : order.IndexOf(item.Worst))
+                .Select(item => item.Endpoint),
+        ];
+    }
 
     // Every link with an end inside the open node: within it, the ones the
     // canvas draws and the ones within one of its children alike — a path

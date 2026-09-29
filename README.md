@@ -52,7 +52,12 @@ configured and never used, drawn dashed — and the inspector lists every link
 within the open node with its origin (ADR-0052, amendment 2026-09-25). Open at a
 node, the canvas is that node framed with what is beneath it, and nothing
 beside it; traffic leaving it runs to one marker labeled *outside*, and the
-inspector names that end the same way. The Monitor counts and lists the nodes
+inspector names that end the same way. Where the publisher draws Parties
+(ADR-0052, amendment 2026-09-29) the cluster reads left to right as the
+streams run: a Party that sends stands left of the nodes it sends into, one
+delivered to right of the nodes that deliver to it, and the nodes between in
+columns by their links; opened, a Party is drawn where it stands, selected,
+and the inspector lists every transport it uses with its state. The Monitor counts and lists the nodes
 the publisher draws as nodes (`IOperatorSurface.NodeScopes`), and its crumb at
 the root leads to the tree from its top. What a topology kind, origin or
 pattern is called — its word, which styles it, and its name, which a person
