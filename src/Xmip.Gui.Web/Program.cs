@@ -75,11 +75,11 @@ try
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
 
-    // The web GUI monitors and does nothing else (ADR-0014, amendment of
-    // 2026-09-05; ADR-0052 clause 3): its role is Observer, and that is not
-    // configurable — no key, no environment variable. What a person may do on
-    // the desktop is the desktop's to decide.
-    builder.Services.AddSingleton(new RoleContext(Role.Observer));
+    // The web offers what the desktop offers, by role (ADR-0014 and ADR-0052,
+    // amendments of 2026-09-14): an Observer watches, an Operator also acts.
+    // The role is the run's to state and the directory's to grant, by the one
+    // rule both hosts take it by.
+    builder.Services.AddSingleton(new RoleContext(RoleContext.Assigned(builder.Configuration)));
 
     // The surfaces every screen reads, chosen in xmip.gui.toml and never guessed
     // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a

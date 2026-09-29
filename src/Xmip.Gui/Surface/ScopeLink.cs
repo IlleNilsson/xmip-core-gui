@@ -82,6 +82,37 @@ public static class ScopeLink
     }
 
     /// <summary>
+    /// The Subscriptions view asking <paramref name="query"/>, on this
+    /// cluster: where the drill stands, the one subscription, the pattern and
+    /// the order are all in the address, by the names
+    /// <see cref="SubscriptionQuery"/> gives them, so a link reproduces the
+    /// view (ADR-0065, amendment 2026-09-29).
+    /// </summary>
+    public static string Subscriptions(SubscriptionQuery query, string? cluster = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        List<string> said = [];
+
+        void Say(string key, string? value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                said.Add(key + "=" + Uri.EscapeDataString(value));
+            }
+        }
+
+        Say("location", query.Location);
+        Say("id", query.Id?.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Say("pattern", query.Pattern);
+        Say("sort", query.Sort);
+        Say("order", query.Order);
+        Say(ClusterView.Query, cluster);
+
+        return said.Count == 0 ? "/subscriptions" : "/subscriptions?" + string.Join('&', said);
+    }
+
+    /// <summary>
     /// This same view, on another cluster: the path the operator is on and
     /// nothing else of the address. A scope of the cluster being left names
     /// nothing in the one being entered, so the drill and the filter start

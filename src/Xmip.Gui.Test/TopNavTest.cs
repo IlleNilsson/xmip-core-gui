@@ -6,7 +6,7 @@ using Xmip.Gui.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// One navigation for both hosts: the four views, what a host adds after
+/// One navigation for both hosts: the five views, what a host adds after
 /// them, and the role described in one set of words. Until 2026-09-27 the web
 /// host and the desktop each wrote the bar and worded the Observer
 /// differently.
@@ -14,14 +14,14 @@ namespace Xmip.Gui.Test;
 public sealed class TopNavTest : BunitContext
 {
     [Fact]
-    public void TheBarLinksTheFourViewsAndDescribesTheRoleOnce()
+    public void TheBarLinksTheFiveViewsAndDescribesTheRoleOnce()
     {
         Services.AddSingleton(new RoleContext(Role.Observer));
 
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         Assert.Equal(
-            ["/configuration", "/", "/topology", "/audit"],
+            ["/configuration", "/", "/topology", "/audit", "/subscriptions"],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
         AngleSharp.Dom.IElement role = bar.Find(".role-pick");
         Assert.Equal("Observer", role.TextContent);
@@ -39,7 +39,7 @@ public sealed class TopNavTest : BunitContext
         Assert.Equal(
             "/configure",
             bar.FindAll("a.topnav-link")[^1].GetAttribute("href"));
-        Assert.Equal("also configures", bar.Find(".role-pick").GetAttribute("title"));
+        Assert.Equal("also acts and configures", bar.Find(".role-pick").GetAttribute("title"));
     }
 
     [Fact]

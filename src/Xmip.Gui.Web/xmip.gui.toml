@@ -11,9 +11,15 @@
 # library loaded in this process, "snapshot", a file a node or the Playground
 # publishes, or "remote", another web host followed over its surface hub at
 # Url. Chosen here and never guessed from a file in a temp directory. This
-# host serves its own surface at /surface for the same following. The web GUI monitors: it starts no node and offers no Pause or
-# Resume (ADR-0014, amendment of 2026-09-05), and its role is Observer.
+# host serves its own surface at /surface for the same following.
 Surface = "native"
+
+# The role this host runs as (ADR-0009): observer watches, operator also
+# pauses, resumes and removes, developer also opens configuration. Else
+# XMIP_ROLE; stated by neither, the role is the directory's, and with none
+# configured the tester holds every role (ADR-0014 and ADR-0052, amendments
+# 2026-09-14). A word that is no role is observer.
+# Role = "observer"
 
 # The runtime's native library, exporting xmip_operate_v1. Found by one rule
 # for every surface: this key, else XMIP_RUNTIME_LIBRARY, else the library
