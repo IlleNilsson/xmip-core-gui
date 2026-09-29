@@ -58,13 +58,9 @@ public static class MauiProgram
         builder.Services.AddSingleton(audit);
 
         // The role is assigned, never chosen in the UI (ADR-0009): a person
-        // cannot promote themselves. It comes from the config file or the
-        // XMIP_ROLE environment variable and defaults to Observer, so a missing
-        // or wrong value grants nothing. A real identity supersedes this later
-        // (ADR-0022/ADR-0027).
-        string? assignedRole =
-            builder.Configuration["Xmip:Role"] ?? Environment.GetEnvironmentVariable("XMIP_ROLE");
-        builder.Services.AddSingleton(new RoleContext(RoleContext.Parse(assignedRole)));
+        // cannot promote themselves. The one rule both hosts take it by.
+        builder.Services.AddSingleton(
+            new RoleContext(RoleContext.Assigned(builder.Configuration)));
 
         // The configurations the Configure page lists: the directory
         // xmip.gui.toml names, else one under app data; the one the desktop

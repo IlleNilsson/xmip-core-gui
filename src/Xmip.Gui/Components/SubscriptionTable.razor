@@ -1,0 +1,130 @@
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+
+@* The Subscriptions view's rows (ADR-0065, amendment 2026-09-29): a bounded
+   list of plain rows — never a Virtualize, which prerendered an empty spacer
+   the height of every row (Pages/Cluster.razor) — and the rest counted. A
+   column's head is a link that orders by it, and again the other way; the
+   ordering is SubscriptionQuery's, the one every surface uses. A row's
+   subscriber opens that subscription; its cluster and node are where the
+   drill stands next. Paused is a mood (ADR-0041), painted as the Monitor
+   paints it and said in words beside the dot. The acts are offered to a role
+   that may operate and to no other. *@
+<section class="subs-records" aria-label="Event subscriptions">
+    @if (Records.Count == 0)
+    {
+        <p class="empty">No subscription here matches.</p>
+    }
+    else
+    {
+        <div class="subs-row subs-head" role="row">
+            <span></span>
+            @foreach ((string column, string heading) in Columns)
+            {
+                <a class="subs-sort @(Sorted(column) ? "sorted" : "")" role="columnheader"
+                   aria-sort="@AriaSort(column)" href="@Sort(column)">
+                    @heading@Arrow(column)
+                </a>
+            }
+            <span role="columnheader">@(MayAct ? "act" : string.Empty)</span>
+        </div>
+        @foreach (SubscriptionRecord entry in Records.Take(Shown))
+        {
+            <div class="subs-row @MoodClass.Of(entry.Paused ? HealthState.Paused : HealthState.Fine)"
+                 role="row">
+                <span class="dot" title="@entry.State"></span>
+                <a class="subs-subscriber" href="@Link(Query with { Location = entry.Node, Id = entry.Id })"
+                   title="Party @entry.Party">@SubscriptionQuery.Who(entry)</a>
+                <a class="subs-cluster" href="@Link(Query with { Location = ClusterOf(entry), Id = null })">
+                    @SubscriptionQuery.Cluster(entry)
+                </a>
+                <a class="subs-node" href="@Link(Query with { Location = entry.Node, Id = null })">
+                    @SubscriptionQuery.NodeName(entry)
+                </a>
+                <span class="subs-action" title="@($"{entry.Action} at {entry.Scope}")">@entry.Action</span>
+                <span class="subs-state">@entry.State</span>
+                <span class="subs-figure">@English.Figure(entry.Queued) of @English.Figure(entry.Capacity)</span>
+                <span class="subs-figure">@English.Figure(entry.Delivered)</span>
+                <span class="subs-figure">@English.Figure(entry.Missed)</span>
+                <span class="subs-since">@English.Age(entry.Since)</span>
+                <span class="subs-acts">
+                    @if (MayAct)
+                    {
+                        @if (entry.Paused)
+                        {
+                            <button class="act" @onclick="() => Acted.InvokeAsync((entry, SubscriptionAct.Resume))">Resume</button>
+                        }
+                        else
+                        {
+                            <button class="act" @onclick="() => Acted.InvokeAsync((entry, SubscriptionAct.Pause))">Pause</button>
+                        }
+                        <button class="act" @onclick="() => Acted.InvokeAsync((entry, SubscriptionAct.Remove))">Remove</button>
+                    }
+                </span>
+            </div>
+        }
+        @if (Records.Count > Shown)
+        {
+            <p class="empty">
+                @English.Figure((ulong)(Records.Count - Shown)) more below these @Shown; the
+                filter narrows to them.
+            </p>
+        }
+    }
+</section>
+
+@code {
+    /// <summary>How many rows are drawn.</summary>
+    public const int Shown = 200;
+
+    /// <summary>The subscriptions, already selected and ordered.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<SubscriptionRecord> Records { get; set; } = [];
+
+    /// <summary>What the view asked for them.</summary>
+    [Parameter, EditorRequired]
+    public SubscriptionQuery Query { get; set; } = new();
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public string? Carried { get; set; }
+
+    /// <summary>Whether the role at the keyboard may act (ADR-0009).</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    /// <summary>Raised with a subscription and the act taken on it.</summary>
+    [Parameter]
+    public EventCallback<(SubscriptionRecord, SubscriptionAct)> Acted { get; set; }
+
+    // The columns shown and what each is headed, by SubscriptionQuery's words.
+    private static readonly (string Column, string Heading)[] Columns =
+    [
+        ("subscriber", "subscriber"), ("cluster", "cluster"), ("node", "node"),
+        ("action", "action"), ("state", "state"), ("queued", "queued"),
+        ("delivered", "delivered"), ("missed", "missed"), ("since", "since"),
+    ];
+
+    private string Link(SubscriptionQuery query) => ScopeLink.Subscriptions(query, Carried);
+
+    private static string ClusterOf(SubscriptionRecord entry) =>
+        ScopeTree.Join([SubscriptionQuery.Cluster(entry)]);
+
+    private bool Sorted(string column) =>
+        string.Equals(Query.Sort ?? SubscriptionQuery.Columns[0], column, StringComparison.Ordinal);
+
+    // The same column again turns the order round; another column starts
+    // ascending.
+    private string Sort(string column) =>
+        Link(Query with
+        {
+            Sort = column,
+            Order = Sorted(column) && !Query.Descending ? "descending" : null,
+        });
+
+    private string Arrow(string column) =>
+        Sorted(column) ? (Query.Descending ? " ↓" : " ↑") : string.Empty;
+
+    private string AriaSort(string column) =>
+        Sorted(column) ? (Query.Descending ? "descending" : "ascending") : "none";
+}

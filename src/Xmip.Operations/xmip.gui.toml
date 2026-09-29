@@ -50,5 +50,8 @@ NodeConfiguration = "module/core/operation/gui/samples/edge-01.xmip.toml"
 # AuditDirectory = ".local-work/audit"
 
 # The role this desktop runs as (ADR-0009): observer, operator or developer.
-# Assigned here or in XMIP_ROLE, never chosen in the UI; absent, Observer.
+# Assigned here or in XMIP_ROLE, never chosen in the UI; stated by neither,
+# the role is the directory's, and with none configured the tester holds
+# every role (ADR-0014 and ADR-0052, amendments 2026-09-14). A word that is
+# no role is observer. The web host takes it by the same rule.
 # Role = "operator"

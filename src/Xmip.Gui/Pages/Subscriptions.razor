@@ -1,0 +1,267 @@
+@page "/subscriptions"
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject RoleContext Role
+@inject ProgramAudit Audited
+@inject NavigationManager Nav
+
+<PageTitle>Xmip — Subscriptions</PageTitle>
+
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+
+<ScopeFilterBox Id="filter-subscriptions" Pattern="@(Asking.Pattern ?? string.Empty)"
+                PatternChanged="Patterned" Said="@PatternSaid" />
+
+@* Who hears what Xmip did (ADR-0065, amendment 2026-09-29): every Event
+   subscription the cluster's nodes hold — the subscriber, a Party; the
+   cluster and the node whose hub holds it; the action it subscribes to —
+   with its state and what its queue has done. The drill is in the address,
+   as every view's is: cluster, node, one subscription, the pattern and the
+   order are a link that reproduces the view. An Operator pauses, resumes and
+   removes; an Observer is shown the list and no act. *@
+<section class="drill subscriptions">
+    <nav class="crumbs" aria-label="Subscriptions drill-down">
+        @foreach ((string label, string href) in Trail)
+        {
+            <a class="crumb-btn" href="@href">@label</a>
+            <span class="sep">/</span>
+        }
+        @if (Asking.Location is { Length: > 0 } scope)
+        {
+            <a class="crumb-link" href="@ScopeLink.Monitor(scope, Carried)">monitor</a>
+        }
+    </nav>
+
+    @foreach (string said in new[] { Refusal, Answer }.Where(said => said.Length > 0))
+    {
+        <p class="subs-said @(said.StartsWith("REFUSED", StringComparison.Ordinal) ? "refused" : "")">
+            @said
+        </p>
+    }
+
+    <p class="subs-count">@Counted · @Where</p>
+
+    @if (Detail is { } one)
+    {
+        <article class="subs-detail @MoodClass.Of(one.Paused ? HealthState.Paused : HealthState.Fine)">
+            <h2>
+                <span class="dot"></span>subscription @one.Id on @SubscriptionQuery.NodeName(one)
+                <small>@one.State</small>
+            </h2>
+            <dl class="subs-fields">
+                <dt>subscriber</dt><dd>@SubscriptionQuery.Who(one)</dd>
+                <dt>party</dt><dd>@one.Party</dd>
+                <dt>cluster</dt><dd>@SubscriptionQuery.Cluster(one)</dd>
+                <dt>node</dt><dd>@one.Node</dd>
+                <dt>action</dt><dd>@one.Action</dd>
+                <dt>reaches</dt><dd>@one.Scope</dd>
+                <dt>state</dt><dd>@one.State</dd>
+                <dt>queued</dt><dd>@English.Figure(one.Queued) of @English.Figure(one.Capacity)</dd>
+                <dt>delivered</dt><dd>@English.Figure(one.Delivered)</dd>
+                <dt>missed</dt><dd>@English.Figure(one.Missed)</dd>
+                <dt>since</dt><dd>@one.Since.ToString("u", System.Globalization.CultureInfo.InvariantCulture) · @English.Age(one.Since)</dd>
+            </dl>
+            @if (Role.MayOperate())
+            {
+                <div class="subs-acts">
+                    @if (one.Paused)
+                    {
+                        <button class="act" @onclick="() => Act((one, SubscriptionAct.Resume))">Resume</button>
+                    }
+                    else
+                    {
+                        <button class="act" @onclick="() => Act((one, SubscriptionAct.Pause))">Pause</button>
+                    }
+                    <button class="act" @onclick="() => Act((one, SubscriptionAct.Remove))">Remove</button>
+                </div>
+            }
+        </article>
+    }
+    else
+    {
+        @if (Nodes.Count > 0)
+        {
+            <div class="branches subs-groups">
+                @foreach (IGrouping<string, SubscriptionRecord> node in Nodes)
+                {
+                    <a class="branch subs-group @MoodClass.Of(node.Any(s => s.Paused) ? HealthState.Paused : HealthState.Fine)"
+                       href="@Link(Asking with { Location = node.Key, Id = null })">
+                        <span class="dot"></span>
+                        <span class="label">@ScopeTree.Node(node.Key)</span>
+                        <span class="worst">node · @node.Count() subscription(s)</span>
+                        <span class="evidence">@Paused(node)</span>
+                        <span class="figures">
+                            @English.Figure((ulong)node.Sum(s => (long)s.Queued)) queued ·
+                            @English.Figure((ulong)node.Sum(s => (long)s.Missed)) missed
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+
+        <SubscriptionTable Records="Shown" Query="Asking" Carried="@Carried"
+                           MayAct="Role.MayOperate()" Acted="Act" />
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "location")] public string? AskedLocation { get; set; }
+    [SupplyParameterFromQuery(Name = "id")] public string? AskedId { get; set; }
+    [SupplyParameterFromQuery(Name = "pattern")] public string? AskedPattern { get; set; }
+    [SupplyParameterFromQuery(Name = "sort")] public string? AskedSort { get; set; }
+    [SupplyParameterFromQuery(Name = "order")] public string? AskedOrder { get; set; }
+
+    private SubscriptionQuery Asking { get; set; } = new();
+
+    private SubscriptionList Listed { get; set; } = SubscriptionList.Empty;
+
+    private IReadOnlyList<SubscriptionRecord> Shown { get; set; } = [];
+
+    // What the query was refused, read again with the view; and what the
+    // last act said, which stays while the publications tick under it.
+    private string Refusal { get; set; } = string.Empty;
+
+    private string Answer { get; set; } = string.Empty;
+
+    private SubscriptionRecord? Detail => Asking.Id is not null && Shown is [var one] ? one : null;
+
+    // The nodes beneath where the drill stands, one step down: shown above
+    // the rows at a cluster, and gone once a node is the place.
+    private IReadOnlyList<IGrouping<string, SubscriptionRecord>> Nodes =>
+        Asking.Location is { Length: > 0 } at && ScopeTree.Node(at).Length > 0
+            ? []
+            : [.. Shown.GroupBy(s => s.Node, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal)];
+
+    private string Counted =>
+        $"{English.Figure((ulong)Shown.Count)} of {English.Figure((ulong)Listed.Subscriptions.Count)} "
+        + $"subscription(s) · {English.Figure((ulong)Shown.Count(s => s.Paused))} paused";
+
+    // Where an act goes, said once: a snapshot's publisher takes orders, or
+    // takes none; a live surface acts in the node's own process.
+    private string Where =>
+        Surface is SnapshotOperator
+            ? Listed.Orders.Length > 0
+                ? "an act is left for the node that holds the subscription, which takes it within a round"
+                : "this publication takes no act: its publisher reads no orders"
+            : "an act is applied in the hub that holds the subscription";
+
+    private string PatternSaid =>
+        !string.IsNullOrEmpty(Asking.Pattern)
+            ? $"{English.Figure((ulong)Shown.Count)} subscription(s) match {Asking.Pattern}"
+            : string.Empty;
+
+    protected override void Read()
+    {
+        // A view asked for a cluster and for no one in it stands at that
+        // cluster: the scope its publisher publishes at, never a name.
+        string? location = AskedLocation;
+        if (location is null && Asked is not null)
+        {
+            location = Surface.Root();
+        }
+
+        Asking = new SubscriptionQuery
+        {
+            Location = location,
+            Id = ulong.TryParse(AskedId, System.Globalization.CultureInfo.InvariantCulture, out ulong id)
+                ? id
+                : null,
+            Pattern = AskedPattern,
+            Sort = AskedSort,
+            Order = AskedOrder,
+        };
+
+        Listed = Surface.Subscriptions();
+        Refusal = string.Empty;
+        try
+        {
+            Shown = Asking.Apply(Listed.Subscriptions);
+        }
+        catch (ArgumentException refused)
+        {
+            Shown = [];
+            Refusal = English.Refusal(refused);
+        }
+    }
+
+    private IEnumerable<(string Label, string Href)> Trail
+    {
+        get
+        {
+            SubscriptionQuery top = Asking with { Location = null, Id = null };
+            yield return ("subscriptions", Link(top));
+
+            if (Asking.Location is not { Length: > 0 } location)
+            {
+                yield break;
+            }
+
+            string[] parts = ScopeTree.Parts(location);
+            if (parts.Length > 0)
+            {
+                yield return ($"cluster {parts[0]}", Link(top with { Location = ScopeTree.Join([parts[0]]) }));
+            }
+
+            string node = ScopeTree.Node(location);
+            if (node.Length > 0)
+            {
+                yield return ($"node {node}", Link(top with { Location = location }));
+            }
+
+            if (Asking.Id is { } id)
+            {
+                yield return ($"subscription {id}", Link(Asking));
+            }
+        }
+    }
+
+    private string Link(SubscriptionQuery query) => ScopeLink.Subscriptions(query, Carried);
+
+    private void Patterned(string pattern) =>
+        Nav.NavigateTo(Link(Asking with { Pattern = pattern.Length == 0 ? null : pattern }));
+
+    private static string Paused(IEnumerable<SubscriptionRecord> node) =>
+        node.Count(s => s.Paused) switch
+        {
+            0 => "none paused",
+            var paused => $"{paused} paused",
+        };
+
+    // An act, by a role that may act: taken through the surface, recorded in
+    // this host's audit with what came of it (ADR-0062), and said. An
+    // Observer is shown no act; one that reached here anyway is refused.
+    private void Act((SubscriptionRecord Subscription, SubscriptionAct Act) asked)
+    {
+        (SubscriptionRecord subscription, SubscriptionAct act) = asked;
+        string word = SubscriptionOperation.Word(act);
+
+        if (!Role.MayOperate())
+        {
+            Answer = $"REFUSED: an {Role.Role} watches; to {word} a subscription is an Operator's.";
+            Audited.Record(
+                $"subscription.{word}", AuditPhase.Failure, AuditSeverity.Warning, Answer);
+            return;
+        }
+
+        string who = ScopeOperation.Who(null);
+        SubscriptionOperation done = Surface.Act(subscription, act, who);
+        Audited.Record(
+            $"subscription.{word}",
+            done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
+            done.Applied ? AuditSeverity.Information : AuditSeverity.Warning,
+            done.Result,
+            new Dictionary<string, string>
+            {
+                ["node"] = subscription.Node,
+                ["subscription"] = subscription.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["subscriber"] = SubscriptionQuery.Who(subscription),
+                ["party"] = subscription.Party,
+                ["who"] = who,
+            });
+        Answer = done.Applied || done.Result.StartsWith("REFUSED", StringComparison.Ordinal)
+            ? done.Result
+            : $"REFUSED: {done.Result}";
+        Read();
+    }
+}

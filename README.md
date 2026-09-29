@@ -30,11 +30,12 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Four views, and four points to drill from: **Configuration**, the classic
+Five views, and five points to drill from: **Configuration**, the classic
 tree, holding still; **Monitor**, the board that follows Receive → Process →
 Send; **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18); and,
 since 2026-09-29, **Audit**, what every Xmip program recorded (ADR-0062,
-amendment 2026-09-29), described below. A
+amendment 2026-09-29), and **Subscriptions**, the Event subscriptions the
+nodes hold (ADR-0065, amendment 2026-09-29), both described below. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -86,7 +87,7 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the four
+is gone. The navigation is one component for both hosts, `TopNav`: the five
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
@@ -115,9 +116,28 @@ words where there is none, where the runtime's library cannot be loaded, and
 over a remote surface, whose cluster's audit stays on its own machine. The
 Monitor's drill links each scope to its audit beside its configuration.
 
+**The Subscriptions view** (`/subscriptions`; the owner, 2026-09-29: *a view
+of event subscriptions. Subscriber, Cluster, Node, Action. One should be able
+to pause, resume and remove event subscriptions*) lists every Event
+subscription the cluster's nodes hold, through
+`IOperatorSurface.Subscriptions`: the subscriber, a Party; the cluster and the
+node whose hub holds it; the action it subscribes to; then its state, queued
+against capacity, delivered, missed and since. A paused one is the Paused
+mood, painted as the Monitor paints it and said in words. It drills cluster →
+node → one subscription, a column's head orders by it and again the other way,
+and the pattern box narrows over each one's node and reach — all
+`SubscriptionQuery`'s, all in the address (`/subscriptions?location=
+xmip:///C1/node/R1&id=2`). An Operator is offered Pause or Resume, and Remove,
+on every row and on the one opened; each act goes through `IOperatorSurface.Act`
+— applied in the node's process, or over a snapshot left where its publication
+says its publisher takes orders — and is recorded in the host's audit as
+`subscription.<act>`. An Observer is shown the list and no act (ADR-0065,
+amendment 2026-09-29).
+
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
-the views over the surface library's own published fixture, and the Audit view
-over an audit file in the capability's shape, so what is asserted is what an
+the views over the surface library's own published fixture, the Audit view
+over an audit file in the capability's shape, and the Subscriptions view over
+a publication whose publisher takes orders, so what is asserted is what an
 operator sees and no surface is faked.
 
 The cluster board follows Xmip's
@@ -166,9 +186,12 @@ same `xmip_validate_v1`, with a TypeScript shell — the one place in the estate
 that has any.
 
 **Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
-The web GUI monitors and does nothing else (ADR-0014, amendment 2026-09-05):
-it starts no node, offers no Pause or Resume, and its role is Observer, not
-configurable.
+The web GUI offers what the desktop offers, by role (ADR-0014 and ADR-0052,
+amendments 2026-09-14): an Observer watches, an Operator also pauses, resumes
+and removes. It starts no node. Both hosts take the role by one rule,
+`RoleContext.Assigned`: `Role` in `xmip.gui.toml`, else `XMIP_ROLE`, and a word
+that is no role is Observer; with none stated and no directory configured the
+tester holds every role (ADR-0009, amendment 2026-09-14).
 
 It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an
