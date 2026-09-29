@@ -213,6 +213,11 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .row .node { color: var(--muted); font-family: ui-monospace, monospace; }
 .row .age { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
+/* A node's row carries its figures where an attention row carries an age:
+   one line of them, not a word per line in the age's 6rem (2026-09-29). */
+.nodes .row { grid-template-columns: 1rem 0.5fr 0.8fr 2fr 1.6fr 0; }
+.nodes .row .age { white-space: nowrap; }
+
 .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; flex: none; }
 .dot { background: var(--mood); }
 .none .dot { background: var(--line); border: 1px solid var(--muted); }

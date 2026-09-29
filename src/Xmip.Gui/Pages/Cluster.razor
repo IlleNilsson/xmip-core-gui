@@ -133,7 +133,13 @@
     }
     else
     {
-        <Virtualize Items="shown" Context="record" ItemSize="34">
+        @* Plain rows, worst first, in the list's own scroll box. Until
+           2026-09-29 a Virtualize drew them: prerendered, it sent an empty
+           spacer the height of every row, and the owner saw a blank area
+           where 478 things needed attention. The first Shown rows are drawn
+           and the rest counted; the filter narrows to them. *@
+        @foreach (HealthRecord record in shown.Take(Shown))
+        {
             <div class="row @MoodClass.Of(record.State)">
                 <span class="dot" title="severity @record.Severity"></span>
                 <a class="scope"
@@ -158,7 +164,11 @@
                     <span></span>
                 }
             </div>
-        </Virtualize>
+        }
+        @if (shown.Count > Shown)
+        {
+            <p class="empty">@English.Figure((ulong)(shown.Count - Shown)) more below these @Shown; the filter narrows to them.</p>
+        }
     }
 </section>
 
@@ -208,6 +218,9 @@
 </section>
 
 @code {
+    /// <summary>How many rows the list draws before it counts the rest.</summary>
+    private const int Shown = 200;
+
     /// <summary>A stage of the message path, what it counts — the tree's own
     /// (ADR-0027 clause 5), read from ScopeTree, so the card and the figures
     /// cannot name different things — and what a thing configured at it is
