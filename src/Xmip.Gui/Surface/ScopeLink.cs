@@ -16,7 +16,9 @@ namespace Xmip.Gui.Surface;
 /// a link that dropped the cluster would land on another cluster's tree at a
 /// scope that is not in it. So every link carries the cluster it was written
 /// on, and a host holding one omits it — the addresses a single-cluster host
-/// writes are the ones it always wrote.
+/// writes are the ones it always wrote. Since 2026-09-30 a link carries the
+/// "show test clusters" box too (<see cref="Carry"/>), so a view that shows
+/// them leads to views that do (ADR-0052, amendment of that date).
 /// </remarks>
 public static class ScopeLink
 {
@@ -24,26 +26,26 @@ public static class ScopeLink
     /// root is no row — the tree begins beneath it — so the root is the tree
     /// itself, from its top: until 2026-09-25 the Monitor's crumb at the root
     /// linked to <c>#s-xmip----</c>, an anchor nothing carries.</summary>
-    public static string Configuration(string scope, string? cluster = null)
+    public static string Configuration(string scope, Carry? carry = null)
     {
-        string page = "configuration" + Asking(cluster);
+        string page = Address("configuration", carry);
 
         return ScopeTree.Parts(scope).Length == 0 ? page : page + "#" + Anchor(scope);
     }
 
     /// <summary>The Monitor's drill at the scope, on this cluster.</summary>
-    public static string Monitor(string scope, string? cluster = null)
+    public static string Monitor(string scope, Carry? carry = null)
     {
-        return "/?scope=" + Uri.EscapeDataString(scope) + Also(cluster);
+        return Address("/", carry, ("scope", scope));
     }
 
     /// <summary>The name the address gives the Topology's open node.</summary>
     public const string Focus = "focus";
 
     /// <summary>The Topology, on this cluster.</summary>
-    public static string Topology(string? cluster = null)
+    public static string Topology(Carry? carry = null)
     {
-        return "/topology" + Asking(cluster);
+        return Address("/topology", carry);
     }
 
     /// <summary>
@@ -53,9 +55,9 @@ public static class ScopeLink
     /// reload keeps where the operator was, and cluster to node to stage is
     /// three addresses rather than three clicks nothing remembers.
     /// </summary>
-    public static string TopologyAt(string node, string? cluster = null)
+    public static string TopologyAt(string node, Carry? carry = null)
     {
-        return "/topology?" + Focus + "=" + Uri.EscapeDataString(node) + Also(cluster);
+        return Address("/topology", carry, (Focus, node));
     }
 
     /// <summary>
@@ -64,21 +66,21 @@ public static class ScopeLink
     /// capability gives it, so a link reproduces the view — who, the filters,
     /// the sort and the page (ADR-0062, amendment 2026-09-29).
     /// </summary>
-    public static string Audit(AuditQuery query, string? cluster = null)
+    public static string Audit(AuditQuery query, Carry? carry = null)
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        List<string> said =
-        [
-            .. query.Pairs().Select(pair => pair.Key + "=" + Uri.EscapeDataString(pair.Value)),
-        ];
-
-        if (!string.IsNullOrEmpty(cluster))
+        // The box and the query say "include what is hidden" in one word, so
+        // either asking it is the address saying it once.
+        AuditQuery asked = query with
         {
-            said.Add(ClusterView.Query + "=" + Uri.EscapeDataString(cluster));
-        }
+            IncludeHidden = query.IncludeHidden || carry is { IncludeHidden: true },
+        };
 
-        return said.Count == 0 ? "/audit" : "/audit?" + string.Join('&', said);
+        return Address(
+            "/audit",
+            carry is null ? null : carry with { IncludeHidden = false },
+            [.. asked.Pairs().Select(pair => (pair.Key, (string?)pair.Value))]);
     }
 
     /// <summary>
@@ -88,13 +90,13 @@ public static class ScopeLink
     /// <see cref="EventSubscriptionQuery"/> gives them, so a link reproduces
     /// the view (ADR-0065, amendment 2026-09-29).
     /// </summary>
-    public static string EventSubscriptions(EventSubscriptionQuery query, string? cluster = null)
+    public static string EventSubscriptions(EventSubscriptionQuery query, Carry? carry = null)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         return Address(
             "/event-subscriptions",
-            cluster,
+            carry,
             ("location", query.Location),
             ("id", query.Id?.ToString(System.Globalization.CultureInfo.InvariantCulture)),
             ("pattern", query.Pattern),
@@ -109,13 +111,13 @@ public static class ScopeLink
     /// gives them, so a link reproduces the view (ADR-0013, amendment
     /// 2026-09-30).
     /// </summary>
-    public static string Subscriptions(SubscriptionQuery query, string? cluster = null)
+    public static string Subscriptions(SubscriptionQuery query, Carry? carry = null)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         return Address(
             "/subscriptions",
-            cluster,
+            carry,
             ("location", query.Location),
             ("name", query.Name),
             ("pattern", query.Pattern),
@@ -125,16 +127,37 @@ public static class ScopeLink
 
     /// <summary>
     /// This same view, on another cluster: the path the operator is on and
-    /// nothing else of the address. A scope of the cluster being left names
-    /// nothing in the one being entered, so the drill and the filter start
-    /// over rather than pointing at something that is not there.
+    /// nothing else of the address but the "show test clusters" box. A scope
+    /// of the cluster being left names nothing in the one being entered, so
+    /// the drill and the filter start over rather than pointing at something
+    /// that is not there.
     /// </summary>
-    public static string Cluster(string relative, string cluster)
+    public static string Cluster(string relative, string cluster, bool includeHidden = false)
+    {
+        return Address(PathOf(relative), new Carry(cluster, includeHidden));
+    }
+
+    /// <summary>
+    /// This same view with the "show test clusters" box ticked or not: the
+    /// address the operator is on, every word of it kept but the box's own
+    /// (ADR-0052, amendment 2026-09-30). A hidden cluster the address names is
+    /// left for the view to answer, which puts the operator on the first
+    /// cluster listed rather than on an error page.
+    /// </summary>
+    public static string Hidden(string relative, bool includeHidden)
     {
         int query = relative.IndexOf('?', StringComparison.Ordinal);
-        string path = (query < 0 ? relative : relative[..query]).TrimStart('/');
+        string[] kept = query < 0
+            ? []
+            : [
+                .. relative[(query + 1)..]
+                    .Split('&', StringSplitOptions.RemoveEmptyEntries)
+                    .Where(word => !word.StartsWith(Carry.Query + "=", StringComparison.Ordinal)),
+            ];
+        string[] said = includeHidden ? [.. kept, Carry.Query + "=" + Carry.Included] : kept;
+        string path = PathOf(relative);
 
-        return "/" + path + "?" + ClusterView.Query + "=" + Uri.EscapeDataString(cluster);
+        return said.Length == 0 ? path : path + "?" + string.Join('&', said);
     }
 
     /// <summary>A scope as an element id: its letters and digits, the rest
@@ -145,15 +168,17 @@ public static class ScopeLink
             scope.Select(letter => char.IsLetterOrDigit(letter) ? letter : '-'));
     }
 
-    // A view's address: its path and each word that says something, then the
-    // cluster the link was written on.
+    // A view's address: its path and each word that says something, then
+    // what the link carries — the cluster it was written on and the box.
     private static string Address(
-        string path, string? cluster, params (string Key, string? Value)[] words)
+        string path, Carry? carry, params (string Key, string? Value)[] words)
     {
+        IEnumerable<(string Key, string? Value)> carried =
+            carry?.Words().Select(word => (word.Key, (string?)word.Value)) ?? [];
         string[] said =
         [
             .. words
-                .Append((Key: ClusterView.Query, Value: cluster))
+                .Concat(carried)
                 .Where(word => !string.IsNullOrEmpty(word.Value))
                 .Select(word => word.Key + "=" + Uri.EscapeDataString(word.Value!)),
         ];
@@ -161,17 +186,11 @@ public static class ScopeLink
         return said.Length == 0 ? path : path + "?" + string.Join('&', said);
     }
 
-    private static string Asking(string? cluster)
+    // The path of a base-relative address, as an absolute one.
+    private static string PathOf(string relative)
     {
-        return string.IsNullOrEmpty(cluster)
-            ? string.Empty
-            : "?" + ClusterView.Query + "=" + Uri.EscapeDataString(cluster);
-    }
+        int query = relative.IndexOf('?', StringComparison.Ordinal);
 
-    private static string Also(string? cluster)
-    {
-        return string.IsNullOrEmpty(cluster)
-            ? string.Empty
-            : "&" + ClusterView.Query + "=" + Uri.EscapeDataString(cluster);
+        return "/" + (query < 0 ? relative : relative[..query]).TrimStart('/');
     }
 }

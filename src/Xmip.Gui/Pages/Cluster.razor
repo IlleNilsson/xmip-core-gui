@@ -4,7 +4,8 @@
 
 <PageTitle>Xmip — Monitor</PageTitle>
 
-<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
 
 <ScopeFilterBox Id="filter-monitor" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />

@@ -4,7 +4,8 @@
 
 <PageTitle>Xmip — Configuration</PageTitle>
 
-<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
 
 <ScopeFilterBox Id="filter-configuration" Pattern="@Pattern" PatternChanged="Filtered"
                 Said="@Filter.Said" />
@@ -92,7 +93,7 @@
     // open down to the stage, and open beyond it where it lies on the way to
     // `trouble`, the leaf that explains its parent; a leaf is its row.
     private RenderFragment Level(
-        string scope, int depth, string? trouble, string? cluster, string? above) =>
+        string scope, int depth, string? trouble, Carry? cluster, string? above) =>
         __builder =>
     {
         IReadOnlyList<Branch> branches =
@@ -132,7 +133,7 @@
         </ul>
     };
 
-    private RenderFragment Row(Branch branch, string? cluster, string kind) => __builder =>
+    private RenderFragment Row(Branch branch, Carry? cluster, string kind) => __builder =>
     {
         string mood = English.Mood(branch.State);
         bool troubled = !branch.IsLeaf && branch.State != HealthState.Fine;
@@ -160,7 +161,7 @@
     // The same scope on the Topology, where the publisher drew it: opened
     // there when something is beneath it, else its parent opened, so the
     // thing is on the canvas. Nothing where it drew no such thing.
-    private string? Topology(string scope, string? cluster)
+    private string? Topology(string scope, Carry? cluster)
     {
         if (!Drawn.TryGetValue(scope, out TopologyNode? node))
         {

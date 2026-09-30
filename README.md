@@ -96,6 +96,17 @@ that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
 base, `ClusterView`, once.
 
+The run line carries one checkbox on every view, *show test clusters*, beside
+the cluster chooser (the owner, 2026-09-29; ADR-0052, amendment 2026-09-30).
+Off — the default — a cluster whose run declared itself hidden
+(`Start-XmipTest -Hidden`) is not in the chooser, not reached by an address
+that names it, and its audit records are neither counted nor grouped; on, it
+is, and its pill, its audit group and its records say `· test`, outlined
+dashed. Hidden is what the run declared, never its name (`ClusterSurfaces`).
+The box is in the address, `hidden=include`, and every link a view writes
+carries it beside the cluster (`Carry`, `ScopeLink`), so a link reproduces the
+view.
+
 **The Audit view** (`/audit`; the owner, 2026-09-29: *audited entries in the
 clusters. Drill-down, sorting and filtering*) reads the records every Xmip
 program audited, through `ProgramAudit.Read` in `Xmip.Surface` and the audit

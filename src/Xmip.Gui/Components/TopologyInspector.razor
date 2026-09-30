@@ -162,7 +162,7 @@
     /// more than one (ADR-0052, amendment 2026-09-20); null where it holds
     /// one, and then the links read as they always did.</summary>
     [Parameter]
-    public string? Cluster { get; set; }
+    public Carry? Cluster { get; set; }
 
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);

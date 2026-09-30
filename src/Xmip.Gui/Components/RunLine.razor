@@ -11,21 +11,34 @@
    bar of its own above this line naming the view a second time beside the
    navigation that already marks it, and the source sat there. What the
    publisher does not say of its run is left out; a node run from
-   configuration has no run to say. *@
+   configuration has no run to say.
+
+   And the one "show test clusters" box every view has, beside the chooser it
+   governs (the owner, 2026-09-29; ADR-0052, amendment 2026-09-30): off, a
+   cluster whose run declared itself hidden is not in the chooser and not in
+   view; on, it is, marked test. Whether a cluster is hidden is what its run
+   declared, never its name (ClusterSurfaces). The box is in the address, so a
+   link reproduces it; ticking it keeps the rest of the address. *@
 <p class="run-line" aria-label="What this view reads">
-    @if (Surfaces.Several)
+    @if (Surfaces.Several(IncludeHidden))
     {
         <span class="run-clusters" aria-label="Cluster">
-            @foreach (string held in Surfaces.Clusters)
+            @foreach (string held in Surfaces.Listed(IncludeHidden))
             {
                 <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
-                   title="@Title(held)" href="@ScopeLink.Cluster(Path, held)">@held</a>
+                   title="@Title(held)"
+                   href="@ScopeLink.Cluster(Path, held, IncludeHidden)">@held@Test(held)</a>
             }
         </span>
     }
+    <label class="run-hidden" title="@HiddenTitle">
+        <input type="checkbox" checked="@IncludeHidden" @onchange="Toggled" />
+        show test clusters
+    </label>
     @if (Said.Length > 0)
     {
-        <span class="run-said" aria-label="What this run was started with">@Said</span>
+        <span class="run-said @(Run is { Hidden: true } ? "test" : "")"
+              aria-label="What this run was started with">@Said</span>
     }
     <span class="source">@Source</span>
 </p>
@@ -43,25 +56,45 @@
     [Parameter]
     public string Source { get; set; } = string.Empty;
 
+    /// <summary>Whether the view shows test clusters, as its address
+    /// says.</summary>
+    [Parameter]
+    public bool IncludeHidden { get; set; }
+
     private string Said => Run is { Said: true } run ? run.Line() : string.Empty;
 
     // The address the operator is on, without its query: switching cluster
     // keeps the view and starts the drill and the filter over (ScopeLink).
     private string Path => Nav.ToBaseRelativePath(Nav.Uri);
 
+    private string HiddenTitle => IncludeHidden
+        ? "showing the clusters whose run declared itself hidden, marked test"
+        : "clusters whose run declared itself hidden are left out";
+
     private bool Showing(string held) =>
-        string.Equals(held, Surfaces.Showing(Cluster), StringComparison.Ordinal);
+        string.Equals(held, Surfaces.Showing(Cluster, IncludeHidden), StringComparison.Ordinal);
 
     private string Mark(string held) =>
         (Showing(held) ? "current" : string.Empty)
-        + (Surfaces.Publishing(held) ? string.Empty : " ended");
+        + (Surfaces.Publishing(held) ? string.Empty : " ended")
+        + (Surfaces.Hidden(held) ? " test" : string.Empty);
+
+    // A hidden cluster shown says so beside its name, in words and not by
+    // colour alone.
+    private string Test(string held) => English.Test(Surfaces.Hidden(held));
 
     // Blazor leaves out an attribute whose value is null, so a pick that is
     // not the one in view carries no aria-current at all.
     private string? Here(string held) => Showing(held) ? "page" : null;
 
     private string Title(string held) =>
-        Surfaces.Publishing(held)
+        (Surfaces.Publishing(held)
             ? $"cluster {held}"
-            : $"cluster {held} — nothing published; its roll has ended";
+            : $"cluster {held} — nothing published; its roll has ended")
+        + (Surfaces.Hidden(held) ? " — a hidden test run" : string.Empty);
+
+    private void Toggled(ChangeEventArgs changed)
+    {
+        Nav.NavigateTo(ScopeLink.Hidden(Path, changed.Value is true));
+    }
 }

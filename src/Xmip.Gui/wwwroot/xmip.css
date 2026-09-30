@@ -106,6 +106,16 @@ body {
    cluster never disappears from under the operator's hand. */
 .cluster-pick.ended { opacity: 0.55; font-style: italic; }
 
+/* The "show test clusters" box, beside the chooser it governs (ADR-0052,
+   amendment 2026-09-30), and what it shows once ticked: a cluster, a group
+   or a record whose run declared itself hidden says "test" in words, and is
+   outlined dashed — never a mood's colour, never the brand's. */
+.run-hidden { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+.cluster-pick.test,
+.audit-group.test,
+.audit-row.test,
+.run-said.test { outline: 1px dashed var(--muted); outline-offset: -1px; }
+
 /* The filter: one line under the run line, on every view. The views are
    crowded (the owner, twice), so this reduces noise and must not add to it —
    a label, a box and what came of it, and nothing else. */
