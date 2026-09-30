@@ -75,7 +75,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     [Fact]
     public void TheListSaysSubscriberClusterNodeAndActionAndGroupsTheNodes()
     {
-        IRenderedComponent<Subscriptions> page = At("/subscriptions", Role.Observer);
+        IRenderedComponent<Subscriptions> page = At("/event-subscriptions", Role.Observer);
 
         Assert.Equal(["CT", "CT", "CT"], Column(page, "cluster"));
         // By subscriber, the first column — the name its Party was declared
@@ -95,7 +95,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void AnObserverIsShownTheListAndNoAct()
     {
         IRenderedComponent<Subscriptions> page =
-            At("/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2FR1&id=2", Role.Observer);
+            At("/event-subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2FR1&id=2", Role.Observer);
 
         Assert.Contains("subscription 2 on R1", page.Find(".subs-detail h2").TextContent,
             StringComparison.Ordinal);
@@ -110,7 +110,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     [Fact]
     public void AnOperatorPausesResumesAndRemovesAndEveryActIsAudited()
     {
-        IRenderedComponent<Subscriptions> page = At("/subscriptions", Role.Operator);
+        IRenderedComponent<Subscriptions> page = At("/event-subscriptions", Role.Operator);
 
         Assert.Equal(
             ["Resume", "Remove", "Pause", "Remove", "Pause", "Remove"],
@@ -141,12 +141,12 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void TheDrillStandsAtANode()
     {
         IRenderedComponent<Subscriptions> node =
-            At("/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2FR1", Role.Observer);
+            At("/event-subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2FR1", Role.Observer);
 
         Assert.Equal(["R1", "R1"], Column(node, "node"));
         Assert.Empty(node.FindAll("a.subs-group"));
         Assert.Equal(
-            ["subscriptions", "cluster CT", "node R1"],
+            ["event subscriptions", "cluster CT", "node R1"],
             node.FindAll(".crumbs .crumb-btn").Select(crumb => crumb.TextContent.Trim()));
     }
 
@@ -154,7 +154,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void AColumnOrdersTheOtherWayWhenAsked()
     {
         IRenderedComponent<Subscriptions> sorted =
-            At("/subscriptions?sort=queued&order=descending", Role.Observer);
+            At("/event-subscriptions?sort=queued&order=descending", Role.Observer);
         Assert.Equal(["9 of 64", "3 of 64", "0 of 64"], Column(sorted, "figure").Where(
             (_, index) => index % 3 == 0));
     }

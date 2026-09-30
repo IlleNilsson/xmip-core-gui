@@ -21,7 +21,7 @@ public sealed class TopNavTest : BunitContext
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         Assert.Equal(
-            ["/configuration", "/", "/topology", "/audit", "/subscriptions"],
+            ["/configuration", "/", "/topology", "/event-subscriptions", "/audit"],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
         AngleSharp.Dom.IElement role = bar.Find(".role-pick");
         Assert.Equal("Observer", role.TextContent);

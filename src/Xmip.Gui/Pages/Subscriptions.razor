@@ -1,4 +1,4 @@
-@page "/subscriptions"
+@page "/event-subscriptions"
 @using Xmip.Abi.Operate
 @using Xmip.Gui.Surface
 @inherits ClusterView
@@ -6,7 +6,7 @@
 @inject ProgramAudit Audited
 @inject NavigationManager Nav
 
-<PageTitle>Xmip — Subscriptions</PageTitle>
+<PageTitle>Xmip — Event subscriptions</PageTitle>
 
 <RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
 
@@ -190,7 +190,7 @@
         get
         {
             SubscriptionQuery top = Asking with { Location = null, Id = null };
-            yield return ("subscriptions", Link(top));
+            yield return ("event subscriptions", Link(top));
 
             if (Asking.Location is not { Length: > 0 } location)
             {

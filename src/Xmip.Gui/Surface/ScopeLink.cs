@@ -109,7 +109,7 @@ public static class ScopeLink
         Say("order", query.Order);
         Say(ClusterView.Query, cluster);
 
-        return said.Count == 0 ? "/subscriptions" : "/subscriptions?" + string.Join('&', said);
+        return said.Count == 0 ? "/event-subscriptions" : "/event-subscriptions?" + string.Join('&', said);
     }
 
     /// <summary>

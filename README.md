@@ -116,7 +116,7 @@ words where there is none, where the runtime's library cannot be loaded, and
 over a remote surface, whose cluster's audit stays on its own machine. The
 Monitor's drill links each scope to its audit beside its configuration.
 
-**The Subscriptions view** (`/subscriptions`; the owner, 2026-09-29: *a view
+**The Event subscriptions view** (`/event-subscriptions`; the owner, 2026-09-29: *a view
 of event subscriptions. Subscriber, Cluster, Node, Action. One should be able
 to pause, resume and remove event subscriptions*) lists every Event
 subscription the cluster's nodes hold, through
@@ -126,7 +126,7 @@ against capacity, delivered, missed and since. A paused one is the Paused
 mood, painted as the Monitor paints it and said in words. It drills cluster →
 node → one subscription, a column's head orders by it and again the other way,
 and the pattern box narrows over each one's node and reach — all
-`SubscriptionQuery`'s, all in the address (`/subscriptions?location=
+`SubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
 xmip:///C1/node/R1&id=2`). An Operator is offered Pause or Resume, and Remove,
 on every row and on the one opened; each act goes through `IOperatorSurface.Act`
 — applied in the node's process, or over a snapshot left where its publication
