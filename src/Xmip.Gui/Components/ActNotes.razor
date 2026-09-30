@@ -1,0 +1,29 @@
+@* What a subscriptions view says above its rows, written once for both
+   kinds: what its query was refused, what the last act came to — a refusal
+   in words and in red — and then how many are shown and where an act goes. *@
+@foreach (string said in new[] { Refusal, Answer }.Where(said => said.Length > 0))
+{
+    <p class="subs-said @(said.StartsWith("REFUSED", StringComparison.Ordinal) ? "refused" : "")">
+        @said
+    </p>
+}
+
+<p class="subs-count">@Counted · @Where</p>
+
+@code {
+    /// <summary>What the query was refused; empty where it was not.</summary>
+    [Parameter]
+    public string Refusal { get; set; } = string.Empty;
+
+    /// <summary>What the last act came to; empty before one.</summary>
+    [Parameter]
+    public string Answer { get; set; } = string.Empty;
+
+    /// <summary>How many are shown, of how many, and how many paused.</summary>
+    [Parameter]
+    public string Counted { get; set; } = string.Empty;
+
+    /// <summary>Where an act goes (<see cref="Xmip.Gui.Surface.ActSaid.Where"/>).</summary>
+    [Parameter]
+    public string Where { get; set; } = string.Empty;
+}

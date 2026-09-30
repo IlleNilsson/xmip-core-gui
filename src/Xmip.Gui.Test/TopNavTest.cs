@@ -6,7 +6,7 @@ using Xmip.Gui.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// One navigation for both hosts: the five views, what a host adds after
+/// One navigation for both hosts: the six views, what a host adds after
 /// them, and the role described in one set of words. Until 2026-09-27 the web
 /// host and the desktop each wrote the bar and worded the Observer
 /// differently.
@@ -14,15 +14,26 @@ namespace Xmip.Gui.Test;
 public sealed class TopNavTest : BunitContext
 {
     [Fact]
-    public void TheBarLinksTheFiveViewsAndDescribesTheRoleOnce()
+    public void TheBarLinksTheSixViewsInOrderAndDescribesTheRoleOnce()
     {
         Services.AddSingleton(new RoleContext(Role.Observer));
 
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
+        // The Subscriptions before the Event subscriptions (ADR-0052,
+        // amendment 2026-09-30), each tab by what it is.
         Assert.Equal(
-            ["/configuration", "/", "/topology", "/event-subscriptions", "/audit"],
+            [
+                "/configuration", "/", "/topology", "/subscriptions", "/event-subscriptions",
+                "/audit",
+            ],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
+        Assert.Equal(
+            [
+                "Configuration", "Monitor", "Topology", "Subscriptions", "Event subscriptions",
+                "Audit",
+            ],
+            bar.FindAll("a.topnav-link").Select(link => link.TextContent.Trim()));
         AngleSharp.Dom.IElement role = bar.Find(".role-pick");
         Assert.Equal("Observer", role.TextContent);
         Assert.Equal(Role.Observer.Describe(), role.GetAttribute("title"));

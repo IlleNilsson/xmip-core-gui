@@ -1,104 +1,91 @@
-@page "/event-subscriptions"
+@page "/subscriptions"
 @using Xmip.Abi.Operate
+@using System.Globalization
 @using Xmip.Gui.Surface
 @inherits ClusterView
 @inject RoleContext Role
 @inject ProgramAudit Audited
 @inject NavigationManager Nav
 
-<PageTitle>Xmip — Event subscriptions</PageTitle>
+<PageTitle>Xmip — Subscriptions</PageTitle>
 
 <RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
 
 <ScopeFilterBox Id="filter-subscriptions" Pattern="@(Asking.Pattern ?? string.Empty)"
                 PatternChanged="Patterned" Said="@PatternSaid" />
 
-@* Who hears what Xmip did (ADR-0065, amendment 2026-09-29): every Event
-   subscription the cluster's nodes hold — the subscriber, a Party; the
-   cluster and the node whose hub holds it; the action it subscribes to —
-   with its state and what its queue has done. The drill is in the address,
-   as every view's is: cluster, node, one subscription, the pattern and the
-   order are a link that reproduces the view. An Operator pauses, resumes and
-   removes; an Observer is shown the list and no act. *@
-<section class="drill subscriptions">
-    <nav class="crumbs" aria-label="Subscriptions drill-down">
-        @foreach ((string label, string href) in Trail)
-        {
-            <a class="crumb-btn" href="@href">@label</a>
-            <span class="sep">/</span>
-        }
-        @if (Asking.Location is { Length: > 0 } scope)
-        {
-            <a class="crumb-link" href="@ScopeLink.Monitor(scope, Carried)">monitor</a>
-        }
-    </nav>
+@* What picks a published Message up and opens a Journey (ADR-0013,
+   amendment 2026-09-30; the owner, the same day: *a Subscription view, for
+   all subscriptions per cluster, with pause and resume, but not remove. That
+   is handled with the TOML configuration files*). Every Subscription the
+   cluster's nodes route by — its configured name, the cluster and node, what
+   it subscribes to and where it leads — with its state and what it picked up
+   and holds. The drill is in the address, as every view's is: cluster, node,
+   one Subscription, the pattern and the order are a link that reproduces the
+   view. An Operator pauses and resumes; an Observer is shown the list and no
+   act; nobody removes one here. Not an Event subscription, which hears what
+   Xmip did: that is the Event subscriptions view. *@
+<section class="drill subscriptions message-subscriptions">
+    <DrillTrail Top="subscriptions" Location="@Asking.Location" Carried="@Carried"
+                At="@(at => Link(Asking with { Location = at, Name = null }))"
+                Opened="@(Asking.Name is { } name
+                    ? ($"subscription {name}", Link(Asking))
+                    : null)" />
 
-    @foreach (string said in new[] { Refusal, Answer }.Where(said => said.Length > 0))
-    {
-        <p class="subs-said @(said.StartsWith("REFUSED", StringComparison.Ordinal) ? "refused" : "")">
-            @said
-        </p>
-    }
+    <ActNotes Refusal="@Refusal" Answer="@Answer" Counted="@Counted"
+              Where="@ActSaid.Where(Surface, Listed.Orders,
+                  "the node that routes by the Subscription",
+                  "the node that routes by the Subscription")" />
 
-    <p class="subs-count">@Counted · @Where</p>
+    <p class="subs-configured">@SubscriptionOperation.Configured</p>
 
     @if (Detail is { } one)
     {
-        <article class="subs-detail @MoodClass.Of(one.Paused ? HealthState.Paused : HealthState.Fine)">
+        <article class="subs-detail @MoodClass.Paused(one.Paused)">
             <h2>
-                <span class="dot"></span>subscription @one.Id on @SubscriptionQuery.NodeName(one)
+                <span class="dot"></span>Subscription @one.Name on @SubscriptionQuery.NodeName(one)
                 <small>@one.State</small>
             </h2>
             <dl class="subs-fields">
-                <dt>subscriber</dt><dd>@SubscriptionQuery.Who(one)</dd>
-                <dt>party</dt><dd>@one.Party</dd>
+                <dt>subscription</dt><dd>@one.Name</dd>
+                <dt>application</dt><dd>@one.Application</dd>
                 <dt>cluster</dt><dd>@SubscriptionQuery.Cluster(one)</dd>
                 <dt>node</dt><dd>@one.Node</dd>
-                <dt>action</dt><dd>@one.Action</dd>
-                <dt>reaches</dt><dd>@one.Scope</dd>
+                <dt>filter</dt><dd>@one.Filter</dd>
+                <dt>leads to</dt><dd>@one.Destination</dd>
                 <dt>state</dt><dd>@one.State</dd>
-                <dt>queued</dt><dd>@English.Figure(one.Queued) of @English.Figure(one.Capacity)</dd>
-                <dt>delivered</dt><dd>@English.Figure(one.Delivered)</dd>
-                <dt>missed</dt><dd>@English.Figure(one.Missed)</dd>
-                <dt>since</dt><dd>@one.Since.ToString("u", System.Globalization.CultureInfo.InvariantCulture) · @English.Age(one.Since)</dd>
+                @if (one.Paused)
+                {
+                    <dt>paused by</dt><dd class="subs-by">@one.By</dd>
+                }
+                <dt>picked up</dt><dd>@English.Figure(one.PickedUp)</dd>
+                <dt>held</dt><dd>@English.Figure(one.Held)</dd>
+                <dt>since</dt>
+                <dd>
+                    @one.Since.ToString("u", CultureInfo.InvariantCulture) ·
+                    @English.Age(one.Since)
+                </dd>
+                <dt>file</dt><dd class="subs-file">@one.File</dd>
             </dl>
+            <h3>configuration</h3>
+            <pre class="subs-configuration">@one.Configuration</pre>
             @if (Role.MayOperate())
             {
                 <div class="subs-acts">
-                    @if (one.Paused)
-                    {
-                        <button class="act" @onclick="() => Act((one, SubscriptionAct.Resume))">Resume</button>
-                    }
-                    else
-                    {
-                        <button class="act" @onclick="() => Act((one, SubscriptionAct.Pause))">Pause</button>
-                    }
-                    <button class="act" @onclick="() => Act((one, SubscriptionAct.Remove))">Remove</button>
+                    <SubscriptionActs Subscription="one" Acted="Act" />
+                    <span class="subs-act-said">
+                        @(one.Paused ? SubscriptionActs.ResumeSaid : SubscriptionActs.PauseSaid)
+                    </span>
                 </div>
             }
         </article>
     }
     else
     {
-        @if (Nodes.Count > 0)
-        {
-            <div class="branches subs-groups">
-                @foreach (IGrouping<string, SubscriptionRecord> node in Nodes)
-                {
-                    <a class="branch subs-group @MoodClass.Of(node.Any(s => s.Paused) ? HealthState.Paused : HealthState.Fine)"
-                       href="@Link(Asking with { Location = node.Key, Id = null })">
-                        <span class="dot"></span>
-                        <span class="label">@ScopeTree.Node(node.Key)</span>
-                        <span class="worst">node · @node.Count() subscription(s)</span>
-                        <span class="evidence">@Paused(node)</span>
-                        <span class="figures">
-                            @English.Figure((ulong)node.Sum(s => (long)s.Queued)) queued ·
-                            @English.Figure((ulong)node.Sum(s => (long)s.Missed)) missed
-                        </span>
-                    </a>
-                }
-            </div>
-        }
+        <NodeGroups TRecord="SubscriptionRecord" Records="Shown" Location="@Asking.Location"
+                    NodeOf="s => s.Node" Paused="s => s.Paused" Noun="Subscription(s)"
+                    At="@(node => Link(Asking with { Location = node, Name = null }))"
+                    Figures="Figures" />
 
         <SubscriptionTable Records="Shown" Query="Asking" Carried="@Carried"
                            MayAct="Role.MayOperate()" Acted="Act" />
@@ -107,7 +94,7 @@
 
 @code {
     [SupplyParameterFromQuery(Name = "location")] public string? AskedLocation { get; set; }
-    [SupplyParameterFromQuery(Name = "id")] public string? AskedId { get; set; }
+    [SupplyParameterFromQuery(Name = "name")] public string? AskedName { get; set; }
     [SupplyParameterFromQuery(Name = "pattern")] public string? AskedPattern { get; set; }
     [SupplyParameterFromQuery(Name = "sort")] public string? AskedSort { get; set; }
     [SupplyParameterFromQuery(Name = "order")] public string? AskedOrder { get; set; }
@@ -124,31 +111,17 @@
 
     private string Answer { get; set; } = string.Empty;
 
-    private SubscriptionRecord? Detail => Asking.Id is not null && Shown is [var one] ? one : null;
-
-    // The nodes beneath where the drill stands, one step down: shown above
-    // the rows at a cluster, and gone once a node is the place.
-    private IReadOnlyList<IGrouping<string, SubscriptionRecord>> Nodes =>
-        Asking.Location is { Length: > 0 } at && ScopeTree.Node(at).Length > 0
-            ? []
-            : [.. Shown.GroupBy(s => s.Node, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal)];
+    private SubscriptionRecord? Detail =>
+        Asking.Name is not null && Shown is [var one] ? one : null;
 
     private string Counted =>
-        $"{English.Figure((ulong)Shown.Count)} of {English.Figure((ulong)Listed.Subscriptions.Count)} "
-        + $"subscription(s) · {English.Figure((ulong)Shown.Count(s => s.Paused))} paused";
-
-    // Where an act goes, said once: a snapshot's publisher takes orders, or
-    // takes none; a live surface acts in the node's own process.
-    private string Where =>
-        Surface is SnapshotOperator
-            ? Listed.Orders.Length > 0
-                ? "an act is left for the node that holds the subscription, which takes it within a round"
-                : "this publication takes no act: its publisher reads no orders"
-            : "an act is applied in the hub that holds the subscription";
+        $"{English.Figure((ulong)Shown.Count)} of "
+        + $"{English.Figure((ulong)Listed.Subscriptions.Count)} Subscription(s) · "
+        + $"{English.Figure((ulong)Shown.Count(s => s.Paused))} paused";
 
     private string PatternSaid =>
         !string.IsNullOrEmpty(Asking.Pattern)
-            ? $"{English.Figure((ulong)Shown.Count)} subscription(s) match {Asking.Pattern}"
+            ? $"{English.Figure((ulong)Shown.Count)} Subscription(s) match {Asking.Pattern}"
             : string.Empty;
 
     protected override void Read()
@@ -164,9 +137,7 @@
         Asking = new SubscriptionQuery
         {
             Location = location,
-            Id = ulong.TryParse(AskedId, System.Globalization.CultureInfo.InvariantCulture, out ulong id)
-                ? id
-                : null,
+            Name = string.IsNullOrEmpty(AskedName) ? null : AskedName,
             Pattern = AskedPattern,
             Sort = AskedSort,
             Order = AskedOrder,
@@ -185,52 +156,19 @@
         }
     }
 
-    private IEnumerable<(string Label, string Href)> Trail
-    {
-        get
-        {
-            SubscriptionQuery top = Asking with { Location = null, Id = null };
-            yield return ("event subscriptions", Link(top));
-
-            if (Asking.Location is not { Length: > 0 } location)
-            {
-                yield break;
-            }
-
-            string[] parts = ScopeTree.Parts(location);
-            if (parts.Length > 0)
-            {
-                yield return ($"cluster {parts[0]}", Link(top with { Location = ScopeTree.Join([parts[0]]) }));
-            }
-
-            string node = ScopeTree.Node(location);
-            if (node.Length > 0)
-            {
-                yield return ($"node {node}", Link(top with { Location = location }));
-            }
-
-            if (Asking.Id is { } id)
-            {
-                yield return ($"subscription {id}", Link(Asking));
-            }
-        }
-    }
-
     private string Link(SubscriptionQuery query) => ScopeLink.Subscriptions(query, Carried);
 
     private void Patterned(string pattern) =>
         Nav.NavigateTo(Link(Asking with { Pattern = pattern.Length == 0 ? null : pattern }));
 
-    private static string Paused(IEnumerable<SubscriptionRecord> node) =>
-        node.Count(s => s.Paused) switch
-        {
-            0 => "none paused",
-            var paused => $"{paused} paused",
-        };
+    private static string Figures(IEnumerable<SubscriptionRecord> node) =>
+        $"{English.Figure((ulong)node.Sum(s => (long)s.PickedUp))} picked up · "
+        + $"{English.Figure((ulong)node.Sum(s => (long)s.Held))} held";
 
     // An act, by a role that may act: taken through the surface, recorded in
-    // this host's audit with what came of it (ADR-0062), and said. An
-    // Observer is shown no act; one that reached here anyway is refused.
+    // this host's audit with what came of it (ADR-0062) under the action
+    // observe::Noun::Subscription gives it — subscription.<act> — and said.
+    // An Observer is shown no act; one that reached here anyway is refused.
     private void Act((SubscriptionRecord Subscription, SubscriptionAct Act) asked)
     {
         (SubscriptionRecord subscription, SubscriptionAct act) = asked;
@@ -238,7 +176,7 @@
 
         if (!Role.MayOperate())
         {
-            Answer = $"REFUSED: an {Role.Role} watches; to {word} a subscription is an Operator's.";
+            Answer = ActSaid.Refused(Role.Role, word, "a Subscription");
             Audited.Record(
                 $"subscription.{word}", AuditPhase.Failure, AuditSeverity.Warning, Answer);
             return;
@@ -254,14 +192,11 @@
             new Dictionary<string, string>
             {
                 ["node"] = subscription.Node,
-                ["subscription"] = subscription.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["subscriber"] = SubscriptionQuery.Who(subscription),
-                ["party"] = subscription.Party,
+                ["subscription"] = subscription.Name,
+                ["application"] = subscription.Application,
                 ["who"] = who,
             });
-        Answer = done.Applied || done.Result.StartsWith("REFUSED", StringComparison.Ordinal)
-            ? done.Result
-            : $"REFUSED: {done.Result}";
+        Answer = ActSaid.Answer(done.Applied, done.Result);
         Read();
     }
 }

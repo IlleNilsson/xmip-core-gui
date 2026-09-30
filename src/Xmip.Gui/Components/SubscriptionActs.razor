@@ -1,0 +1,38 @@
+@using Xmip.Abi.Operate
+
+@* The acts on one Subscription, written once for its row and its opened
+   view: Pause while it picks up, Resume while it holds — and no Remove, ever:
+   a Subscription is added and removed in the TOML configuration of the Xmip
+   Application that draws it (ADR-0013, amendment 2026-09-30). Each button
+   says in its title what it does to the Messages the Subscription matches. *@
+@if (Subscription.Paused)
+{
+    <button class="act" title="@ResumeSaid"
+            @onclick="() => Acted.InvokeAsync((Subscription, SubscriptionAct.Resume))">
+        Resume
+    </button>
+}
+else
+{
+    <button class="act" title="@PauseSaid"
+            @onclick="() => Acted.InvokeAsync((Subscription, SubscriptionAct.Pause))">
+        Pause
+    </button>
+}
+
+@code {
+    /// <summary>What a pause does, in the words the view says it.</summary>
+    public const string PauseSaid =
+        "Messages it matches are held, not picked up; nothing is lost.";
+
+    /// <summary>What a resume does, in the words the view says it.</summary>
+    public const string ResumeSaid = "What it held is picked up, oldest first.";
+
+    /// <summary>The Subscription acted on.</summary>
+    [Parameter, EditorRequired]
+    public SubscriptionRecord Subscription { get; set; } = default!;
+
+    /// <summary>Raised with the Subscription and the act taken on it.</summary>
+    [Parameter]
+    public EventCallback<(SubscriptionRecord, SubscriptionAct)> Acted { get; set; }
+}

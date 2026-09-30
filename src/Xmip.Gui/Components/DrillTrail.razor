@@ -1,0 +1,71 @@
+@using Xmip.Gui.Surface
+
+@* Where a subscriptions view's drill stands, written once for both kinds:
+   the view's top, then the cluster and the node the address stands at, then
+   the one opened — each a link that reproduces the view there — and the
+   Monitor at the same scope. *@
+<nav class="crumbs" aria-label="@($"{Top} drill-down")">
+    @foreach ((string label, string href) in Trail)
+    {
+        <a class="crumb-btn" href="@href">@label</a>
+        <span class="sep">/</span>
+    }
+    @if (Location is { Length: > 0 } scope)
+    {
+        <a class="crumb-link" href="@ScopeLink.Monitor(scope, Carried)">monitor</a>
+    }
+</nav>
+
+@code {
+    /// <summary>What the view's top is called, lower case.</summary>
+    [Parameter, EditorRequired]
+    public string Top { get; set; } = string.Empty;
+
+    /// <summary>Where the drill stands: a cluster, a node, or null for the
+    /// top.</summary>
+    [Parameter]
+    public string? Location { get; set; }
+
+    /// <summary>The view's address standing at a location, null for its
+    /// top.</summary>
+    [Parameter, EditorRequired]
+    public Func<string?, string> At { get; set; } = _ => string.Empty;
+
+    /// <summary>The one opened, as its crumb says it and links to it.</summary>
+    [Parameter]
+    public (string Label, string Href)? Opened { get; set; }
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public string? Carried { get; set; }
+
+    private IEnumerable<(string Label, string Href)> Trail
+    {
+        get
+        {
+            yield return (Top, At(null));
+
+            if (Location is not { Length: > 0 } location)
+            {
+                yield break;
+            }
+
+            string[] parts = ScopeTree.Parts(location);
+            if (parts.Length > 0)
+            {
+                yield return ($"cluster {parts[0]}", At(ScopeTree.Join([parts[0]])));
+            }
+
+            string node = ScopeTree.Node(location);
+            if (node.Length > 0)
+            {
+                yield return ($"node {node}", At(location));
+            }
+
+            if (Opened is { } opened)
+            {
+                yield return opened;
+            }
+        }
+    }
+}

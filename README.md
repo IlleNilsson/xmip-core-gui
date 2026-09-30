@@ -30,12 +30,15 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Five views, and five points to drill from: **Configuration**, the classic
-tree, holding still; **Monitor**, the board that follows Receive → Process →
-Send; **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18); and,
-since 2026-09-29, **Audit**, what every Xmip program recorded (ADR-0062,
-amendment 2026-09-29), and **Subscriptions**, the Event subscriptions the
-nodes hold (ADR-0065, amendment 2026-09-29), both described below. A
+Six views, and six points to drill from, in this order on the bar:
+**Configuration**, the classic tree, holding still; **Monitor**, the board
+that follows Receive → Process → Send; **Topology** (ADR-0052, amendments
+2026-09-14 and 2026-09-18); **Subscriptions**, what picks a published Message
+up and opens a Journey (ADR-0013, amendment 2026-09-30); **Event
+subscriptions**, who hears what Xmip did (ADR-0065, amendment 2026-09-29); and
+**Audit**, what every Xmip program recorded (ADR-0062, amendment 2026-09-29)
+— the last three described below, and the Subscriptions placed before the
+Event subscriptions by ADR-0052, amendment 2026-09-30. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -47,7 +50,7 @@ that explains it and links to that leaf's row, with the way to it standing
 open. The Topology is always what is configured and what is observed,
 together; there is no switch between them. It opens on the cluster's nodes and
 the traffic between them, and the drill is in the address
-(`/topology?focus=node/R1`): every node on the canvas is a link, open where
+(`/topology?focus=node/alpha`): every node on the canvas is a link, open where
 something is beneath it and its configuration where nothing is, so cluster to
 node to stage to endpoint is a chain of addresses. Every line says what passes
 over it — its volume and rate, or `configured · no traffic observed` on a path
@@ -106,7 +109,7 @@ time (UTC), node, program, action, phase, severity and summary, newest first,
 a column's head sorting by it and again the other way. The filters are the
 scope pattern box every view has — the one wildcard, `observe::wildcard`,
 over each record's location — and severity, action and a time range beside
-it. Everything is in the address (`/audit?location=xmip:///C1/node/R1&
+it. Everything is in the address (`/audit?location=xmip:///C1/node/alpha&
 severity=error&sort=action&order=ascending`), so a link reproduces the view;
 a page draws 200 rows and links the next and the previous (no `Virtualize`,
 which prerendered a blank spacer). A record opens whole, every property with
@@ -116,29 +119,57 @@ words where there is none, where the runtime's library cannot be loaded, and
 over a remote surface, whose cluster's audit stays on its own machine. The
 Monitor's drill links each scope to its audit beside its configuration.
 
-**The Event subscriptions view** (`/event-subscriptions`; the owner, 2026-09-29: *a view
-of event subscriptions. Subscriber, Cluster, Node, Action. One should be able
-to pause, resume and remove event subscriptions*) lists every Event
-subscription the cluster's nodes hold, through
-`IOperatorSurface.Subscriptions`: the subscriber, a Party; the cluster and the
+**The Subscriptions view** (`/subscriptions`; the owner, 2026-09-30: *a
+Subscription view, for all subscriptions per cluster, with pause and resume,
+but not remove. That is handled with the TOML configuration files*) lists
+every Subscription the cluster's nodes route by, through
+`IOperatorSurface.Subscriptions`: its configured name, the cluster and the
+node, its filter — what it subscribes to — and where it leads, the Xmip
+Process or Send Port it opens a Journey into; then its state, active or
+paused, what it picked up, what it holds and since. A paused one is the Paused
+mood, painted as the Monitor paints it and said in words. It drills cluster →
+node → one Subscription by name, a column's head orders by it and again the
+other way, and the pattern box narrows over each one's node and name — all
+`SubscriptionQuery`'s, all in the address (`/subscriptions?location=
+xmip:///C1/node/alpha&name=edi`). The one opened shows its configuration exactly
+as the TOML says it, the file it comes from, the Xmip Application that draws
+it, and who paused it while it is paused. An Operator is offered Pause while
+it picks up — what it matches is held, not picked up, and nothing is lost —
+and Resume while it holds — what it held is picked up, oldest first — on every
+row and on the one opened; there is no Remove anywhere, and the view says so
+in words (`SubscriptionOperation.Configured`): a Subscription is added and
+removed in the TOML configuration of the Xmip Application that draws it. Each
+act goes through `IOperatorSurface.Act` — applied in the node's process, or
+over a snapshot left where its publication says its publisher takes orders —
+and is recorded in the host's audit as `subscription.<act>`. An Observer is
+shown the list and no act (ADR-0013, amendment 2026-09-30).
+
+**The Event subscriptions view** (`/event-subscriptions`; the owner,
+2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
+One should be able to pause, resume and remove event subscriptions*) lists
+every Event subscription the cluster's nodes hold, through
+`IOperatorSurface.EventSubscriptions`: the subscriber, a Party; the cluster and the
 node whose hub holds it; the action it subscribes to; then its state, queued
 against capacity, delivered, missed and since. A paused one is the Paused
 mood, painted as the Monitor paints it and said in words. It drills cluster →
-node → one subscription, a column's head orders by it and again the other way,
-and the pattern box narrows over each one's node and reach — all
-`SubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
-xmip:///C1/node/R1&id=2`). An Operator is offered Pause or Resume, and Remove,
+node → one Event subscription, a column's head orders by it and again the
+other way, and the pattern box narrows over each one's node and reach — all
+`EventSubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
+xmip:///C1/node/alpha&id=2`). An Operator is offered Pause or Resume, and Remove,
 on every row and on the one opened; each act goes through `IOperatorSurface.Act`
 — applied in the node's process, or over a snapshot left where its publication
 says its publisher takes orders — and is recorded in the host's audit as
-`subscription.<act>`. An Observer is shown the list and no act (ADR-0065,
-amendment 2026-09-29).
+`event.<act>`. An Observer is shown the list and no act (ADR-0065,
+amendment 2026-09-29). The two views share their pieces — the drill's crumbs
+(`DrillTrail`), the nodes one step down (`NodeGroups`), the sortable head
+(`SortHead`), what an act came to (`ActNotes`, `ActSaid`) — so they cannot
+drift apart.
 
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
-over an audit file in the capability's shape, and the Subscriptions view over
-a publication whose publisher takes orders, so what is asserted is what an
-operator sees and no surface is faked.
+over an audit file in the capability's shape, and the Subscriptions and
+Event subscriptions views over a publication whose publisher takes orders, so
+what is asserted is what an operator sees and no surface is faked.
 
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured

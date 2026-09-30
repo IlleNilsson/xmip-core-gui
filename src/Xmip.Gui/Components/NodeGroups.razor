@@ -1,0 +1,63 @@
+@typeparam TRecord
+@using Xmip.Gui.Surface
+
+@* The nodes beneath where a subscriptions view's drill stands, one step
+   down, written once for both kinds: each node a link to the view standing
+   there, painted Paused where any of its subscriptions is, said in words
+   beside the dot, and with what the kind counts. Gone once a node is the
+   place. *@
+@if (Groups.Count > 0)
+{
+    <div class="branches subs-groups">
+        @foreach (IGrouping<string, TRecord> node in Groups)
+        {
+            <a class="branch subs-group @MoodClass.Paused(node.Any(Paused))"
+               href="@At(node.Key)">
+                <span class="dot"></span>
+                <span class="label">@ScopeTree.Node(node.Key)</span>
+                <span class="worst">node · @node.Count() @Noun</span>
+                <span class="evidence">@Said(node.Count(Paused))</span>
+                <span class="figures">@Figures(node)</span>
+            </a>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>The subscriptions shown.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TRecord> Records { get; set; } = [];
+
+    /// <summary>Where the drill stands; a node there draws no groups.</summary>
+    [Parameter]
+    public string? Location { get; set; }
+
+    /// <summary>The node a subscription is on.</summary>
+    [Parameter, EditorRequired]
+    public Func<TRecord, string> NodeOf { get; set; } = _ => string.Empty;
+
+    /// <summary>Whether a subscription is paused.</summary>
+    [Parameter, EditorRequired]
+    public Func<TRecord, bool> Paused { get; set; } = _ => false;
+
+    /// <summary>The view standing at a node.</summary>
+    [Parameter, EditorRequired]
+    public Func<string, string> At { get; set; } = _ => string.Empty;
+
+    /// <summary>What a node's count is of, as in "3 subscription(s)".</summary>
+    [Parameter]
+    public string Noun { get; set; } = "subscription(s)";
+
+    /// <summary>What the kind counts of a node's subscriptions.</summary>
+    [Parameter, EditorRequired]
+    public Func<IEnumerable<TRecord>, string> Figures { get; set; } = _ => string.Empty;
+
+    private IReadOnlyList<IGrouping<string, TRecord>> Groups =>
+        Location is { Length: > 0 } at && ScopeTree.Node(at).Length > 0
+            ? []
+            : [.. Records.GroupBy(NodeOf, StringComparer.Ordinal)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)];
+
+    private static string Said(int paused) =>
+        paused == 0 ? "none paused" : $"{paused} paused";
+}
