@@ -663,12 +663,15 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .audit-fields dt { color: var(--muted); }
 .audit-fields dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.85rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* The Subscriptions view (ADR-0065, amendment 2026-09-29). A paused
-   subscription is the Paused mood and is painted as the Monitor paints it,
-   with its state said in words beside the dot. */
+/* The two subscriptions views, which share their shape: the Subscriptions
+   (ADR-0013, amendment 2026-09-30), what picks a published Message up, and
+   the Event subscriptions (ADR-0065, amendment 2026-09-29), who hears what
+   Xmip did. A paused one is the Paused mood and is painted as the Monitor
+   paints it, with its state said in words beside the dot. */
 .subs-said { margin: 0 0 0.75rem; color: var(--muted); }
 .subs-said.refused { color: var(--red); font-weight: 600; }
 .subs-count { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.85rem; }
+.subs-configured { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.85rem; }
 .subs-groups { margin-bottom: 1rem; gap: 0.3rem; }
 .subs-group {
     grid-template-columns: 1rem minmax(8rem, 1fr) 12rem minmax(8rem, 1fr) 14rem;
@@ -679,12 +682,24 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-records { padding-bottom: 1.5rem; }
 .subs-row {
     display: grid;
-    grid-template-columns:
-        1rem minmax(8rem, 17.5rem) 4rem 4rem minmax(12rem, 1fr) 4.5rem 6rem 5.5rem 4.5rem 5.5rem 11rem;
     align-items: center; gap: 0.6rem;
     padding: 0.4rem 0.9rem; background: var(--paper);
     border: 1px solid var(--line); border-top: none;
     color: inherit; font-size: 0.85rem;
+}
+/* A Subscription: its name, cluster, node, filter, where it leads, state,
+   picked up, held, since and its one act. */
+.message-subs .subs-row {
+    grid-template-columns:
+        1rem minmax(8rem, 12rem) 4rem 4rem minmax(10rem, 1fr) minmax(10rem, 1fr) 4.5rem 5.5rem
+        4.5rem 5.5rem 6rem;
+}
+/* An Event subscription: its subscriber, cluster, node, action, state,
+   queued, delivered, missed, since and its acts. */
+.event-subs .subs-row {
+    grid-template-columns:
+        1rem minmax(8rem, 17.5rem) 4rem 4rem minmax(12rem, 1fr) 4.5rem 6rem 5.5rem 4.5rem 5.5rem
+        11rem;
 }
 .subs-row:hover:not(.subs-head) { background: var(--brand-tint); }
 .subs-head {
@@ -698,13 +713,16 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-row a { color: inherit; text-decoration: none; }
 .subs-row a:hover { color: var(--brand-deep); text-decoration: underline; }
 /* The Party's declared name; its identifier where it was declared with
-   none, whole, since the part that tells two apart is at its end. */
-.subs-row .subs-subscriber {
+   none, whole, since the part that tells two apart is at its end. A
+   Subscription's configured name the same. */
+.subs-row .event-subscriber, .subs-row .subs-name {
     font-family: ui-monospace, monospace; font-size: 0.8rem; font-weight: 600;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .subs-row .subs-cluster, .subs-row .subs-node { font-family: ui-monospace, monospace; }
-.subs-row .subs-action { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.subs-row .event-action, .subs-row .subs-filter, .subs-row .subs-destination {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .subs-row .subs-state { color: var(--muted); }
 .subs-row.paused .subs-state { color: var(--mood); font-weight: 600; }
 .subs-row .subs-figure, .subs-row .subs-since {
@@ -713,7 +731,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-row .subs-since { color: var(--muted); }
 .subs-acts { display: flex; gap: 0.4rem; justify-content: flex-end; }
 
-/* One subscription, whole, and its acts. */
+/* One subscription, whole, and its acts; a Subscription's configuration
+   exactly as its TOML says it. */
 .subs-detail {
     background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
     padding: 1rem 1.25rem; margin-bottom: 1.5rem;
@@ -723,4 +742,14 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0 0 1rem; }
 .subs-fields dt { color: var(--muted); }
 .subs-fields dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.85rem; overflow-wrap: anywhere; }
-.subs-detail .subs-acts { justify-content: flex-start; }
+.subs-detail .subs-acts { justify-content: flex-start; align-items: center; }
+.subs-detail h3 {
+    margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+.subs-configuration {
+    margin: 0 0 1rem; padding: 0.75rem 1rem; background: var(--ground);
+    border: 1px solid var(--line); border-radius: 6px;
+    font-family: ui-monospace, monospace; font-size: 0.85rem; white-space: pre; overflow-x: auto;
+}
+.subs-act-said { color: var(--muted); font-size: 0.85rem; }

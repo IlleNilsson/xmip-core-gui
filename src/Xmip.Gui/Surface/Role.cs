@@ -34,8 +34,9 @@ public static class Roles
 
     /// <summary>
     /// Whether the role may act on the running estate — pause and resume a
-    /// Location, a host or a node, and pause, resume and remove an Event
-    /// subscription (Operator and up). An Observer only watches.
+    /// Location, a host, a node or a Subscription, and pause, resume and
+    /// remove an Event subscription (Operator and up). An Observer only
+    /// watches.
     /// </summary>
     public static bool MayOperate(this Role role)
     {

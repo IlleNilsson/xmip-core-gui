@@ -20,6 +20,13 @@ public static class MoodClass
         return $"{English.Mood(state)} {English.Color(state)}";
     }
 
+    /// <summary>The classes for a subscription of either kind: Paused while it
+    /// is, Fine otherwise.</summary>
+    public static string Paused(bool paused)
+    {
+        return Of(paused ? HealthState.Paused : HealthState.Fine);
+    }
+
     /// <summary>The classes for the rollup over a set of leaves, or
     /// <c>none</c> when nothing is recorded — nothing is not Fine.</summary>
     public static string Of(IEnumerable<HealthRecord> records)

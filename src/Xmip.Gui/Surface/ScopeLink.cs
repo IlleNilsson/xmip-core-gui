@@ -3,12 +3,12 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the views. The web GUI is four points
-/// to drill from — Configuration, Monitor, Topology and, since 2026-09-29,
-/// Audit — and from any of them a scope leads to the same scope in the others
-/// (the owner, 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link
-/// from any view ends at the view of the actual configuration). One place
-/// writes the
+/// Where a scope is reached in each of the views. The web GUI is six points
+/// to drill from — Configuration, Monitor, Topology, Subscriptions (since
+/// 2026-09-30), Event subscriptions and Audit (since 2026-09-29) — and from
+/// any of them a scope leads to the same scope in the others (the owner,
+/// 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link from any view
+/// ends at the view of the actual configuration). One place writes the
 /// links, so a row, a node and a crumb cannot disagree about where a scope is.
 /// </summary>
 /// <remarks>
@@ -82,34 +82,45 @@ public static class ScopeLink
     }
 
     /// <summary>
+    /// The Event subscriptions view asking <paramref name="query"/>, on this
+    /// cluster: where the drill stands, the one Event subscription, the
+    /// pattern and the order are all in the address, by the names
+    /// <see cref="EventSubscriptionQuery"/> gives them, so a link reproduces
+    /// the view (ADR-0065, amendment 2026-09-29).
+    /// </summary>
+    public static string EventSubscriptions(EventSubscriptionQuery query, string? cluster = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        return Address(
+            "/event-subscriptions",
+            cluster,
+            ("location", query.Location),
+            ("id", query.Id?.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            ("pattern", query.Pattern),
+            ("sort", query.Sort),
+            ("order", query.Order));
+    }
+
+    /// <summary>
     /// The Subscriptions view asking <paramref name="query"/>, on this
-    /// cluster: where the drill stands, the one subscription, the pattern and
-    /// the order are all in the address, by the names
-    /// <see cref="SubscriptionQuery"/> gives them, so a link reproduces the
-    /// view (ADR-0065, amendment 2026-09-29).
+    /// cluster: where the drill stands, the one Subscription by its name, the
+    /// pattern and the order, by the names <see cref="SubscriptionQuery"/>
+    /// gives them, so a link reproduces the view (ADR-0013, amendment
+    /// 2026-09-30).
     /// </summary>
     public static string Subscriptions(SubscriptionQuery query, string? cluster = null)
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        List<string> said = [];
-
-        void Say(string key, string? value)
-        {
-            if (!string.IsNullOrEmpty(value))
-            {
-                said.Add(key + "=" + Uri.EscapeDataString(value));
-            }
-        }
-
-        Say("location", query.Location);
-        Say("id", query.Id?.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        Say("pattern", query.Pattern);
-        Say("sort", query.Sort);
-        Say("order", query.Order);
-        Say(ClusterView.Query, cluster);
-
-        return said.Count == 0 ? "/event-subscriptions" : "/event-subscriptions?" + string.Join('&', said);
+        return Address(
+            "/subscriptions",
+            cluster,
+            ("location", query.Location),
+            ("name", query.Name),
+            ("pattern", query.Pattern),
+            ("sort", query.Sort),
+            ("order", query.Order));
     }
 
     /// <summary>
@@ -132,6 +143,22 @@ public static class ScopeLink
     {
         return "s-" + string.Concat(
             scope.Select(letter => char.IsLetterOrDigit(letter) ? letter : '-'));
+    }
+
+    // A view's address: its path and each word that says something, then the
+    // cluster the link was written on.
+    private static string Address(
+        string path, string? cluster, params (string Key, string? Value)[] words)
+    {
+        string[] said =
+        [
+            .. words
+                .Append((Key: ClusterView.Query, Value: cluster))
+                .Where(word => !string.IsNullOrEmpty(word.Value))
+                .Select(word => word.Key + "=" + Uri.EscapeDataString(word.Value!)),
+        ];
+
+        return said.Length == 0 ? path : path + "?" + string.Join('&', said);
     }
 
     private static string Asking(string? cluster)

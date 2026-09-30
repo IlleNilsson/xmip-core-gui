@@ -1,0 +1,51 @@
+@* The head row of a subscriptions table, written once for both kinds — the
+   Subscriptions and the Event subscriptions. A column's head is a link that
+   orders by it, and the same column again turns the order round; another
+   column starts ascending. The ordering itself is the query's, the one
+   every surface uses; this row only writes the addresses that ask for it. *@
+<div class="subs-row subs-head" role="row">
+    <span></span>
+    @foreach ((string column, string heading) in Columns)
+    {
+        <a class="subs-sort @(Sorted(column) ? "sorted" : "")" role="columnheader"
+           aria-sort="@AriaSort(column)" href="@Sort(column)">
+            @heading@Arrow(column)
+        </a>
+    }
+    <span role="columnheader">@(MayAct ? "act" : string.Empty)</span>
+</div>
+
+@code {
+    /// <summary>The columns shown, each by the query's word and its
+    /// heading.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<(string Column, string Heading)> Columns { get; set; } = [];
+
+    /// <summary>The column the rows are ordered by now.</summary>
+    [Parameter, EditorRequired]
+    public string By { get; set; } = string.Empty;
+
+    /// <summary>Whether that order is greatest first.</summary>
+    [Parameter]
+    public bool Descending { get; set; }
+
+    /// <summary>The address ordering by a column, and descending or
+    /// not.</summary>
+    [Parameter, EditorRequired]
+    public Func<string, string?, string> Link { get; set; } = (_, _) => string.Empty;
+
+    /// <summary>Whether the rows beneath carry acts.</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    private bool Sorted(string column) => string.Equals(By, column, StringComparison.Ordinal);
+
+    private string Sort(string column) =>
+        Link(column, Sorted(column) && !Descending ? "descending" : null);
+
+    private string Arrow(string column) =>
+        Sorted(column) ? (Descending ? " ↓" : " ↑") : string.Empty;
+
+    private string AriaSort(string column) =>
+        Sorted(column) ? (Descending ? "descending" : "ascending") : "none";
+}

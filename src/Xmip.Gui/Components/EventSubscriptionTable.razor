@@ -1,0 +1,127 @@
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+
+@* The Event subscriptions view's rows (ADR-0065, amendment 2026-09-29): a
+   bounded list of plain rows — never a Virtualize, which prerendered an empty
+   spacer the height of every row (Pages/Cluster.razor) — and the rest
+   counted. The head orders by a column (SortHead), by
+   EventSubscriptionQuery's order, the one every surface uses. A row's
+   subscriber opens that Event subscription; its cluster and node are where
+   the drill stands next. Paused is a mood (ADR-0041), painted as the Monitor
+   paints it and said in words beside the dot. The acts are offered to a role
+   that may operate and to no other. *@
+<section class="subs-records event-subs" aria-label="Event subscriptions">
+    @if (Records.Count == 0)
+    {
+        <p class="empty">No Event subscription here matches.</p>
+    }
+    else
+    {
+        <SortHead Columns="Columns" By="@(Query.Sort ?? EventSubscriptionQuery.Columns[0])"
+                  Descending="Query.Descending" Link="Sort" MayAct="MayAct" />
+        @foreach (EventSubscriptionRecord entry in Records.Take(Shown))
+        {
+            <div class="subs-row @MoodClass.Paused(entry.Paused)"
+                 role="row">
+                <span class="dot" title="@entry.State"></span>
+                <a class="event-subscriber" title="Party @entry.Party"
+                   href="@Link(Query with { Location = entry.Node, Id = entry.Id })">
+                    @EventSubscriptionQuery.Who(entry)
+                </a>
+                <a class="subs-cluster"
+                   href="@Link(Query with { Location = ClusterOf(entry), Id = null })">
+                    @EventSubscriptionQuery.Cluster(entry)
+                </a>
+                <a class="subs-node" href="@Link(Query with { Location = entry.Node, Id = null })">
+                    @EventSubscriptionQuery.NodeName(entry)
+                </a>
+                <span class="event-action" title="@($"{entry.Action} at {entry.Scope}")">
+                    @entry.Action
+                </span>
+                <span class="subs-state">@entry.State</span>
+                <span class="subs-figure">
+                    @English.Figure(entry.Queued) of @English.Figure(entry.Capacity)
+                </span>
+                <span class="subs-figure">@English.Figure(entry.Delivered)</span>
+                <span class="subs-figure">@English.Figure(entry.Missed)</span>
+                <span class="subs-since">@English.Age(entry.Since)</span>
+                <span class="subs-acts">
+                    @if (MayAct)
+                    {
+                        @if (entry.Paused)
+                        {
+                            <button class="act"
+                                    @onclick="() => Act(entry, EventSubscriptionAct.Resume)">
+                                Resume
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="act"
+                                    @onclick="() => Act(entry, EventSubscriptionAct.Pause)">
+                                Pause
+                            </button>
+                        }
+                        <button class="act"
+                                @onclick="() => Act(entry, EventSubscriptionAct.Remove)">
+                            Remove
+                        </button>
+                    }
+                </span>
+            </div>
+        }
+        @if (Records.Count > Shown)
+        {
+            <p class="empty">
+                @English.Figure((ulong)(Records.Count - Shown)) more below these @Shown; the
+                filter narrows to them.
+            </p>
+        }
+    }
+</section>
+
+@code {
+    /// <summary>How many rows are drawn.</summary>
+    public const int Shown = 200;
+
+    /// <summary>The Event subscriptions, already selected and ordered.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EventSubscriptionRecord> Records { get; set; } = [];
+
+    /// <summary>What the view asked for them.</summary>
+    [Parameter, EditorRequired]
+    public EventSubscriptionQuery Query { get; set; } = new();
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public string? Carried { get; set; }
+
+    /// <summary>Whether the role at the keyboard may act (ADR-0009).</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    /// <summary>Raised with an Event subscription and the act taken on it.</summary>
+    [Parameter]
+    public EventCallback<(EventSubscriptionRecord, EventSubscriptionAct)> Acted { get; set; }
+
+    // The columns shown and what each is headed, by EventSubscriptionQuery's
+    // words.
+    private static readonly (string Column, string Heading)[] Columns =
+    [
+        ("subscriber", "subscriber"), ("cluster", "cluster"), ("node", "node"),
+        ("action", "action"), ("state", "state"), ("queued", "queued"),
+        ("delivered", "delivered"), ("missed", "missed"), ("since", "since"),
+    ];
+
+    private string Link(EventSubscriptionQuery query) =>
+        ScopeLink.EventSubscriptions(query, Carried);
+
+    private string Sort(string column, string? order) =>
+        Link(Query with { Sort = column, Order = order });
+
+    private Task Act(EventSubscriptionRecord entry, EventSubscriptionAct act) =>
+        Acted.InvokeAsync((entry, act));
+
+    private static string ClusterOf(EventSubscriptionRecord entry) =>
+        ScopeTree.Join([EventSubscriptionQuery.Cluster(entry)]);
+}

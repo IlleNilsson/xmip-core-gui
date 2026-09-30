@@ -2,10 +2,11 @@
 @using Xmip.Gui.Surface
 @inject RoleContext Role
 
-@* The bar every host shows, once: the five views this library draws — the
-   Audit view joined the three on 2026-09-29 (ADR-0062), and the
-   Subscriptions view the same day (ADR-0065) — what the host adds after
-   them, and the role it runs as — assigned, not chosen here (ADR-0009),
+@* The bar every host shows, once: the six views this library draws — the
+   Audit view joined the three on 2026-09-29 (ADR-0062), the Event
+   subscriptions view the same day (ADR-0065), and the Subscriptions view
+   before it on 2026-09-30 (ADR-0013 and ADR-0052, amendments of that date) —
+   what the host adds after them, and the role it runs as — assigned, not chosen here (ADR-0009),
    by one rule for both hosts (RoleContext.Assigned), described in one set
    of words (Roles.Describe). The web host adds nothing; the desktop adds
    Configure for a role that may configure. Until 2026-09-27 each host wrote
@@ -15,6 +16,7 @@
     <NavLink class="topnav-link" href="/configuration">Configuration</NavLink>
     <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
     <NavLink class="topnav-link" href="/topology">Topology</NavLink>
+    <NavLink class="topnav-link" href="/subscriptions">Subscriptions</NavLink>
     <NavLink class="topnav-link" href="/event-subscriptions">Event subscriptions</NavLink>
     <NavLink class="topnav-link" href="/audit">Audit</NavLink>
     @ChildContent
@@ -25,7 +27,7 @@
 </nav>
 
 @code {
-    /// <summary>What the host adds after the five views.</summary>
+    /// <summary>What the host adds after the six views.</summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 }
