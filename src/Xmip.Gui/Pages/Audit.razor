@@ -6,7 +6,8 @@
 
 <PageTitle>Xmip — Audit</PageTitle>
 
-<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
 
 <ScopeFilterBox Id="filter-audit" Pattern="@(Asking.Pattern ?? string.Empty)"
                 PatternChanged="Patterned" Said="@PatternSaid" />
@@ -20,7 +21,9 @@
    a cmdlet or a web host, stands under its host: nothing is read out of a
    program's name. The drill is in the address, as the Monitor's is: every
    step, every filter, the sort and the page are a link that reproduces the
-   view. *@
+   view. What a run that declared itself hidden recorded is left out with its
+   cluster until "show test clusters" is ticked, and then marked test
+   (ADR-0052, amendment 2026-09-30). *@
 <section class="drill audit">
     <nav class="crumbs" aria-label="Audit drill-down">
         @foreach ((string label, string href) in Trail)
@@ -59,9 +62,10 @@
                 <div class="branches audit-groups">
                     @foreach (AuditGroup group in found.Groups)
                     {
-                        <a class="branch audit-group @Worst(group)" href="@Link(Into(group))">
+                        <a class="branch audit-group @Worst(group) @(group.Hidden ? "test" : "")"
+                           href="@Link(Into(group))">
                             <span class="dot"></span>
-                            <span class="label">@Label(group)</span>
+                            <span class="label">@Label(group)@English.Test(group.Hidden)</span>
                             <span class="worst">@group.Kind · @group.Count record(s)</span>
                             <span class="evidence">@Counted(group)</span>
                             <span class="figures">latest @Time(group.Latest)</span>
@@ -133,6 +137,7 @@
             Program = AskedProgram, Record = AskedRecord, Severity = AskedSeverity,
             Action = AskedAction, From = AskedFrom, To = AskedTo, Sort = AskedSort,
             Order = AskedOrder, Offset = Math.Max(AskedOffset, 0),
+            IncludeHidden = IncludeHidden,
         };
 
         try

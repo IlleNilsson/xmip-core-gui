@@ -11,7 +11,11 @@ namespace Xmip.Gui.Surface;
 /// clusters at once. A view told nothing, or
 /// told a cluster this host does not hold, is on the first: a roll that ended
 /// leaves a link behind, and the answer to that is the other cluster, never an
-/// error page.
+/// error page. Whether the view shows test clusters — those whose run declared
+/// itself hidden — is in the address too, <c>?hidden=include</c>, off unless
+/// said (the owner, 2026-09-29; ADR-0052, amendment 2026-09-30): off, a
+/// hidden cluster is not listed, not reached and not linked to; on, it is,
+/// marked as test.
 /// </summary>
 /// <remarks>
 /// The base exists so the pages stay what ADR-0052 clause 1 says they are —
@@ -40,17 +44,29 @@ public abstract class ClusterView : ComponentBase, IDisposable
     [SupplyParameterFromQuery(Name = Query)]
     public string? Asked { get; set; }
 
-    /// <summary>The publication this view reads: the asked cluster's, or the
-    /// first where the host does not hold it.</summary>
-    protected IOperatorSurface Surface => Surfaces.For(Asked);
+    /// <summary>What the address says of the "show test clusters" box: its
+    /// word, or null where it says nothing.</summary>
+    [SupplyParameterFromQuery(Name = Carry.Query)]
+    public string? AskedHidden { get; set; }
 
-    /// <summary>The cluster this view is on, as the chooser marks it.</summary>
-    protected string Cluster => Surfaces.Showing(Asked);
+    /// <summary>Whether this view shows test clusters: the clusters, and the
+    /// audit records, of a run that declared itself hidden.</summary>
+    protected bool IncludeHidden => Carry.Says(AskedHidden);
+
+    /// <summary>The publication this view reads: the asked cluster's, or the
+    /// first listed where the host does not list it.</summary>
+    protected IOperatorSurface Surface => Surfaces.For(Asked, IncludeHidden);
+
+    /// <summary>The cluster this view is on, as the chooser marks it; empty
+    /// where the host lists none.</summary>
+    protected string Cluster => Surfaces.Showing(Asked, IncludeHidden);
 
     /// <summary>What a link out of this view carries: the cluster where the
-    /// host holds more than one, nothing where it holds one. A host with one
-    /// cluster writes the addresses it always wrote.</summary>
-    protected string? Carried => Surfaces.Several ? Cluster : null;
+    /// host lists more than one, and the box where it is ticked. A host with
+    /// one cluster and the box unticked writes the addresses it always
+    /// wrote.</summary>
+    protected Carry Carried =>
+        new(Surfaces.Several(IncludeHidden) ? Cluster : null, IncludeHidden);
 
     /// <summary>What the view's filter box says: a pattern over the scopes,
     /// empty for none.</summary>

@@ -9,7 +9,8 @@
 
 <PageTitle>Xmip — Event subscriptions</PageTitle>
 
-<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source" />
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
 
 <ScopeFilterBox Id="filter-event-subscriptions" Pattern="@(Asking.Pattern ?? string.Empty)"
                 PatternChanged="Patterned" Said="@PatternSaid" />
