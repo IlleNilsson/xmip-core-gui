@@ -84,7 +84,7 @@ public sealed class TwoClustersTest : BunitContext
 
         Assert.Equal("C2", Current(page));
         Assert.Contains(
-            "RoundTrip · C2 · nodes delta=receive zeta=send · online delta · harsh",
+            "RoundTrip · C2 · nodes delta=receiving zeta=sending · online delta · harsh",
             page.Find("p.run-line").TextContent,
             StringComparison.Ordinal);
 

@@ -23,7 +23,7 @@ namespace Xmip.Gui.Test;
 public sealed class ClusterTopologyTest : BunitContext
 {
     private const string RunLine =
-        "RoundTrip · C1 · nodes alpha=receive beta=process+send gamma=send · "
+        "RoundTrip · C1 · nodes alpha=receiving beta=processing+sending gamma=sending · "
         + "online alpha · realistic";
 
     public ClusterTopologyTest()
@@ -287,7 +287,7 @@ public sealed class ClusterTopologyTest : BunitContext
     }
 
     /// <summary>
-    /// What a node declares it can do reaches the operator where the operator
+    /// What a node declares — its roles — reaches the operator where the operator
     /// looks at that node (ADR-0056; ADR-0014, amendment 2026-09-19): in the
     /// run line at the top of every view, on the node in the topology's
     /// inspector, and as a row of its own in the configuration tree, where the
@@ -299,7 +299,7 @@ public sealed class ClusterTopologyTest : BunitContext
     {
         Address(ScopeLink.TopologyAt("node/beta"));
         IElement declared = Render<Topology>().Find(".topology-inspector dd.capability");
-        Assert.Equal("process+send", declared.TextContent.Split('·')[0].Trim());
+        Assert.Equal("processing+sending", declared.TextContent.Split('·')[0].Trim());
         Assert.Contains("published by the node", declared.TextContent, StringComparison.Ordinal);
         Assert.Contains(
             "authentication and runtime capability are not modelled",
@@ -308,7 +308,7 @@ public sealed class ClusterTopologyTest : BunitContext
 
         Address(ScopeLink.TopologyAt("node/alpha"));
         Assert.Contains(
-            "receive · online",
+            "receiving · online",
             Render<Topology>().Find(".topology-inspector dd.capability").TextContent,
             StringComparison.Ordinal);
 
@@ -322,7 +322,7 @@ public sealed class ClusterTopologyTest : BunitContext
         IElement row = tree.Find($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/capability")}");
         Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
         Assert.Equal(
-            "declares send; offline; authentication and runtime capability are "
+            "declares sending; offline; authentication and runtime capability are "
                 + "not modelled",
             row.QuerySelector(".evidence")?.TextContent);
     }

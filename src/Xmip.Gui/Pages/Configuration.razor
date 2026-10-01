@@ -207,7 +207,7 @@
     private static string Relative(string from, string scope) =>
         string.Join('/', ScopeTree.Parts(scope).Skip(ScopeTree.Parts(from).Length));
 
-    // What a scope is. What a node declares it can do is the node's own
+    // What a scope is. What a node declares — its roles — is the node's own
     // statement (ADR-0056); where a node publishes it is observe's to say, not
     // a leaf's name. Then what the publisher's topology says the thing is —
     // cluster, node, stage, endpoint — and beneath an endpoint, the
