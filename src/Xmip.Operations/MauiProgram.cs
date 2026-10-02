@@ -73,17 +73,20 @@ public static class MauiProgram
                 : TomlDocument.Resolve(configured, basePath),
             string.IsNullOrWhiteSpace(starts) ? null : TomlDocument.Resolve(starts, basePath)));
 
-        // The one surface every screen reads, chosen in xmip.gui.toml and never
-        // guessed (ADR-0052 clause 3): the same selection as the web host, from
-        // the same keys. The desktop configures (ADR-0014, amendment of
-        // 2026-09-05), so when the surface is the runtime and a node is named,
-        // it starts that node — the one thing a browser cannot do.
-        builder.Services.AddSingleton<IOperatorSurface>(services =>
+        // The surfaces every screen reads, chosen in xmip.gui.toml and never
+        // guessed (ADR-0052 clause 3), by the web host's one rule: one
+        // snapshot per cluster where several are named, so the desktop moves
+        // between clusters as the web does (the owner, 2026-10-02: "make it so
+        // that the desktop version opens multiple clusters too"). The desktop
+        // configures (ADR-0014, amendment of 2026-09-05), so when the surface
+        // is the runtime and a node is named, it starts that node — the one
+        // thing a browser cannot do.
+        builder.Services.AddSingleton(services =>
         {
-            IOperatorSurface surface = SurfaceChoice.Open(builder.Configuration, basePath);
+            ClusterSurfaces held = SurfaceChoice.OpenAll(builder.Configuration, basePath);
             string? node = builder.Configuration["Xmip:NodeConfiguration"];
 
-            if (surface is NativeOperator native && !string.IsNullOrWhiteSpace(node))
+            if (held.First is NativeOperator native && !string.IsNullOrWhiteSpace(node))
             {
                 ConfigurationVerdict started = native.Start(TomlDocument.Resolve(node, basePath));
 
@@ -97,16 +100,13 @@ public static class MauiProgram
                     new Dictionary<string, string> { ["configuration"] = started.Path });
             }
 
-            return surface;
+            return held;
         });
 
-        // The desktop routes to the same pages, and a page reads the set its
-        // host holds (ADR-0052, amendment 2026-09-20). The desktop starts a
-        // node from the surface it configures, so its set is that one surface;
-        // a desktop over a list of snapshots is the web host's shape and is
-        // not what the desktop is for.
+        // Configure's commands answer one surface: the first cluster's
+        // (SurfaceChoice.OpenFirst's rule), the one a node is started from.
         builder.Services.AddSingleton(services =>
-            ClusterSurfaces.Over(services.GetRequiredService<IOperatorSurface>()));
+            services.GetRequiredService<ClusterSurfaces>().First);
 
         // Validate and Start on the Configure page go through the runtime the
         // board reads when that is the native one; over a snapshot, the
