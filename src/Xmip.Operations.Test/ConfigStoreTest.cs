@@ -10,18 +10,22 @@ namespace Xmip.Operations.Test;
 /// </summary>
 public sealed class ConfigStoreTest : IDisposable
 {
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Receiver = Names.WithRole("receiving");
+    private static readonly string Sender = Names.WithRole("sending");
+
     private readonly string _directory =
         Directory.CreateTempSubdirectory("xmip-config-store-").FullName;
 
     [Fact]
     public void TheDeclaredConfigurationIsTheStartedOneWhateverItIsCalled()
     {
-        string main = Write("main.xmip.toml", "alpha");
-        string declared = Write("edge.xmip.toml", "beta");
+        string main = Write("main.xmip.toml", Receiver);
+        string declared = Write($"{Sender}.xmip.toml", Sender);
 
         IReadOnlyList<ConfigStore.Entry> entries = new ConfigStore(_directory, declared).List();
 
-        Assert.Equal(["beta", "alpha"], entries.Select(entry => entry.Name));
+        Assert.Equal([Sender, Receiver], entries.Select(entry => entry.Name));
         Assert.True(entries[0].Started);
         Assert.False(entries.Single(entry => entry.Path == main).Started);
     }
@@ -32,7 +36,7 @@ public sealed class ConfigStoreTest : IDisposable
         Assert.Empty(new ConfigStore(_directory, null).List());
         Assert.Empty(Directory.EnumerateFiles(_directory));
 
-        Write("main.xmip.toml", "alpha");
+        Write("main.xmip.toml", Receiver);
 
         Assert.False(new ConfigStore(_directory, null).List().Single().Started);
     }

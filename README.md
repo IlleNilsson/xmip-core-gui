@@ -30,15 +30,18 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Six views, and six points to drill from, in this order on the bar:
+Seven views, and seven points to drill from, in this order on the bar:
 **Configuration**, the classic tree, holding still; **Monitor**, the board
 that follows Receive → Process → Send; **Topology** (ADR-0052, amendments
 2026-09-14 and 2026-09-18); **Subscriptions**, what picks a published Message
-up and opens a Journey (ADR-0013, amendment 2026-09-30); **Event
-subscriptions**, who hears what Xmip did (ADR-0065, amendment 2026-09-29); and
-**Audit**, what every Xmip program recorded (ADR-0062, amendment 2026-09-29)
-— the last three described below, and the Subscriptions placed before the
-Event subscriptions by ADR-0052, amendment 2026-09-30. A
+up and opens a Journey (ADR-0013, amendment 2026-09-30); **Dead Message
+Queue**, the accepted Messages no Subscription matched (ADR-0052, amendment
+2026-10-01); **Event subscriptions**, who hears what Xmip did (ADR-0065,
+amendment 2026-09-29); and **Audit**, what every Xmip program recorded
+(ADR-0062, amendment 2026-09-29) — the last four described below, the
+Subscriptions placed before the Event subscriptions by ADR-0052, amendment
+2026-09-30, and the Dead Message Queue after the Subscriptions, whose
+declines it shows. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -50,7 +53,7 @@ that explains it and links to that leaf's row, with the way to it standing
 open. The Topology is always what is configured and what is observed,
 together; there is no switch between them. It opens on the cluster's nodes and
 the traffic between them, and the drill is in the address
-(`/topology?focus=node/alpha`): every node on the canvas is a link, open where
+(`/topology?focus=node/R1`): every node on the canvas is a link, open where
 something is beneath it and its configuration where nothing is, so cluster to
 node to stage to endpoint is a chain of addresses. Every line says what passes
 over it — its volume and rate, or `configured · no traffic observed` on a path
@@ -90,7 +93,7 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the five
+is gone. The navigation is one component for both hosts, `TopNav`: the seven
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
@@ -120,7 +123,7 @@ time (UTC), node, program, action, phase, severity and summary, newest first,
 a column's head sorting by it and again the other way. The filters are the
 scope pattern box every view has — the one wildcard, `observe::wildcard`,
 over each record's location — and severity, action and a time range beside
-it. Everything is in the address (`/audit?location=xmip:///C1/node/alpha&
+it. Everything is in the address (`/audit?location=xmip:///C1/node/R1&
 severity=error&sort=action&order=ascending`), so a link reproduces the view;
 a page draws 200 rows and links the next and the previous (no `Virtualize`,
 which prerendered a blank spacer). A record opens whole, every property with
@@ -142,7 +145,7 @@ mood, painted as the Monitor paints it and said in words. It drills cluster →
 node → one Subscription by name, a column's head orders by it and again the
 other way, and the pattern box narrows over each one's node and name — all
 `SubscriptionQuery`'s, all in the address (`/subscriptions?location=
-xmip:///C1/node/alpha&name=edi`). The one opened shows its configuration exactly
+xmip:///C1/node/R1&name=edi`). The one opened shows its configuration exactly
 as the TOML says it, the file it comes from, the Xmip Application that draws
 it, and who paused it while it is paused. An Operator is offered Pause while
 it picks up — what it matches is held, not picked up, and nothing is lost —
@@ -155,32 +158,61 @@ over a snapshot left where its publication says its publisher takes orders —
 and is recorded in the host's audit as `subscription.<act>`. An Observer is
 shown the list and no act (ADR-0013, amendment 2026-09-30).
 
+**The Dead Message Queue view** (`/dead-messages`; ADR-0052, amendment
+2026-10-01) lists what each node's Dead Message Queue keeps, through
+`IOperatorSurface.DeadMessages`: every accepted Message that no Subscription
+matched, kept in the Ledger with its receive context — when it was received,
+its identifier, the cluster and the node whose queue keeps it, the Receive
+Location it arrived at and how many Subscriptions declined it, the oldest
+first; a node publishes its oldest hundred. It is not a dead letter queue: a
+failed Journey never goes there, so an entry is no mood and its row is not
+painted. It drills cluster → node → one Message, a column's head orders by
+it and again the other way, and the pattern box narrows over each one's node
+and Message — all `DeadMessageQuery`'s, all in the address
+(`/dead-messages?location=xmip:///C1/node/R1&message=<id>`). The one opened
+shows its gate verdicts in the order they ran, its promoted properties and
+every Subscription asked and why it declined, in the order asked. An Operator
+is offered Replay on every row and on the one opened — once a Subscription is
+added or fixed, the Message is routed again against the node's Subscriptions
+of now, a Journey opened for each match and the entry taken out; one that
+still matches nothing stays. The Replay goes through `IOperatorSurface.Act`
+— applied in the node's process, or over a snapshot left where its
+publication says its publisher takes orders — and is recorded in the host's
+audit as `dead-message.replay`. An Observer is shown the list and no act.
+
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
 One should be able to pause, resume and remove event subscriptions*) lists
 every Event subscription the cluster's nodes hold, through
 `IOperatorSurface.EventSubscriptions`: the subscriber, a Party; the cluster and the
-node whose hub holds it; the action it subscribes to; then its state, queued
-against capacity, delivered, missed and since. A paused one is the Paused
+node whose hub holds it — the one its subscriber connected to, not the one it
+hears, for it hears the matching Events of every node of the cluster (ADR-0065,
+amendment 2026-10-02), and the links that carry them between nodes are the
+cluster's and never listed; the action it subscribes to; then its state, queued
+against capacity, delivered, missed and since. Above them, read-only, one line
+for each member a node there does not hear — *R1: not hearing `<node>`
+since `<time>`: `<why>`*, `EventSubscriptionQuery.Line` — with no act, so no
+Event is missing silently. A paused one is the Paused
 mood, painted as the Monitor paints it and said in words. It drills cluster →
 node → one Event subscription, a column's head orders by it and again the
 other way, and the pattern box narrows over each one's node and reach — all
 `EventSubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
-xmip:///C1/node/alpha&id=2`). An Operator is offered Pause or Resume, and Remove,
+xmip:///C1/node/R1&id=2`). An Operator is offered Pause or Resume, and Remove,
 on every row and on the one opened; each act goes through `IOperatorSurface.Act`
 — applied in the node's process, or over a snapshot left where its publication
 says its publisher takes orders — and is recorded in the host's audit as
 `event.<act>`. An Observer is shown the list and no act (ADR-0065,
-amendment 2026-09-29). The two views share their pieces — the drill's crumbs
+amendment 2026-09-29). The three views share their pieces — the drill's crumbs
 (`DrillTrail`), the nodes one step down (`NodeGroups`), the sortable head
 (`SortHead`), what an act came to (`ActNotes`, `ActSaid`) — so they cannot
 drift apart.
 
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
-over an audit file in the capability's shape, and the Subscriptions and
-Event subscriptions views over a publication whose publisher takes orders, so
-what is asserted is what an operator sees and no surface is faked.
+over an audit file in the capability's shape, and the Subscriptions, the
+Dead Message Queue and the Event subscriptions views over a publication
+whose publisher takes orders, so what is asserted is what an operator sees
+and no surface is faked.
 
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
@@ -231,9 +263,15 @@ that has any.
 The web GUI offers what the desktop offers, by role (ADR-0014 and ADR-0052,
 amendments 2026-09-14): an Observer watches, an Operator also pauses, resumes
 and removes. It starts no node. Both hosts take the role by one rule,
-`RoleContext.Assigned`: `Role` in `xmip.gui.toml`, else `XMIP_ROLE`, and a word
-that is no role is Observer; with none stated and no directory configured the
-tester holds every role (ADR-0009, amendment 2026-09-14).
+`RoleContext.Assigned` (in `Xmip.Surface`): `Role` in `xmip.gui.toml`, else
+`XMIP_ROLE`, and a word that is no role is Observer; with none stated and no
+directory configured the tester holds every role (ADR-0009, amendment
+2026-09-14). The same role is enforced on what other machines ask: the surface
+hub takes an act — pause, resume, remove — only where the host's role may act,
+and as the subject of the client certificate that reached it, never a name the
+caller gives — on loopback without a certificate, as the operating system
+user the host runs as; it refuses in words an act its role may not take or
+one from elsewhere without a certificate, and audits every one (ADR-0009, amendment 2026-10-03).
 
 It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an

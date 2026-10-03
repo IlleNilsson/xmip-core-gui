@@ -13,11 +13,14 @@ namespace Xmip.Operations.Test;
 /// </summary>
 public sealed class NodeConfigurationTest : IDisposable
 {
-    private const string Head = """
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Receiver = Names.WithRole("receiving");
+
+    private static readonly string Head = $"""
         [service]
-        name = "xmip-edge-01"
-        cluster_name = "lab"
-        node_name = "edge-01"
+        name = "xmip-{Receiver}"
+        cluster_name = "{Names.Name}"
+        node_name = "{Receiver}"
 
         """;
 
@@ -28,8 +31,10 @@ public sealed class NodeConfigurationTest : IDisposable
     [Fact]
     public void ADocumentTheEditorSavesValidatesInTheRuntime()
     {
-        string sample = Path.Combine(
-            Estate(), "module", "core", "operation", "gui", "samples", "edge-01.xmip.toml");
+        // The module's one sample, whatever it is called.
+        string sample = Assert.Single(Directory.GetFiles(
+            Path.Combine(Estate(), "module", "core", "operation", "gui", "samples"),
+            "*.xmip.toml"));
         NodeConfiguration node = NodeConfiguration.Read(sample);
 
         node.Processes[0].ExecutionStyle = "concurrent";
@@ -38,10 +43,10 @@ public sealed class NodeConfigurationTest : IDisposable
             Name = "archive-out",
             Start = false,
             Transport = "file",
-            Address = "C:/xmip/edge-01/out/archive",
+            Address = $"C:/xmip/{node.NodeName}/out/archive",
         });
 
-        string saved = Path.Combine(_directory, "edge-01.xmip.toml");
+        string saved = Path.Combine(_directory, Path.GetFileName(sample));
         node.Write(saved);
 
         ConfigurationVerdict verdict = _runtime.Validate(saved);
@@ -142,12 +147,12 @@ public sealed class NodeConfigurationTest : IDisposable
     [Fact]
     public void CommentsAndLayoutSurviveAnEditAndASave()
     {
-        const string Original = """
-            # The edge node in the lab. Keep this line.
+        string original = $"""
+            # The receiving node of the test cluster. Keep this line.
             [service]
-            name = "xmip-edge-01"
-            cluster_name = "lab" # the lab cluster
-            node_name = "edge-01"
+            name = "xmip-{Receiver}"
+            cluster_name = "{Names.Name}" # the test cluster
+            node_name = "{Receiver}"
 
             # The one Process.
             [[xmip_processes]]
@@ -165,7 +170,7 @@ public sealed class NodeConfigurationTest : IDisposable
 
             """;
 
-        NodeConfiguration node = NodeConfiguration.Parse(Original);
+        NodeConfiguration node = NodeConfiguration.Parse(original);
         node.Processes[0].Name = "approval-2";
         node.Processes[0].Start = false;
         node.ReceiveLocations[0].Name = "orders";
@@ -181,7 +186,7 @@ public sealed class NodeConfigurationTest : IDisposable
         node.Write(saved);
         string written = File.ReadAllText(saved);
 
-        string expected = Original
+        string expected = original
             .Replace("name = \"approval\"", "name = \"approval-2\"", StringComparison.Ordinal)
             .Replace("start = true # starts", "start = false # starts", StringComparison.Ordinal)
             .Replace("name = \"orders-in\"", "name = \"orders\"", StringComparison.Ordinal)

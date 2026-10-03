@@ -1,0 +1,164 @@
+@page "/dead-messages"
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject RoleContext Role
+@inject ProgramAudit Audited
+@inject NavigationManager Nav
+
+<PageTitle>Xmip — Dead Message Queue</PageTitle>
+
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
+
+<ScopeFilterBox Id="filter-dead-messages" Pattern="@(Asking.Pattern ?? string.Empty)"
+                PatternChanged="Patterned" Said="@PatternSaid" />
+
+@* What each node's Dead Message Queue keeps (ADR-0052, amendment
+   2026-10-01; the owner, the same day): every accepted Message that no
+   Subscription matched, kept in the Ledger with its receive context. It is
+   not a dead letter queue: a failed Journey never goes there. Listed per
+   cluster and node, as every view drills; one opened shows its gate
+   verdicts, its promoted properties and every Subscription's decline. The
+   drill is in the address: cluster, node, one Message, the pattern and the
+   order are a link that reproduces the view. An Operator replays once a
+   Subscription is added or fixed; an Observer is shown the list and no
+   act. *@
+<section class="drill subscriptions dead-message-queue">
+    <DrillTrail Top="dead message queue" Location="@Asking.Location" Carried="@Carried"
+                At="@(at => Link(Asking with { Location = at, Message = null }))"
+                Opened="@(Asking.Message is { } message
+                    ? ($"message {message}", Link(Asking))
+                    : null)" />
+
+    <ActNotes Refusal="@Refusal" Answer="@Answer" Counted="@Counted"
+              Where="@ActSaid.Where(Surface, Listed.Orders,
+                  "the node whose queue keeps the Message",
+                  "the node whose queue keeps the Message")" />
+
+    @if (Detail is { } one)
+    {
+        <DeadMessageDetail Message="one" MayAct="Role.MayOperate()" Acted="Act" />
+    }
+    else
+    {
+        <NodeGroups TRecord="DeadMessageRecord" Records="Shown" Location="@Asking.Location"
+                    NodeOf="m => m.Node" Paused="_ => false" Noun="Message(s)"
+                    Mood="_ => MoodClass.None" Evidence="Evidence"
+                    At="@(node => Link(Asking with { Location = node, Message = null }))"
+                    Figures="Figures" />
+
+        <DeadMessageTable Records="Shown" Query="Asking" Carried="@Carried"
+                          MayAct="Role.MayOperate()" Acted="Act" />
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "location")] public string? AskedLocation { get; set; }
+    [SupplyParameterFromQuery(Name = "message")] public string? AskedMessage { get; set; }
+    [SupplyParameterFromQuery(Name = "pattern")] public string? AskedPattern { get; set; }
+    [SupplyParameterFromQuery(Name = "sort")] public string? AskedSort { get; set; }
+    [SupplyParameterFromQuery(Name = "order")] public string? AskedOrder { get; set; }
+
+    private DeadMessageQuery Asking { get; set; } = new();
+
+    private DeadMessageList Listed { get; set; } = DeadMessageList.Empty;
+
+    private IReadOnlyList<DeadMessageRecord> Shown { get; set; } = [];
+
+    // What the query was refused, read again with the view; and what the
+    // last act said, which stays while the publications tick under it.
+    private string Refusal { get; set; } = string.Empty;
+
+    private string Answer { get; set; } = string.Empty;
+
+    private DeadMessageRecord? Detail =>
+        Asking.Message is not null && Shown is [var one] ? one : null;
+
+    private string Counted =>
+        $"{English.Figure((ulong)Shown.Count)} of "
+        + $"{English.Figure((ulong)Listed.DeadMessages.Count)} Message(s) in the Dead Message "
+        + "Queue · each node publishes its oldest hundred";
+
+    private string PatternSaid =>
+        !string.IsNullOrEmpty(Asking.Pattern)
+            ? $"{English.Figure((ulong)Shown.Count)} Message(s) match {Asking.Pattern}"
+            : string.Empty;
+
+    protected override void Read()
+    {
+        // A view asked for a cluster and for no one in it stands at that
+        // cluster: the scope its publisher publishes at, never a name.
+        string? location = AskedLocation;
+        if (location is null && Asked is not null)
+        {
+            location = Surface.Root();
+        }
+
+        Asking = new DeadMessageQuery
+        {
+            Location = location,
+            Message = string.IsNullOrEmpty(AskedMessage) ? null : AskedMessage,
+            Pattern = AskedPattern,
+            Sort = AskedSort,
+            Order = AskedOrder,
+        };
+
+        Listed = Surface.DeadMessages();
+        Refusal = string.Empty;
+        try
+        {
+            Shown = Asking.Apply(Listed.DeadMessages);
+        }
+        catch (ArgumentException refused)
+        {
+            Shown = [];
+            Refusal = English.Refusal(refused);
+        }
+    }
+
+    private string Link(DeadMessageQuery query) => ScopeLink.DeadMessages(query, Carried);
+
+    private void Patterned(string pattern) =>
+        Nav.NavigateTo(Link(Asking with { Pattern = pattern.Length == 0 ? null : pattern }));
+
+    private static string Evidence(IEnumerable<DeadMessageRecord> node) =>
+        $"oldest {English.Age(node.Min(m => m.Received))}";
+
+    private static string Figures(IEnumerable<DeadMessageRecord> node) =>
+        $"{English.Figure((ulong)node.Sum(m => m.Declines.Count))} decline(s)";
+
+    // A Replay, by a role that may act: taken through the surface, recorded
+    // in this host's audit with what came of it (ADR-0062) under the action
+    // observe::Noun::DeadMessage gives it — dead-message.replay — and said.
+    // An Observer is shown no act; one that reached here anyway is refused.
+    private void Act((DeadMessageRecord Message, DeadMessageAct Act) asked)
+    {
+        (DeadMessageRecord message, DeadMessageAct act) = asked;
+        string action = $"{DeadMessageOperation.Noun}.{DeadMessageOperation.Word(act)}";
+
+        if (!Role.MayOperate())
+        {
+            Answer = ActSaid.Refused(
+                Role.Role, DeadMessageOperation.Word(act), "a Message in a Dead Message Queue");
+            Audited.Record(action, AuditPhase.Failure, AuditSeverity.Warning, Answer);
+            return;
+        }
+
+        string who = ScopeOperation.Who(null);
+        DeadMessageOperation done = Surface.Act(message, act, who);
+        Audited.Record(
+            action,
+            done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
+            done.Applied ? AuditSeverity.Information : AuditSeverity.Warning,
+            done.Result,
+            new Dictionary<string, string>
+            {
+                ["node"] = message.Node,
+                ["message"] = message.Message,
+                ["who"] = who,
+            });
+        Answer = ActSaid.Answer(done.Applied, done.Result);
+        Read();
+    }
+}

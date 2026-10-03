@@ -18,7 +18,9 @@ Surface = "native"
 # pauses, resumes and removes, developer also opens configuration. Else
 # XMIP_ROLE; stated by neither, the role is the directory's, and with none
 # configured the tester holds every role (ADR-0014 and ADR-0052, amendments
-# 2026-09-14). A word that is no role is observer.
+# 2026-09-14). A word that is no role is observer. The surface hub at /surface
+# refuses by it every act another machine asks for (ADR-0009, amendment
+# 2026-10-03).
 # Role = "observer"
 
 # The runtime's native library, exporting xmip_operate_v1. Found by one rule

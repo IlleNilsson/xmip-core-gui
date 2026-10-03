@@ -37,6 +37,11 @@
              Link="Configuration\NodeConfiguration.cs" />
     <Compile Include="..\Xmip.Operations\Configuration\ConfigStore.cs"
              Link="Configuration\ConfigStore.cs" />
+    <!-- The test cluster's names, read by the one helper every .NET test
+         shares (ADR-0056, amendment 2026-10-03). -->
+    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"
+             Link="TestCluster.cs" />
+    <Using Include="Xmip.Surface.Test" />
     <Using Include="Xunit" />
   </ItemGroup>
 

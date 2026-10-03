@@ -1,6 +1,7 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Xmip.Abi.Operate;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Surface;
@@ -11,17 +12,33 @@ namespace Xmip.Gui.Test;
 /// The web GUI is three points to drill from — Configuration, Monitor and
 /// Topology — and from any of them a scope leads to the same scope in the
 /// others (ADR-0052, amendments 2026-09-14 and 2026-09-18). Rendered over the
-/// surface library's own fixture: edge-01 holds a done Receive Location and a
-/// stressed Xmip Process, edge-02 a paused Send Location and a fine one.
+/// surface library's own fixture: one node holds a done Receive Location and a
+/// stressed Xmip Process, the other a paused Send Location and a fine one. The
+/// scopes are read from the fixture, never written here.
 /// </summary>
 public sealed class ThreeViewsTest : BunitContext
 {
-    private const string Done = "xmip:///edge-01/receive/party";
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Fixture =
+        Path.Combine(AppContext.BaseDirectory, "Fixture", "snapshot.toml");
+    private static readonly HealthRecord[] Records =
+        [.. new SnapshotOperator(Fixture).Health(ScopeTree.Root)];
+
+    /// <summary>The done Receive Location.</summary>
+    private static readonly string Done =
+        Records.Single(record => record.State == HealthState.Done).Scope;
+
+    /// <summary>The node holding it, the first segment of its scope.</summary>
+    private static readonly string Troubled = $"{ScopeTree.Root}{ScopeTree.Segment(Done, 0)}";
+
+    /// <summary>The fine Send Location on the other node.</summary>
+    private static readonly string Fine = Records.Single(record =>
+        record.State == HealthState.Fine
+        && !record.Scope.StartsWith($"{Troubled}/", StringComparison.Ordinal)).Scope;
 
     public ThreeViewsTest()
     {
-        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "snapshot.toml");
-        Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
+        Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(Fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer));
     }
 
@@ -32,12 +49,12 @@ public sealed class ThreeViewsTest : BunitContext
 
         // The owner, 2026-09-18: the severity was there and the way to the
         // problem area was not.
-        AngleSharp.Dom.IElement node = page.Find($"#{ScopeLink.Anchor("xmip:///edge-01")}");
+        AngleSharp.Dom.IElement node = page.Find($"#{ScopeLink.Anchor(Troubled)}");
         AngleSharp.Dom.IElement problem = node.QuerySelector("a.tree-link.problem")
             ?? throw new InvalidOperationException("no problem link on a troubled node");
 
         Assert.Equal(ScopeLink.Configuration(Done), problem.GetAttribute("href"));
-        Assert.Contains("receive/party", node.TextContent, StringComparison.Ordinal);
+        Assert.Contains(Done[(Troubled.Length + 1)..], node.TextContent, StringComparison.Ordinal);
         Assert.Contains("connection refused", node.TextContent, StringComparison.Ordinal);
         Assert.NotNull(page.Find($"#{ScopeLink.Anchor(Done)}"));
     }
@@ -47,11 +64,10 @@ public sealed class ThreeViewsTest : BunitContext
     {
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
-        AngleSharp.Dom.IElement fine =
-            page.Find($"#{ScopeLink.Anchor("xmip:///edge-02/send/billing")}");
+        AngleSharp.Dom.IElement fine = page.Find($"#{ScopeLink.Anchor(Fine)}");
         Assert.Null(fine.QuerySelector("a.tree-link.problem"));
         Assert.Equal(
-            ScopeLink.Monitor("xmip:///edge-02/send/billing"),
+            ScopeLink.Monitor(Fine),
             fine.QuerySelector("a.tree-link")?.GetAttribute("href"));
 
         // Branch or leaf, a row is somewhere a link from another view can land.
@@ -114,20 +130,20 @@ public sealed class ThreeViewsTest : BunitContext
 
         // Beneath the root it lands on the row itself, and the row is there.
         Services.GetRequiredService<NavigationManager>()
-            .NavigateTo(ScopeLink.Monitor("xmip:///edge-01/receive"));
+            .NavigateTo(ScopeLink.Monitor($"{Troubled}/receive"));
         string? deeper = Render<Cluster>().Find("nav.crumbs a.crumb-link").GetAttribute("href");
-        Assert.Equal(ScopeLink.Configuration("xmip:///edge-01/receive"), deeper);
+        Assert.Equal(ScopeLink.Configuration($"{Troubled}/receive"), deeper);
         Assert.NotNull(
-            Render<Configuration>().Find($"#{ScopeLink.Anchor("xmip:///edge-01/receive")}"));
+            Render<Configuration>().Find($"#{ScopeLink.Anchor($"{Troubled}/receive")}"));
     }
 
     [Fact]
     public void AScopeIsWrittenTheSameWayByEveryView()
     {
-        Assert.Equal("s-xmip----C1-node-alpha", ScopeLink.Anchor("xmip:///C1/node/alpha"));
-        Assert.Equal(
-            "configuration#s-xmip----C1-node-alpha",
-            ScopeLink.Configuration("xmip:///C1/node/alpha"));
-        Assert.Equal("/?scope=xmip%3A%2F%2F%2FC1", ScopeLink.Monitor("xmip:///C1"));
+        string node = Names.NodeScope(0);
+        string anchor = $"s-xmip----{Names.Name}-node-{Names.Nodes[0]}";
+        Assert.Equal(anchor, ScopeLink.Anchor(node));
+        Assert.Equal($"configuration#{anchor}", ScopeLink.Configuration(node));
+        Assert.Equal($"/?scope=xmip%3A%2F%2F%2F{Names.Name}", ScopeLink.Monitor(Names.Scope));
     }
 }

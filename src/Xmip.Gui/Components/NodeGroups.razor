@@ -2,21 +2,20 @@
 @using Xmip.Gui.Surface
 
 @* The nodes beneath where a subscriptions view's drill stands, one step
-   down, written once for both kinds: each node a link to the view standing
-   there, painted Paused where any of its subscriptions is, said in words
-   beside the dot, and with what the kind counts. Gone once a node is the
-   place. *@
+   down, written once for both kinds and for the Dead Message Queue: each
+   node a link to the view standing there, painted Paused where any of its
+   subscriptions is, said in words beside the dot, and with what the kind
+   counts. Gone once a node is the place. *@
 @if (Groups.Count > 0)
 {
     <div class="branches subs-groups">
         @foreach (IGrouping<string, TRecord> node in Groups)
         {
-            <a class="branch subs-group @MoodClass.Paused(node.Any(Paused))"
-               href="@At(node.Key)">
+            <a class="branch subs-group @Painted(node)" href="@At(node.Key)">
                 <span class="dot"></span>
                 <span class="label">@ScopeTree.Node(node.Key)</span>
                 <span class="worst">node · @node.Count() @Noun</span>
-                <span class="evidence">@Said(node.Count(Paused))</span>
+                <span class="evidence">@Saying(node)</span>
                 <span class="figures">@Figures(node)</span>
             </a>
         }
@@ -52,11 +51,28 @@
     [Parameter, EditorRequired]
     public Func<IEnumerable<TRecord>, string> Figures { get; set; } = _ => string.Empty;
 
+    /// <summary>The mood classes a node's group is painted with, for a kind
+    /// that is never paused — a Dead Message Queue's entries; null paints
+    /// Paused where any of the node's records is.</summary>
+    [Parameter]
+    public Func<IEnumerable<TRecord>, string>? Mood { get; set; }
+
+    /// <summary>What a node's group says beside its dot, for a kind that is
+    /// never paused; null says how many are paused.</summary>
+    [Parameter]
+    public Func<IEnumerable<TRecord>, string>? Evidence { get; set; }
+
     private IReadOnlyList<IGrouping<string, TRecord>> Groups =>
         Location is { Length: > 0 } at && ScopeTree.Node(at).Length > 0
             ? []
             : [.. Records.GroupBy(NodeOf, StringComparer.Ordinal)
                 .OrderBy(group => group.Key, StringComparer.Ordinal)];
+
+    private string Painted(IGrouping<string, TRecord> node) =>
+        Mood?.Invoke(node) ?? MoodClass.Paused(node.Any(Paused));
+
+    private string Saying(IGrouping<string, TRecord> node) =>
+        Evidence?.Invoke(node) ?? Said(node.Count(Paused));
 
     private static string Said(int paused) =>
         paused == 0 ? "none paused" : $"{paused} paused";

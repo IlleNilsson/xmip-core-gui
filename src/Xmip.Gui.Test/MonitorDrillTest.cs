@@ -15,11 +15,13 @@ namespace Xmip.Gui.Test;
 /// not work and datapoints are wrong*, *the operation web is not drillable
 /// and has too many headers*, and *it is all about solving the problem*.
 /// Rendered over the surface library's cluster fixture, whose worst leaf is
-/// gamma's tcp/json Send Location.
+/// the sending node's tcp/json Send Location.
 /// </summary>
 public sealed class MonitorDrillTest : BunitContext
 {
-    private const string Leaf = "xmip:///C1/node/gamma/send/tcp/json";
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Sender = Names.WithRole("sending");
+    private static readonly string Leaf = $"{Names.Scope}/node/{Sender}/send/tcp/json";
 
     public MonitorDrillTest()
     {
@@ -54,18 +56,18 @@ public sealed class MonitorDrillTest : BunitContext
     {
         IRenderedComponent<Cluster> page = Render<Cluster>();
 
-        // One cluster, named once: no "cluster" crumb above C1, and the rows
-        // are what is beneath C1 rather than C1 alone.
-        Assert.Equal(["C1"], Crumbs(page));
+        // One cluster, named once: no "cluster" crumb above it, and the rows
+        // are what is beneath it rather than the cluster alone.
+        Assert.Equal([Names.Name], Crumbs(page));
         Assert.Equal(
-            [ScopeLink.Monitor("xmip:///C1/node")],
+            [ScopeLink.Monitor($"{Names.Scope}/node")],
             page.FindAll("section.drill a.branch").Select(row => row.GetAttribute("href")));
     }
 
     [Fact]
     public void TheWorstRowAtEveryLevelLeadsToTheLeafAndTheLeafShowsItsRecord()
     {
-        string at = "xmip:///C1";
+        string at = Names.Scope;
 
         for (int step = 0; step < 8; step++)
         {
@@ -89,7 +91,7 @@ public sealed class MonitorDrillTest : BunitContext
         AngleSharp.Dom.IElement record = bottom.Find("section.drill .drill-leaf");
         Assert.Contains("2/3 rounds passed, 1 failed", record.TextContent, StringComparison.Ordinal);
         Assert.Contains("severity 40", record.TextContent, StringComparison.Ordinal);
-        Assert.Equal(["C1", "node", "gamma", "send", "tcp", "json"], Crumbs(bottom));
+        Assert.Equal([Names.Name, "node", Sender, "send", "tcp", "json"], Crumbs(bottom));
     }
 
     [Fact]
@@ -98,7 +100,7 @@ public sealed class MonitorDrillTest : BunitContext
         AngleSharp.Dom.IElement why = Render<Cluster>().Find("section.cluster .why a.leaf");
 
         Assert.Equal(ScopeLink.Monitor(Leaf), why.GetAttribute("href"));
-        Assert.Equal("node/gamma/send/tcp/json", why.TextContent);
+        Assert.Equal($"node/{Sender}/send/tcp/json", why.TextContent);
     }
 
     [Fact]
@@ -110,10 +112,11 @@ public sealed class MonitorDrillTest : BunitContext
             ScopeLink.Monitor(Leaf),
             page.FindAll("section.list .row a.scope").Select(link => link.GetAttribute("href")));
         Assert.Equal(
+            // The fixture's three nodes, by name.
             [
-                ScopeLink.Monitor("xmip:///C1/node/alpha"),
-                ScopeLink.Monitor("xmip:///C1/node/beta"),
-                ScopeLink.Monitor("xmip:///C1/node/gamma"),
+                .. new[] { Names.WithRole("receiving"), Names.WithRole("processing"), Sender }
+                    .Order(StringComparer.Ordinal)
+                    .Select(name => ScopeLink.Monitor($"{Names.Scope}/node/{name}")),
             ],
             page.FindAll("section.nodes .row a.scope").Select(link => link.GetAttribute("href")));
     }
@@ -121,7 +124,7 @@ public sealed class MonitorDrillTest : BunitContext
     [Fact]
     public void TheTopologysOpenNodeNamesItsProblemAndLinksToIt()
     {
-        Address(ScopeLink.TopologyAt("node/gamma"));
+        Address(ScopeLink.TopologyAt($"node/{Sender}"));
 
         AngleSharp.Dom.IElement problem =
             Render<Topology>().Find("aside.topology-inspector dd .why a.leaf");
@@ -132,25 +135,26 @@ public sealed class MonitorDrillTest : BunitContext
     [Fact]
     public void ALocationsOwnVerdictStandsAboveWhatIsBeneathIt()
     {
-        // 2026-09-26, C1: the drill's last step at a Done Send Location showed
+        // 2026-09-26: the drill's last step at a Done Send Location showed
         // only its fine identity step, and the cause was gone.
         string path = Path.Combine(Path.GetTempPath(), $"xmip-own-{Guid.NewGuid():N}.toml");
-        File.WriteAllText(path, """
-            node = "xmip:///C1"
+        string location = $"{Names.Scope}/node/{Sender}/send/dns/regex";
+        File.WriteAllText(path, $"""
+            node = "{Names.Scope}"
             [[records]]
-            scope = "xmip:///C1/node/gamma/send/dns/regex"
+            scope = "{location}"
             state = "done"
             severity = 90
             evidence = "no port was free"
             [[records]]
-            scope = "xmip:///C1/node/gamma/send/dns/regex/identity"
+            scope = "{location}/identity"
             state = "fine"
             """);
         using BunitContext own = new();
         own.Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(path)));
         own.Services.AddSingleton(new RoleContext(Role.Observer));
         own.Services.GetRequiredService<NavigationManager>()
-            .NavigateTo(ScopeLink.Monitor("xmip:///C1/node/gamma/send/dns/regex"));
+            .NavigateTo(ScopeLink.Monitor(location));
 
         IRenderedComponent<Cluster> page = own.Render<Cluster>();
 

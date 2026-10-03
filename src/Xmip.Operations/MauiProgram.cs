@@ -2,7 +2,6 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
-using Xmip.Gui.Surface;
 using Xmip.Operations.Configuration;
 using Xmip.Surface;
 

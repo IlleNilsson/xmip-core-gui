@@ -250,7 +250,7 @@
         Go(Asking with { Pattern = pattern.Length == 0 ? null : pattern, Offset = 0 });
 
     // A scope's group is named by its last segment beside its kind: cluster
-    // C1, node alpha.
+    // <cluster>, node <node>.
     private static string Label(AuditGroup group) =>
         group.Kind is not ("program" or "host") && ScopeTree.Parts(group.Who) is [.., var last]
             ? last

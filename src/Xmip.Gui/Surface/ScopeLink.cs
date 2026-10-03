@@ -3,9 +3,10 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the views. The web GUI is six points
+/// Where a scope is reached in each of the views. The web GUI is seven points
 /// to drill from — Configuration, Monitor, Topology, Subscriptions (since
-/// 2026-09-30), Event subscriptions and Audit (since 2026-09-29) — and from
+/// 2026-09-30), Dead Message Queue (since 2026-10-03), Event subscriptions and
+/// Audit (since 2026-09-29) — and from
 /// any of them a scope leads to the same scope in the others (the owner,
 /// 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link from any view
 /// ends at the view of the actual configuration). One place writes the
@@ -120,6 +121,27 @@ public static class ScopeLink
             carry,
             ("location", query.Location),
             ("name", query.Name),
+            ("pattern", query.Pattern),
+            ("sort", query.Sort),
+            ("order", query.Order));
+    }
+
+    /// <summary>
+    /// The Dead Message Queue view asking <paramref name="query"/>, on this
+    /// cluster: where the drill stands, the one Message by its identifier,
+    /// the pattern and the order, by the names <see cref="DeadMessageQuery"/>
+    /// gives them, so a link reproduces the view (ADR-0052, amendment
+    /// 2026-10-01).
+    /// </summary>
+    public static string DeadMessages(DeadMessageQuery query, Carry? carry = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        return Address(
+            "/dead-messages",
+            carry,
+            ("location", query.Location),
+            ("message", query.Message),
             ("pattern", query.Pattern),
             ("sort", query.Sort),
             ("order", query.Order));

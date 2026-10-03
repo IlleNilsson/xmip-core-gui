@@ -34,6 +34,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The test cluster's names, read by the one helper every .NET test
+         shares (ADR-0056, amendment 2026-10-03). -->
+    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"
+             Link="TestCluster.cs" />
+    <Using Include="Xmip.Surface.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The surface library's own fixtures: a copy would drift from them. -->
     <None Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Fixture\*.toml"
           Link="Fixture\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
