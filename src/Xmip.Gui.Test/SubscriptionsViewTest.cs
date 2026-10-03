@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Gui.Components;
 using Xmip.Gui.Pages;
-using Xmip.Gui.Surface;
 using Xmip.Surface;
 
 namespace Xmip.Gui.Test;
@@ -12,8 +11,9 @@ namespace Xmip.Gui.Test;
 /// The Subscriptions view (the owner, 2026-09-30: *a Subscription view, for
 /// all subscriptions per cluster, with pause and resume, but not remove. That
 /// is handled with the TOML configuration files*; ADR-0013, amendment of the
-/// same date). Rendered over a publication of cluster CT whose nodes alpha and gamma
-/// route by three Subscriptions and whose publisher takes orders: the list,
+/// same date). Rendered over a publication of the test cluster whose receiving
+/// and sending nodes route by three Subscriptions and whose publisher takes
+/// orders: the list,
 /// the drill to a node and to one Subscription with its configuration as the
 /// file says it, the acts an Operator takes — Pause and Resume, never Remove —
 /// the list an Observer is shown without them, and every act in the host's
@@ -24,20 +24,28 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     private const string Edi = "[[subscriptions]]\nname = \"edi\"\n"
         + "filter = \"MessageType = 'edi'\"\nsend_port = \"RoundTripOut\"";
 
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Receiver = Names.WithRole("receiving");
+    private static readonly string Sender = Names.WithRole("sending");
+
+    /// <summary>The receiving node's address, escaped for a query.</summary>
+    private static readonly string AtReceiver =
+        Uri.EscapeDataString($"{Names.Scope}/node/{Receiver}");
+
     private readonly string _place = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-subscriptions-{Guid.NewGuid():N}");
 
     public SubscriptionsViewTest()
     {
         Directory.CreateDirectory(_place);
-        string snapshot = Path.Combine(_place, "CT-snapshot.toml");
+        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.toml");
         File.WriteAllText(
             snapshot,
-            "node = \"xmip:///CT\"\n"
+            $"node = \"{Names.Scope}\"\n"
             + $"orders = '{Orders}'\n"
-            + Entry("alpha", "structured", "active", 12, 0)
-            + Entry("alpha", "edi", "paused", 3, 9)
-            + Entry("gamma", "flat", "active", 40, 0));
+            + Entry(Receiver, "structured", "active", 12, 0)
+            + Entry(Receiver, "edi", "paused", 3, 9)
+            + Entry(Sender, "flat", "active", 40, 0));
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
@@ -52,7 +60,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
             ? Edi
             : $"[[subscriptions]]\nname = \"{name}\"";
 
-        return $"[[subscriptions]]\nnode = \"xmip:///CT/node/{node}\"\nname = \"{name}\"\n"
+        return $"[[subscriptions]]\nnode = \"{Names.Scope}/node/{node}\"\nname = \"{name}\"\n"
             + "application = \"RoundTrip\"\n"
             + $"filter = \"MessageType = '{name}'\"\n"
             + "destination = \"the Send Port 'RoundTripOut'\"\n"
@@ -91,8 +99,8 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
 
         // By its configured name, the first column, then by node.
         Assert.Equal(["edi", "flat", "structured"], Column(page, "name"));
-        Assert.Equal(["CT", "CT", "CT"], Column(page, "cluster"));
-        Assert.Equal(["alpha", "gamma", "alpha"], Column(page, "node"));
+        Assert.Equal([Names.Name, Names.Name, Names.Name], Column(page, "cluster"));
+        Assert.Equal([Receiver, Sender, Receiver], Column(page, "node"));
         Assert.Equal(
             ["MessageType = 'edi'", "MessageType = 'flat'", "MessageType = 'structured'"],
             Column(page, "filter"));
@@ -105,7 +113,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
                 "held", "since"],
             page.FindAll("a.subs-sort").Select(head => head.TextContent.Trim()));
         Assert.Equal(
-            ["alpha", "gamma"],
+            [Receiver, Sender],
             page.FindAll("a.subs-group .label").Select(label => label.TextContent.Trim()));
         Assert.Contains("1 paused", page.Find(".subs-count").TextContent, StringComparison.Ordinal);
     }
@@ -114,12 +122,12 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void TheDrillStandsAtANode()
     {
         IRenderedComponent<Subscriptions> node =
-            At("/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2Falpha", Role.Observer);
+            At($"/subscriptions?location={AtReceiver}", Role.Observer);
 
         Assert.Equal(["edi", "structured"], Column(node, "name"));
         Assert.Empty(node.FindAll("a.subs-group"));
         Assert.Equal(
-            ["subscriptions", "cluster CT", "node alpha"],
+            ["subscriptions", $"cluster {Names.Name}", $"node {Receiver}"],
             node.FindAll(".crumbs .crumb-btn").Select(crumb => crumb.TextContent.Trim()));
     }
 
@@ -127,10 +135,10 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void OneSubscriptionShowsItsConfigurationAsTheFileSaysIt()
     {
         IRenderedComponent<Subscriptions> page = At(
-            "/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2Falpha&name=edi", Role.Observer);
+            $"/subscriptions?location={AtReceiver}&name=edi", Role.Observer);
 
         Assert.Contains(
-            "Subscription edi on alpha", page.Find(".subs-detail h2").TextContent,
+            $"Subscription edi on {Receiver}", page.Find(".subs-detail h2").TextContent,
             StringComparison.Ordinal);
         Assert.Equal(Edi, page.Find("pre.subs-configuration").TextContent.TrimEnd('\n'));
         Assert.Equal("applications/round-trip.xmip.toml", page.Find(".subs-file").TextContent);
@@ -138,7 +146,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             "RoundTrip", page.Find(".subs-fields").TextContent, StringComparison.Ordinal);
         Assert.Equal(
-            ["subscriptions", "cluster CT", "node alpha", "subscription edi"],
+            ["subscriptions", $"cluster {Names.Name}", $"node {Receiver}", "subscription edi"],
             page.FindAll(".crumbs .crumb-btn").Select(crumb => crumb.TextContent.Trim()));
     }
 
@@ -149,7 +157,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         Assert.Empty(list.FindAll("button"));
 
         Services.GetRequiredService<NavigationManager>().NavigateTo(
-            "/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2Falpha&name=edi");
+            $"/subscriptions?location={AtReceiver}&name=edi");
         IRenderedComponent<Subscriptions> one = Render<Subscriptions>();
         Assert.Single(one.FindAll(".subs-detail"));
         Assert.Empty(one.FindAll("button"));
@@ -178,9 +186,9 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
 
         Assert.Equal(
             ["subscription structured pause", "subscription edi resume"],
-            OrdersLeft.For(Orders, "alpha"));
+            OrdersLeft.For(Orders, Receiver));
         Assert.Contains(
-            "left for alpha", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
+            $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"subscription.pause\"", audit, StringComparison.Ordinal);
@@ -192,14 +200,14 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public void AnOpenedSubscriptionIsActedOnAndSaysWhatTheActDoes()
     {
         IRenderedComponent<Subscriptions> page = At(
-            "/subscriptions?location=xmip%3A%2F%2F%2FCT%2Fnode%2Falpha&name=edi", Role.Operator);
+            $"/subscriptions?location={AtReceiver}&name=edi", Role.Operator);
 
         Assert.Equal("Resume", page.Find(".subs-detail button").TextContent.Trim());
         Assert.Equal(SubscriptionActs.ResumeSaid, page.Find(".subs-act-said").TextContent.Trim());
 
         page.Find(".subs-detail button").Click();
 
-        Assert.Equal(["subscription edi resume"], OrdersLeft.For(Orders, "alpha"));
+        Assert.Equal(["subscription edi resume"], OrdersLeft.For(Orders, Receiver));
     }
 
     [Fact]

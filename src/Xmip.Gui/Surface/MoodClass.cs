@@ -14,6 +14,11 @@ namespace Xmip.Gui.Surface;
 /// </summary>
 public static class MoodClass
 {
+    /// <summary>The class for no mood: nothing is recorded, or what is shown
+    /// is no health — a Message in a Dead Message Queue. Nothing is not
+    /// Fine.</summary>
+    public const string None = "none";
+
     /// <summary>The classes for one mood: <c>done red</c>.</summary>
     public static string Of(HealthState state)
     {
@@ -31,6 +36,6 @@ public static class MoodClass
     /// <c>none</c> when nothing is recorded — nothing is not Fine.</summary>
     public static string Of(IEnumerable<HealthRecord> records)
     {
-        return ScopeTree.Rollup(records) is HealthState rolled ? Of(rolled) : "none";
+        return ScopeTree.Rollup(records) is HealthState rolled ? Of(rolled) : None;
     }
 }

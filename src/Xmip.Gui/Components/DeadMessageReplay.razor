@@ -1,0 +1,25 @@
+@using Xmip.Abi.Operate
+
+@* The one act on a Message in a Dead Message Queue, written once for its row
+   and its opened view: Replay, once a Subscription is added or fixed
+   (ADR-0052, amendment 2026-10-01). The button says in its title what a
+   Replay does to the Message. *@
+<button class="act" title="@ReplaySaid"
+        @onclick="() => Acted.InvokeAsync((Message, DeadMessageAct.Replay))">
+    Replay
+</button>
+
+@code {
+    /// <summary>What a Replay does, in the words the view says it.</summary>
+    public const string ReplaySaid =
+        "Routed again against the node's Subscriptions of now: a Journey is opened for each "
+        + "match and the Message leaves the queue; one that still matches nothing stays.";
+
+    /// <summary>The Message replayed.</summary>
+    [Parameter, EditorRequired]
+    public DeadMessageRecord Message { get; set; } = default!;
+
+    /// <summary>Raised with the Message and the act taken on it.</summary>
+    [Parameter]
+    public EventCallback<(DeadMessageRecord, DeadMessageAct)> Acted { get; set; }
+}

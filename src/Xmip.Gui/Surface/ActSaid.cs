@@ -3,9 +3,10 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// What a subscriptions view says of an act, written once for both kinds —
-/// the Subscriptions (ADR-0013, amendment 2026-09-30) and the Event
-/// subscriptions (ADR-0065, amendment 2026-09-29): where an act goes, what
+/// What a view that acts on what a node publishes says of an act, written
+/// once for every kind — the Subscriptions (ADR-0013, amendment 2026-09-30),
+/// the Event subscriptions (ADR-0065, amendment 2026-09-29) and the Dead
+/// Message Queue (ADR-0052, amendment 2026-10-01): where an act goes, what
 /// came of it, and the refusal a role that only watches is given.
 /// </summary>
 public static class ActSaid

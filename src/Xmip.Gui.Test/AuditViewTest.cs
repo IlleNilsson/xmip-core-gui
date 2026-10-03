@@ -12,27 +12,44 @@ namespace Xmip.Gui.Test;
 /// The Audit view (the owner, 2026-09-29: *the operation web needs an audit
 /// view: audited entries in the clusters. Drill-down, sorting and
 /// filtering*; ADR-0062, amendment of the same date). Rendered over an audit
-/// file in the shape the capability writes it: a roll and a node of C1 that
-/// declared their locations, a node of C2, and a cmdlet that declared none.
+/// file in the shape the capability writes it: a roll and a node of the test
+/// cluster that declared their locations, a node of the second cluster
+/// fixture's, and a cmdlet that declared none.
 /// </summary>
 public sealed class AuditViewTest : BunitContext, IDisposable
 {
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string First = Names.Name;
+    private static readonly string Receiver = Names.WithRole("receiving");
+    private static readonly string Node = $"{Names.Scope}/node/{Receiver}";
+    private static readonly string NodeProgram = $"xmip-playground-{First}-node-{Receiver}";
+    private static readonly string RollProgram = $"xmip-playground-{First}-roll";
+
+    /// <summary>The second cluster, as its fixture's publication names it.</summary>
+    private static readonly string Second = ClusterSurfaces.NameOf(new SnapshotOperator(
+        Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster-c2.toml")));
+
+    /// <summary>The machine the records were written on.</summary>
+    private static readonly string Host = Environment.MachineName.ToLowerInvariant();
+
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-audit-{Environment.ProcessId}-{Guid.NewGuid():N}");
 
     public AuditViewTest()
     {
+        string sender = Names.WithRole("sending");
         Directory.CreateDirectory(_directory);
         File.WriteAllText(
             Path.Combine(_directory, "audit.toml"),
-            Record("01", "2026-09-29T10:00:01.000000000Z", "xmip-playground-C1-roll",
-                "xmip:///C1", "start", "begin", "information", null)
-            + Record("02", "2026-09-29T10:00:02.000000000Z", "xmip-playground-C1-node-alpha",
-                "xmip:///C1/node/alpha", "start", "begin", "information", null)
-            + Record("03", "2026-09-29T10:00:03.000000000Z", "xmip-playground-C1-node-alpha",
-                "xmip:///C1/node/alpha", "publish", "failure", "error", "could not write")
-            + Record("04", "2026-09-29T10:00:04.000000000Z", "xmip-playground-C2-node-beta",
-                "xmip:///C2/node/beta", "start", "begin", "information", null)
+            Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
+                Names.Scope, "start", "begin", "information", null)
+            + Record("02", "2026-09-29T10:00:02.000000000Z", NodeProgram,
+                Node, "start", "begin", "information", null)
+            + Record("03", "2026-09-29T10:00:03.000000000Z", NodeProgram,
+                Node, "publish", "failure", "error", "could not write")
+            + Record("04", "2026-09-29T10:00:04.000000000Z",
+                $"xmip-playground-{Second}-node-{sender}",
+                $"{ScopeTree.Root}{Second}/node/{sender}", "start", "begin", "information", null)
             + Record("05", "2026-09-29T10:00:05.000000000Z", "Xmip", null,
                 "Start-XmipTest", "begin", "warning", null));
 
@@ -48,7 +65,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     {
         return "[[record]]\n"
             + $"audit_id = \"{id}\"\nat = \"{at}\"\nprogram = \"{program}\"\n"
-            + "host = \"edge-01\"\nprocess = \"42\"\n"
+            + $"host = \"{Host}\"\nprocess = \"42\"\n"
             + (location is null ? string.Empty : $"location = \"{location}\"\n")
             + $"action = \"{action}\"\nphase = \"{phase}\"\nseverity = \"{severity}\"\n"
             + (message is null ? string.Empty : $"message = \"{message}\"\n")
@@ -85,7 +102,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     {
         IRenderedComponent<Audit> page = At("/audit");
 
-        Assert.Equal(["C1", "C2", "edge-01"], Groups(page));
+        Assert.Equal([First, Second, Host], Groups(page));
         Assert.Equal(["05", "04", "03", "02", "01"], Ids(page));
         Assert.Contains("5 of 5 record(s)", page.Find(".audit-count").TextContent,
             StringComparison.Ordinal);
@@ -95,18 +112,17 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     public void AClusterDrillsToItsNodesAndANodeToItsPrograms()
     {
         IRenderedComponent<Audit> cluster = At(
-            "/audit?location=" + Uri.EscapeDataString("xmip:///C1"));
-        Assert.Equal(["alpha", "xmip-playground-C1-roll"], Groups(cluster));
-        Assert.Equal(["alpha", "alpha", "—"], Column(cluster, "node"));
+            "/audit?location=" + Uri.EscapeDataString(Names.Scope));
+        Assert.Equal([Receiver, RollProgram], Groups(cluster));
+        Assert.Equal([Receiver, Receiver, "—"], Column(cluster, "node"));
         Assert.Equal(
-            ScopeLink.Audit(new AuditQuery { Location = "xmip:///C1/node/alpha" }),
+            ScopeLink.Audit(new AuditQuery { Location = Node }),
             cluster.Find("a.audit-group").GetAttribute("href"));
 
-        IRenderedComponent<Audit> node = At(
-            "/audit?location=" + Uri.EscapeDataString("xmip:///C1/node/alpha"));
-        Assert.Equal(["xmip-playground-C1-node-alpha"], Groups(node));
+        IRenderedComponent<Audit> node = At("/audit?location=" + Uri.EscapeDataString(Node));
+        Assert.Equal([NodeProgram], Groups(node));
         Assert.Equal(
-            ["audit", "cluster C1", "node alpha"],
+            ["audit", $"cluster {First}", $"node {Receiver}"],
             node.FindAll(".crumbs .crumb-btn").Select(crumb => crumb.TextContent.Trim()));
     }
 
@@ -117,7 +133,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
 
         IElement detail = page.Find(".audit-detail");
         Assert.Contains("could not write", detail.TextContent, StringComparison.Ordinal);
-        Assert.Contains("xmip:///C1/node/alpha", detail.TextContent, StringComparison.Ordinal);
+        Assert.Contains(Node, detail.TextContent, StringComparison.Ordinal);
         Assert.Contains("stress", detail.TextContent, StringComparison.Ordinal);
         Assert.Empty(page.FindAll("a.audit-row"));
     }
@@ -138,7 +154,8 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     [Fact]
     public void ThePatternSeverityAndTimeNarrowAndTheAddressReproducesThem()
     {
-        IRenderedComponent<Audit> patterned = At("/audit?pattern=C1%2Fnode%2F*");
+        IRenderedComponent<Audit> patterned =
+            At($"/audit?pattern={Uri.EscapeDataString($"{First}/node/")}*");
         Assert.Equal(["03", "02"], Ids(patterned));
 
         IRenderedComponent<Audit> severe = At("/audit?severity=error");

@@ -9,7 +9,8 @@ namespace Xmip.Gui.Test;
 
 /// <summary>
 /// The filter the three views gained on 2026-09-19, over the surface library's
-/// cluster fixture: C1 with alpha, beta and gamma. The pattern is the estate's, matched
+/// cluster fixture: the test cluster with its receiving, processing and sending
+/// nodes. The pattern is the estate's, matched
 /// by <see cref="ScopePattern"/> — the same one the prompt and the executable
 /// match with (ADR-0052 clause 1; ADR-0059 clauses 7 and 8) — and what it
 /// narrows, what it never narrows, and what it says when it names nothing are
@@ -18,6 +19,15 @@ namespace Xmip.Gui.Test;
 /// </summary>
 public sealed class ScopeFilterViewTest : BunitContext
 {
+    private static readonly TestCluster Names = TestCluster.Read();
+    private static readonly string Receiver = Names.WithRole("receiving");
+    private static readonly string Sender = Names.WithRole("sending");
+    private static readonly string Nodes = $"{Names.Scope}/node";
+
+    /// <summary>A pattern that names nothing: every node's name run together,
+    /// which no one node's name begins with.</summary>
+    private static readonly string Nowhere = $"{Nodes}/{string.Concat(Names.Nodes)}*";
+
     public ScopeFilterViewTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
@@ -49,13 +59,13 @@ public sealed class ScopeFilterViewTest : BunitContext
         string banner = page.Find("section.cluster .state").TextContent;
         int before = page.FindAll("section.list .row").Count;
 
-        page.Find("#filter-monitor").Change("*/gamma*");
+        page.Find("#filter-monitor").Change($"*/{Sender}*");
 
         IReadOnlyList<IElement> rows = page.FindAll("section.list .row");
         Assert.NotEmpty(rows);
         Assert.True(rows.Count < before, "the filter narrowed nothing");
         Assert.All(
-            rows, row => Assert.Contains("gamma", row.TextContent, StringComparison.Ordinal));
+            rows, row => Assert.Contains(Sender, row.TextContent, StringComparison.Ordinal));
         Assert.Equal(banner, page.Find("section.cluster .state").TextContent);
         Assert.Contains("of ", page.Find(".scope-filter-said").TextContent,
             StringComparison.Ordinal);
@@ -75,24 +85,26 @@ public sealed class ScopeFilterViewTest : BunitContext
     {
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
+        string receiver = $"{Nodes}/{Receiver}";
+        string sender = $"{Nodes}/{Sender}";
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor(receiver)}"));
 
-        page.Find("#filter-configuration").Change("*/gamma/send/tcp");
+        page.Find("#filter-configuration").Change($"*/{Sender}/send/tcp");
 
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node")}"));
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma")}"));
-        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/tcp")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor(Nodes)}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor(sender)}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor($"{sender}/send/tcp")}"));
 
         // What it matched shows what is beneath it, and nothing else stays.
-        Assert.NotEmpty(
-            page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/tcp/json")}"));
-        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/alpha")}"));
-        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor("xmip:///C1/node/gamma/send/file")}"));
+        Assert.NotEmpty(page.FindAll($"#{ScopeLink.Anchor($"{sender}/send/tcp/json")}"));
+        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor(receiver)}"));
+        Assert.Empty(page.FindAll($"#{ScopeLink.Anchor($"{sender}/send/file")}"));
     }
 
     /// <summary>
     /// The topology filters its nodes, and a link is drawn only where both of
-    /// its ends are still shown: the handoffs alpha to beta to gamma go when beta does.
+    /// its ends are still shown: the handoffs from the receiving node through
+    /// the processing one to the sending one go when the processing one does.
     /// </summary>
     [Fact]
     public void TheTopologyNarrowsItsNodesAndDropsALinkWithAHiddenEnd()
@@ -100,9 +112,9 @@ public sealed class ScopeFilterViewTest : BunitContext
         IRenderedComponent<Topology> page = Render<Topology>();
 
         // The cluster stands open by itself, filtered or not (2026-09-25).
-        page.Find("#filter-topology").Change("*/alpha");
+        page.Find("#filter-topology").Change($"*/{Receiver}");
 
-        Assert.Equal(["alpha"], Labels(page));
+        Assert.Equal([Receiver], Labels(page));
         Assert.Empty(page.FindAll("g.topology-link"));
     }
 
@@ -120,7 +132,7 @@ public sealed class ScopeFilterViewTest : BunitContext
         Assert.All(said, one =>
         {
             Assert.StartsWith("REFUSED", one.TextContent, StringComparison.Ordinal);
-            Assert.Contains("xmip:///C1/node/Q*", one.TextContent, StringComparison.Ordinal);
+            Assert.Contains(Nowhere, one.TextContent, StringComparison.Ordinal);
             Assert.Contains("scope(s) published", one.TextContent, StringComparison.Ordinal);
         });
     }
@@ -134,10 +146,10 @@ public sealed class ScopeFilterViewTest : BunitContext
     {
         IRenderedComponent<Topology> page = Render<Topology>();
 
-        page.Find("#filter-topology").Change("xmip:///C1/node/Q*");
+        page.Find("#filter-topology").Change(Nowhere);
 
         IElement empty = page.Find("section.topology-empty h1");
-        Assert.Equal("Nothing matches xmip:///C1/node/Q*", empty.TextContent);
+        Assert.Equal($"Nothing matches {Nowhere}", empty.TextContent);
         Assert.Empty(page.FindAll("g.topology-node"));
     }
 
@@ -145,14 +157,13 @@ public sealed class ScopeFilterViewTest : BunitContext
     /// and what each of them says about it.</summary>
     private List<IElement> Filtered()
     {
-        const string nowhere = "xmip:///C1/node/Q*";
         IRenderedComponent<Cluster> monitor = Render<Cluster>();
         IRenderedComponent<Configuration> tree = Render<Configuration>();
         IRenderedComponent<Topology> topology = Render<Topology>();
 
-        monitor.Find("#filter-monitor").Change(nowhere);
-        tree.Find("#filter-configuration").Change(nowhere);
-        topology.Find("#filter-topology").Change(nowhere);
+        monitor.Find("#filter-monitor").Change(Nowhere);
+        tree.Find("#filter-configuration").Change(Nowhere);
+        topology.Find("#filter-topology").Change(Nowhere);
 
         return
         [

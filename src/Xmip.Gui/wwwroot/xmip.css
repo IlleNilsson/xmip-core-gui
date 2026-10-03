@@ -690,6 +690,12 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-group .label { font-family: ui-monospace, monospace; }
 .subs-group .figures { grid-column: auto; text-align: right; white-space: nowrap; }
 .subs-records { padding-bottom: 1.5rem; }
+/* A member of the cluster a node does not hear: said, never acted on. */
+.unheard {
+    margin: 0 0 1rem; padding: 0.4rem 0.9rem; list-style: none;
+    border: 1px solid var(--line); background: var(--paper);
+    font-family: ui-monospace, monospace; font-size: 0.85rem;
+}
 .subs-row {
     display: grid;
     align-items: center; gap: 0.6rem;
@@ -763,3 +769,14 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     font-family: ui-monospace, monospace; font-size: 0.85rem; white-space: pre; overflow-x: auto;
 }
 .subs-act-said { color: var(--muted); font-size: 0.85rem; }
+
+/* The Dead Message Queue (ADR-0052, amendment 2026-10-01), in the
+   subscriptions views' shape: when received, the Message, cluster, node,
+   Receive Location, how many declined and its one act. An entry is no mood,
+   so its row is not painted; one opened lists its pairs as a Subscription's
+   fields are listed. */
+.dead-messages .subs-row {
+    grid-template-columns:
+        1rem 5.5rem minmax(12rem, 1fr) 4rem 4rem minmax(8rem, 14rem) 5.5rem 6rem;
+}
+.dead-detail .dead-none { margin: 0 0 1rem; }

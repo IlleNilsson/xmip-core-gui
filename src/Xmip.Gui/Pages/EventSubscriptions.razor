@@ -17,8 +17,11 @@
 
 @* Who hears what Xmip did (ADR-0065, amendment 2026-09-29): every Event
    subscription the cluster's nodes hold — the subscriber, a Party; the
-   cluster and the node whose hub holds it; the action it subscribes to —
-   with its state and what its queue has done. The drill is in the address,
+   cluster and the node whose hub holds it, the one its subscriber connected
+   to, which hears every node's matching Events (ADR-0065, amendment
+   2026-10-02) — the links between nodes are the cluster's and never listed,
+   and a member a node here does not hear is one read-only line;
+   the action it subscribes to — with its state and what its queue has done. The drill is in the address,
    as every view's is: cluster, node, one Event subscription, the pattern and
    the order are a link that reproduces the view. An Operator pauses, resumes
    and removes; an Observer is shown the list and no act. Not a Subscription,
@@ -34,6 +37,19 @@
               Where="@ActSaid.Where(Surface, Listed.Orders,
                   "the node that holds the Event subscription",
                   "the hub that holds the Event subscription")" />
+
+    @* Read-only: a member of the cluster a node here does not hear, so no
+       Event is missing silently (ADR-0065, amendment 2026-10-02). The links
+       between nodes are the cluster's: no row, no act. *@
+    @if (Unheard.Count > 0)
+    {
+        <ul class="unheard" aria-label="Members not heard">
+            @foreach (UnheardRecord gone in Unheard)
+            {
+                <li>@EventSubscriptionQuery.Line(gone)</li>
+            }
+        </ul>
+    }
 
     @if (Detail is { } one)
     {
@@ -110,6 +126,8 @@
 
     private IReadOnlyList<EventSubscriptionRecord> Shown { get; set; } = [];
 
+    private IReadOnlyList<UnheardRecord> Unheard { get; set; } = [];
+
     // What the query was refused, read again with the view; and what the
     // last act said, which stays while the publications tick under it.
     private string Refusal { get; set; } = string.Empty;
@@ -149,6 +167,7 @@
         };
 
         Listed = Surface.EventSubscriptions();
+        Unheard = Asking.Unheard(Listed.Unheard);
         Refusal = string.Empty;
         try
         {

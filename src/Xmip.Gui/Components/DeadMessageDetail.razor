@@ -1,0 +1,71 @@
+@using System.Globalization
+@using Xmip.Abi.Operate
+
+@* One Message in a Dead Message Queue, opened (ADR-0052, amendment
+   2026-10-01): where and when it was received, then what its gates
+   concluded in the order they ran, its promoted properties by name, and
+   every Subscription asked and why it declined, in the order asked — what an
+   Operator reads to add or fix the Subscription that should have matched.
+   Replay is offered to a role that may operate, and said in words. *@
+<article class="subs-detail dead-detail">
+    <h2>Message @Message.Message on @DeadMessageQuery.NodeName(Message)</h2>
+    <dl class="subs-fields">
+        <dt>message</dt><dd>@Message.Message</dd>
+        <dt>cluster</dt><dd>@DeadMessageQuery.Cluster(Message)</dd>
+        <dt>node</dt><dd>@Message.Node</dd>
+        <dt>Receive Location</dt><dd>@Message.ReceiveLocation</dd>
+        <dt>received</dt>
+        <dd>
+            @Message.Received.ToString("u", CultureInfo.InvariantCulture) ·
+            @English.Age(Message.Received)
+        </dd>
+        <dt>place in the queue</dt><dd>@English.Figure(Message.Sequence)</dd>
+    </dl>
+    @foreach ((string heading, string kind, IReadOnlyList<KeyValuePair<string, string>> pairs)
+        in Sections)
+    {
+        <h3>@heading</h3>
+        @if (pairs.Count == 0)
+        {
+            <p class="empty dead-none">none</p>
+        }
+        else
+        {
+            <dl class="subs-fields dead-@kind">
+                @foreach ((string name, string value) in pairs)
+                {
+                    <dt>@name</dt><dd>@value</dd>
+                }
+            </dl>
+        }
+    }
+    @if (MayAct)
+    {
+        <div class="subs-acts">
+            <DeadMessageReplay Message="Message" Acted="Acted" />
+            <span class="subs-act-said">@DeadMessageReplay.ReplaySaid</span>
+        </div>
+    }
+</article>
+
+@code {
+    /// <summary>The Message opened.</summary>
+    [Parameter, EditorRequired]
+    public DeadMessageRecord Message { get; set; } = default!;
+
+    /// <summary>Whether the role at the keyboard may act (ADR-0009).</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    /// <summary>Raised with the Message and the act taken on it.</summary>
+    [Parameter]
+    public EventCallback<(DeadMessageRecord, DeadMessageAct)> Acted { get; set; }
+
+    private (string Heading, string Kind, IReadOnlyList<KeyValuePair<string, string>> Pairs)[]
+        Sections =>
+    [
+        ("gate verdicts", "validation", Message.Validation),
+        ("promoted properties", "promoted", Message.Promoted),
+        ("declines", "declines", Message.Declines),
+    ];
+}

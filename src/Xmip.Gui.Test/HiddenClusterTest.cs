@@ -10,14 +10,21 @@ namespace Xmip.Gui.Test;
 
 /// <summary>
 /// The "show test clusters" box (the owner, 2026-09-29: *when tests are run
-/// include a checkbox if CT cluster should be shown or not in the operation
-/// tools*; ADR-0052, amendment 2026-09-30). A cluster is hidden because its
-/// run declared itself hidden — never because of its name — so the fixture
-/// is C1 beside a copy of C2 published as CT, once declared hidden and once
-/// not. Off by default; in the address; on every view.
+/// include a checkbox if [the test] cluster should be shown or not in the
+/// operation tools*; ADR-0052, amendment 2026-09-30). A cluster is hidden
+/// because its run declared itself hidden — never because of its name — so
+/// the fixture is the test cluster beside a copy of the second cluster
+/// fixture, once declared hidden and once not. Off by default; in the
+/// address; on every view.
 /// </summary>
 public sealed class HiddenClusterTest : BunitContext, IDisposable
 {
+    private static readonly string First = TestCluster.Read().Name;
+
+    /// <summary>The second cluster, as its fixture's publication names it.</summary>
+    private static readonly string Second =
+        ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-c2.toml")));
+
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-hidden-{Environment.ProcessId}-{Guid.NewGuid():N}");
 
@@ -28,7 +35,8 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
         File.WriteAllText(
             Path.Combine(_directory, "audit.toml"),
-            Record("01", "xmip:///C1", hidden: false) + Record("02", "xmip:///CT", hidden: true));
+            Record("01", $"{ScopeTree.Root}{First}", hidden: false)
+            + Record("02", $"{ScopeTree.Root}{Second}", hidden: true));
     }
 
     void IDisposable.Dispose()
@@ -42,18 +50,17 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         return Path.Combine(AppContext.BaseDirectory, "Fixture", name);
     }
 
-    // C2's fixture published as CT, its run declaring itself hidden or not.
+    // The second cluster's fixture, its run declaring itself hidden or not.
     private string Published(bool hidden)
     {
-        string text = File.ReadAllText(Fixture("cluster-c2.toml"))
-            .Replace("C2", "CT", StringComparison.Ordinal);
+        string text = File.ReadAllText(Fixture("cluster-c2.toml"));
 
         if (hidden)
         {
             text = text.Replace("\n[run]\n", "\n[run]\nhidden = true\n", StringComparison.Ordinal);
         }
 
-        string path = Path.Combine(_directory, $"CT-{hidden}.toml");
+        string path = Path.Combine(_directory, $"{Second}-{hidden}.toml");
         File.WriteAllText(path, text);
 
         return path;
@@ -63,7 +70,8 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     {
         return "[[record]]\n"
             + $"audit_id = \"{id}\"\nat = \"2026-09-30T10:00:0{id[1]}.000000000Z\"\n"
-            + "program = \"probe\"\nhost = \"edge-01\"\nprocess = \"42\"\n"
+            + $"program = \"probe\"\nhost = \"{Environment.MachineName.ToLowerInvariant()}\"\n"
+            + "process = \"42\"\n"
             + $"location = \"{location}\"\n"
             + (hidden ? "hidden = \"true\"\n" : string.Empty)
             + "action = \"start\"\nphase = \"begin\"\nseverity = \"information\"\n\n";
@@ -108,13 +116,14 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
             Assert.Empty(Picked(page));
             Assert.False(Box(page).HasAttribute("checked"));
             Assert.DoesNotContain(
-                "CT", page.Find("p.run-line").TextContent, StringComparison.Ordinal);
+                Second, page.Find("p.run-line").TextContent, StringComparison.Ordinal);
         }
 
-        // Asked for by name, the hidden one is not reached: the view is on C1.
-        IRenderedComponent<Cluster> asked = At<Cluster>("/?cluster=CT");
+        // Asked for by name, the hidden one is not reached: the view is on the
+        // first.
+        IRenderedComponent<Cluster> asked = At<Cluster>($"/?cluster={Second}");
         Assert.Contains(
-            "C1", asked.Find("p.run-line .run-said").TextContent, StringComparison.Ordinal);
+            First, asked.Find("p.run-line .run-said").TextContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -124,7 +133,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
 
         IRenderedComponent<Cluster> page = At<Cluster>("/?hidden=include");
 
-        Assert.Equal(["C1", "CT · test"], Picked(page));
+        Assert.Equal([First, $"{Second} · test"], Picked(page));
         Assert.Contains("test", page.FindAll("a.cluster-pick")[1].ClassList);
         Assert.True(Box(page).HasAttribute("checked"));
         Assert.All(
@@ -136,20 +145,20 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
             link => Assert.Contains("hidden=include", link.GetAttribute("href"),
                 StringComparison.Ordinal));
 
-        IRenderedComponent<Cluster> onIt = At<Cluster>("/?cluster=CT&hidden=include");
+        IRenderedComponent<Cluster> onIt = At<Cluster>($"/?cluster={Second}&hidden=include");
         Assert.Contains(
             "hidden test run", onIt.Find("p.run-line .run-said").TextContent,
             StringComparison.Ordinal);
     }
 
     [Fact]
-    public void AClusterCalledCTWhoseRunDeclaredNothingIsShownLikeAnyOther()
+    public void AClusterWhoseRunDeclaredNothingIsShownLikeAnyOther()
     {
         Holding(hidden: false);
 
         IRenderedComponent<Cluster> page = At<Cluster>("/");
 
-        Assert.Equal(["C1", "CT"], Picked(page));
+        Assert.Equal([First, Second], Picked(page));
         Assert.Empty(page.FindAll("a.cluster-pick.test"));
     }
 
@@ -161,13 +170,13 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         IRenderedComponent<Audit> off = At<Audit>("/audit");
         string[] groups =
             [.. off.FindAll("a.audit-group .label").Select(label => label.TextContent)];
-        Assert.Equal(["C1"], groups);
+        Assert.Equal([First], groups);
         Assert.Contains("1 of 1 record(s)", off.Find(".audit-count").TextContent,
             StringComparison.Ordinal);
 
         IRenderedComponent<Audit> on = At<Audit>("/audit?hidden=include");
         groups = [.. on.FindAll("a.audit-group .label").Select(label => label.TextContent)];
-        Assert.Equal(["C1", "CT · test"], groups);
+        Assert.Equal([First, $"{Second} · test"], groups);
         Assert.Single(on.FindAll("a.audit-row.test"));
         Assert.All(
             on.FindAll("a.audit-group"),

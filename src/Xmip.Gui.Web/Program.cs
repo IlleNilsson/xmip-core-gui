@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
-using Xmip.Gui.Surface;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
 using Xmip.Surface;
@@ -107,6 +106,9 @@ try
     // This host's surface, served: the CLI, the PowerShell module and a GUI on
     // another machine follow it over SignalR and are told when it changes, never
     // asking (ADR-0052, amendment 2026-09-15). The same surface the pages read.
+    // An act asked over it is taken only where this host's role, above, may
+    // act, and as the client certificate's subject; refused in words and
+    // audited otherwise (ADR-0009, amendment 2026-10-03).
     builder.Services.AddXmipSurfaceRelay();
 
     // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host

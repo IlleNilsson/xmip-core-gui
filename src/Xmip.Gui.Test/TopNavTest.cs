@@ -1,12 +1,12 @@
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Gui.Components;
-using Xmip.Gui.Surface;
+using Xmip.Surface;
 
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// One navigation for both hosts: the six views, what a host adds after
+/// One navigation for both hosts: the seven views, what a host adds after
 /// them, and the role described in one set of words. Until 2026-09-27 the web
 /// host and the desktop each wrote the bar and worded the Observer
 /// differently.
@@ -14,24 +14,26 @@ namespace Xmip.Gui.Test;
 public sealed class TopNavTest : BunitContext
 {
     [Fact]
-    public void TheBarLinksTheSixViewsInOrderAndDescribesTheRoleOnce()
+    public void TheBarLinksTheSevenViewsInOrderAndDescribesTheRoleOnce()
     {
         Services.AddSingleton(new RoleContext(Role.Observer));
 
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         // The Subscriptions before the Event subscriptions (ADR-0052,
-        // amendment 2026-09-30), each tab by what it is.
+        // amendment 2026-09-30), the Dead Message Queue after the
+        // Subscriptions whose declines it shows (amendment 2026-10-01), each
+        // tab by what it is.
         Assert.Equal(
             [
-                "/configuration", "/", "/topology", "/subscriptions", "/event-subscriptions",
-                "/audit",
+                "/configuration", "/", "/topology", "/subscriptions", "/dead-messages",
+                "/event-subscriptions", "/audit",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
         Assert.Equal(
             [
-                "Configuration", "Monitor", "Topology", "Subscriptions", "Event subscriptions",
-                "Audit",
+                "Configuration", "Monitor", "Topology", "Subscriptions", "Dead Message Queue",
+                "Event subscriptions", "Audit",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.TextContent.Trim()));
         AngleSharp.Dom.IElement role = bar.Find(".role-pick");
