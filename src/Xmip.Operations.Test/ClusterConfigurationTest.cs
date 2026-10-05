@@ -156,10 +156,62 @@ public sealed class ClusterConfigurationTest : IDisposable
             cluster.TryEdit(new ClusterEdit.AddNode(Estate.Cluster.Nodes[0]), out string r2), r2);
         Assert.True(cluster.Views.IsCluster);
 
-        cluster.Write();
+        Assert.True(cluster.TryWrite(out string stale), stale);
         Assert.True(cluster.Exists);
         Assert.False(cluster.Changed);
         Assert.Equal(cluster.Text, File.ReadAllText(cluster.Path));
+    }
+
+    [Fact]
+    public void ASaveRefusesAFileAnotherEditorChangedAndOverwritesNothing()
+    {
+        ClusterConfiguration cluster = Estate.Written(_directory);
+        Assert.True(cluster.TryEdit(
+            new ClusterEdit.Set(["service"], ["name"], "\"mine\""), out string edit), edit);
+        string theirs = File.ReadAllText(cluster.Path) + "# saved by another editor\n";
+        File.WriteAllText(cluster.Path, theirs);
+
+        Assert.False(cluster.TryWrite(out string refusal));
+        Assert.Contains("changed on disk", refusal, StringComparison.Ordinal);
+        Assert.Equal(theirs, File.ReadAllText(cluster.Path));
+        Assert.True(cluster.Changed);
+
+        // Opened again, it holds the other change, and saves over it.
+        ClusterConfiguration again = ClusterConfiguration.Open(cluster.Path);
+        Assert.Contains("another editor", again.Text, StringComparison.Ordinal);
+        Assert.True(again.TryEdit(
+            new ClusterEdit.Set(["service"], ["name"], "\"mine\""), out string redo), redo);
+        Assert.True(again.TryWrite(out string none), none);
+        Assert.Contains("another editor", File.ReadAllText(cluster.Path), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AFileThatAppearedSinceAnEmptyOpenIsNotOverwritten()
+    {
+        ClusterConfiguration cluster =
+            ClusterConfiguration.Open(Path.Combine(_directory, "new.toml"));
+        Assert.True(cluster.TryEdit(
+            new ClusterEdit.AddNode(Estate.Cluster.Nodes[0]), out string edit), edit);
+        File.WriteAllText(cluster.Path, "# written elsewhere\n");
+
+        Assert.False(cluster.TryWrite(out _));
+        Assert.Equal("# written elsewhere\n", File.ReadAllText(cluster.Path));
+    }
+
+    [Fact]
+    public void ASaveLeavesNoTemporaryFileAndSavesAgainAfterItself()
+    {
+        ClusterConfiguration cluster = Estate.Written(_directory);
+
+        for (int save = 0; save < 2; save++)
+        {
+            Assert.True(cluster.TryEdit(
+                new ClusterEdit.Set(["service"], ["name"], $"\"save-{save}\""), out string e), e);
+            Assert.True(cluster.TryWrite(out string stale), stale);
+        }
+
+        Assert.Equal(["xmip.toml"], Directory.GetFiles(_directory).Select(Path.GetFileName));
+        Assert.Contains("save-1", File.ReadAllText(cluster.Path), StringComparison.Ordinal);
     }
 
     public void Dispose()

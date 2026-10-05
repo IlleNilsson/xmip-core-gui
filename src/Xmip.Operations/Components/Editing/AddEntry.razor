@@ -7,16 +7,17 @@
 @if (Places.Count > 0)
 {
     <div class="add-entry">
-        <select @bind="_at">
+        <select aria-label="Where the new entry goes" @bind="_at">
             @for (int i = 0; i < Places.Count; i++)
             {
                 <option value="@i">@Places[i].Scope</option>
             }
         </select>
-        <input placeholder="name" @bind="_name" />
+        <input placeholder="name" aria-label="Name of the new entry" @bind="_name" />
         <textarea rows="2" placeholder="start = true&#10;transport = &quot;file&quot;"
+                  aria-label="Values of the new entry, one key = value per line"
                   @bind="_values"></textarea>
-        <button @onclick="Add">+ add</button>
+        <button aria-label="Add the entry" @onclick="Add">+ add</button>
     </div>
 }
 

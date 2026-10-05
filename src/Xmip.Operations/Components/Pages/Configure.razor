@@ -10,7 +10,11 @@
    2026-10-05): an overview of the cluster, drilling down to a node and to
    its artifacts by kind, then to an entry whose values are edited in place.
    Every view, edit and refusal is the runtime's (xmip_operate.h section
-   10); the page draws what it answers and sends the edits. *@
+   10); the page draws what it answers and sends the edits. Edits not saved
+   are never lost by leaving: the page holds the way out and asks — save,
+   discard or stay. *@
+<NavigationLock OnBeforeInternalNavigation="Leaving"
+                ConfirmExternalNavigation="@(_cluster is { Changed: true })" />
 <section class="cfg-layout">
     <aside class="configs">
         <h2>Cluster</h2>
@@ -26,7 +30,8 @@
                 <span class="config-name">@name</span>
                 @if (name == Runtime.Delivery.Node)
                 {
-                    <span class="badge" title="the Node xmip.gui.toml names">started here</span>
+                    <span class="badge"
+                          title="the Node xmip.gui.toml names: its slice is shipped and planned here; nothing runs it here">configured here</span>
                 }
             </button>
         }
@@ -51,17 +56,38 @@
         <div class="path">
             <button class="primary" disabled="@(_cluster is not { Editable: true })"
                     @onclick="Save">Save</button>
+            <button class="discard" disabled="@(_cluster is not { Changed: true })"
+                    @onclick="Discard">Discard changes</button>
             <button disabled="@(_cluster is null)" @onclick="Validate">Validate</button>
-            @if (Runtime.Delivery.Node is { } started)
+            @if (Runtime.Delivery.Node is { } configured)
             {
-                <button @onclick="StartNode">Start @started</button>
+                <button class="plan" @onclick="PlanNode"
+                        title="Slice the saved file for @configured, then validate it and publish its plan; the node does not run here">
+                    Plan @configured
+                </button>
             }
             @if (_cluster is { Changed: true })
             {
                 <span class="changed">changed, not saved</span>
             }
-            <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+            <span class="status @(_ok ? "ok" : "bad")" role="status">@_status</span>
+            @if (_stale)
+            {
+                <button class="reload" @onclick="Reload">Reload from disk</button>
+            }
         </div>
+
+        @if (_leaving is not null)
+        {
+            <div class="group leaving" role="alertdialog" aria-labelledby="leaving-said">
+                <p id="leaving-said">
+                    @Path.GetFileName(_cluster?.Path) has changes that are not saved.
+                </p>
+                <button class="primary" @onclick="SaveAndLeave">Save and leave</button>
+                <button class="discard" @onclick="DiscardAndLeave">Discard and leave</button>
+                <button class="stay" @onclick="Stay">Stay</button>
+            </div>
+        }
 
         @if (_deliveries.Count > 0)
         {
@@ -106,7 +132,8 @@
             <div class="group">
                 <div class="group-head">
                     <h2>Nodes</h2>
-                    <input placeholder="node name" @bind="_newNode" />
+                    <input placeholder="node name" aria-label="New node name"
+                           @bind="_newNode" />
                     <button @onclick="AddNode">+ add node</button>
                 </div>
                 <EntryList Entries="NodeEntries()" Open="Open" Edit="Edit" />
@@ -168,6 +195,13 @@
     private string _status = "";
     private bool _ok = true;
 
+    // Where the operator was going when the page held them back for edits
+    // not saved; null while nothing waits.
+    private string? _leaving;
+
+    // The last save found the file changed on disk by another editor.
+    private bool _stale;
+
     protected override void OnInitialized()
     {
         // Configuration is the Operator's, not the Observer's (ADR-0009). An
@@ -179,18 +213,83 @@
             return;
         }
 
+        Load();
+    }
+
+    // The cluster's file as it is on disk now, whatever was edited here.
+    private void Load()
+    {
+        _stale = false;
+
         try
         {
             _cluster = ClusterConfiguration.Open(Runtime.Delivery.ClusterPath);
             _status = _cluster.Exists
                 ? $"editing {Path.GetFileName(_cluster.Path)}"
                 : $"no file at {_cluster.Path} yet: add a node, then save";
+            _ok = true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            _cluster = null;
             _status = exception.Message;
             _ok = false;
         }
+    }
+
+    // Leaving with edits not saved is held, and the page asks what to do.
+    private void Leaving(LocationChangingContext context)
+    {
+        if (_cluster is { Changed: true })
+        {
+            _leaving = context.TargetLocation;
+            context.PreventNavigation();
+        }
+    }
+
+    private void Stay()
+    {
+        _leaving = null;
+    }
+
+    // Saved, the way out is taken; a save that wrote nothing keeps the
+    // operator here with the edits and the sentence that says why.
+    private void SaveAndLeave()
+    {
+        string? target = _leaving;
+        _leaving = null;
+        Save();
+
+        if (target is not null && _cluster is { Changed: false })
+        {
+            Nav.NavigateTo(target);
+        }
+    }
+
+    private void DiscardAndLeave()
+    {
+        string? target = _leaving;
+        _leaving = null;
+        Discard();
+
+        if (target is not null)
+        {
+            Nav.NavigateTo(target);
+        }
+    }
+
+    // The edits not saved are dropped, and the file read again as it is.
+    private void Discard()
+    {
+        Load();
+        _deliveries = [];
+        _entry = null;
+    }
+
+    private void Reload()
+    {
+        Discard();
+        _status = $"reloaded {Path.GetFileName(_cluster?.Path)} from disk; edit again, then save";
     }
 
     // The kinds below the cluster and its nodes, as the runtime lists them.
@@ -259,7 +358,9 @@
     }
 
     // Every edit through the runtime: made, or refused in its words and
-    // audited (ADR-0062).
+    // audited (ADR-0062). An edit is sent from a component below, whose own
+    // event re-renders only itself, so the page re-renders too: the views,
+    // the status and "changed, not saved" follow every edit.
     private bool Edit(ClusterEdit edit)
     {
         if (_cluster is null)
@@ -267,17 +368,22 @@
             return false;
         }
 
-        if (_cluster.TryEdit(edit, out string refusal))
+        bool made = _cluster.TryEdit(edit, out string refusal);
+
+        if (made)
         {
             _status = "edited; not saved";
             _ok = true;
-            return true;
+        }
+        else
+        {
+            Runtime.Refused(edit, _cluster.Path, refusal);
+            _status = refusal;
+            _ok = false;
         }
 
-        Runtime.Refused(edit, _cluster.Path, refusal);
-        _status = refusal;
-        _ok = false;
-        return false;
+        StateHasChanged();
+        return made;
     }
 
     private void AddNode()
@@ -302,6 +408,7 @@
         ClusterSave saved = Runtime.Save(_cluster);
         _deliveries = saved.Nodes;
         _status = saved.Said;
+        _stale = saved.Stale;
         _ok = saved.Valid && saved.Nodes.All(node => node.Outcome != NodeDelivery.Standing.Refused);
     }
 
@@ -316,9 +423,9 @@
         }
     }
 
-    private void StartNode()
+    private void PlanNode()
     {
-        Show(Runtime.StartNode());
+        Show(Runtime.PlanNode());
     }
 
     private void Show(ConfigurationVerdict verdict)

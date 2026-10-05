@@ -9,23 +9,29 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// Retry and Dismiss where a Send Port's last failed Journey is shown
-/// (runtime-model.md section 13; ADR-0013): the Monitor's drill at the Port's
-/// scope, whose record's evidence names the Journey and why. Rendered over a
-/// publication of the test cluster whose sending node published one Port
-/// with a failed Journey and one without, and whose publisher takes orders:
-/// both acts for an Operator, each left for the sending node; none for an
-/// Observer; none at a Port that names no failed Journey; and every act in the
-/// host's audit as <c>journey.retry</c> or <c>journey.dismiss</c>.
+/// Every Journey that failed at a Send Port, listed at the Port's scope with
+/// Retry and Dismiss on each (runtime-model.md section 13; ADR-0013): the
+/// Monitor's drill at the Port, over a publication of the test cluster whose
+/// sending node published one Port with two failed Journeys, one whose
+/// evidence names a Journey the publication lists none for, and one without,
+/// and whose publisher takes orders. Each Journey listed with why and both
+/// acts for an Operator, each left for the sending node; the Journeys and no
+/// act for an Observer; the evidence's one Journey where none is listed;
+/// nothing at a Port with no failed Journey; and every act in the host's
+/// audit as <c>journey.retry</c> or <c>journey.dismiss</c>.
 /// </summary>
 public sealed class JourneyActsViewTest : BunitContext, IDisposable
 {
-    private const string Journey = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0b";
+    private const string First = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0b";
+    private const string Second = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0c";
+    private const string Named = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0d";
 
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Sender = Names.WithRole("sending");
-    private static readonly string Failing = $"{Names.Scope}/node/{Sender}/send/invoices";
-    private static readonly string Sending = $"{Names.Scope}/node/{Sender}/send/orders";
+    private static readonly string Sending = $"{Names.Scope}/node/{Sender}";
+    private static readonly string Failing = $"{Sending}/send/invoices";
+    private static readonly string Evidenced = $"{Sending}/send/audit";
+    private static readonly string Fine = $"{Sending}/send/orders";
 
     private readonly string _place = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-journey-{Guid.NewGuid():N}");
@@ -40,9 +46,18 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
             + $"orders = '{Orders}'\n"
             + Record(
                 Failing,
-                $"started; tcp at 127.0.0.1:9; sent 4, failed 1, waiting 0; the Journey {Journey} "
-                + "failed: every Send Location failed its tries")
-            + Record(Sending, "started; tcp at 127.0.0.1:9; sent 4, failed 0, waiting 0"));
+                "Send Port; sent 4, failed 2, waiting 0, failed in its queue 2; the Journey "
+                + $"{Second} failed: every Send Location failed its tries")
+            + Record(
+                Evidenced,
+                $"Send Port; sent 1, failed 1, waiting 0; the Journey {Named} failed: refused")
+            + Record(Fine, "Send Port; sent 4, failed 0, waiting 0, failed in its queue 0")
+            + $"\n[[failed_journeys]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
+            + "count = 2\n"
+            + $"\n[[failed_journeys.journeys]]\njourney = \"{First}\"\nsequence = 3\n"
+            + "reason = \"invoices: the far end refused it\"\n"
+            + $"\n[[failed_journeys.journeys]]\njourney = \"{Second}\"\nsequence = 8\n"
+            + "reason = \"invoices: every Send Location failed its tries\"\n");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
@@ -70,23 +85,33 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
         return Render<Cluster>();
     }
 
+    private static IReadOnlyList<string> Listed(IRenderedComponent<Cluster> page)
+    {
+        return [.. page.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!)];
+    }
+
     [Fact]
-    public void AnOperatorRetriesAndDismissesTheJourneyThePortSaysAndEachIsAudited()
+    public void AnOperatorRetriesOrDismissesEachJourneyThatFailedAndEachIsAudited()
     {
         IRenderedComponent<Cluster> page = At(Failing, Role.Operator);
 
+        Assert.Equal([First, Second], Listed(page));
+        Assert.Contains(
+            "2 Journeys failed", page.Find(".journey-acts").TextContent, StringComparison.Ordinal);
+        Assert.Contains(
+            "invoices: the far end refused it", page.FindAll(".journey-failed")[0].TextContent,
+            StringComparison.Ordinal);
         Assert.Equal(
-            ["Retry", "Dismiss"],
-            page.FindAll(".journey-acts button").Select(button => button.TextContent.Trim()));
+            ["Retry", "Dismiss", "Retry", "Dismiss"],
+            page.FindAll(".journey-failed button").Select(button => button.TextContent.Trim()));
         Assert.Equal(
-            JourneyActs.RetrySaid, page.FindAll(".journey-acts button")[0].GetAttribute("title"));
-        Assert.Contains(Journey, page.Find(".journey-acts").TextContent, StringComparison.Ordinal);
+            JourneyActs.RetrySaid, page.FindAll(".journey-failed button")[0].GetAttribute("title"));
 
-        page.FindAll(".journey-acts button")[0].Click();
-        page.FindAll(".journey-acts button")[1].Click();
+        page.FindAll(".journey-failed")[0].QuerySelectorAll("button")[0].Click();
+        page.FindAll(".journey-failed")[1].QuerySelectorAll("button")[1].Click();
 
         Assert.Equal(
-            [$"journey {Journey} retry", $"journey {Journey} dismiss"],
+            [$"journey {First} retry", $"journey {Second} dismiss"],
             OrdersLeft.For(Orders, Sender));
         Assert.Contains(
             $"left for {Sender}", page.Find(".journey-acts .subs-said").TextContent,
@@ -95,23 +120,34 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"journey.retry\"", audit, StringComparison.Ordinal);
         Assert.Contains("action = \"journey.dismiss\"", audit, StringComparison.Ordinal);
-        Assert.Contains($"\"journey\" = \"{Journey}\"", audit, StringComparison.Ordinal);
+        Assert.Contains($"\"journey\" = \"{First}\"", audit, StringComparison.Ordinal);
+        Assert.Contains($"\"journey\" = \"{Second}\"", audit, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void AnObserverIsShownTheJourneyAndNoAct()
+    public void AnObserverIsShownTheJourneysAndNoAct()
     {
         IRenderedComponent<Cluster> page = At(Failing, Role.Observer);
 
-        Assert.Contains(Journey, page.Find(".journey-acts").TextContent, StringComparison.Ordinal);
+        Assert.Equal([First, Second], Listed(page));
         Assert.Empty(page.FindAll(".journey-acts button"));
         Assert.False(Directory.Exists(Orders));
     }
 
     [Fact]
-    public void APortThatNamesNoFailedJourneyOffersNoAct()
+    public void WhereNoneIsListedTheJourneyTheEvidenceNamesIsOffered()
     {
-        IRenderedComponent<Cluster> page = At(Sending, Role.Operator);
+        IRenderedComponent<Cluster> page = At(Evidenced, Role.Operator);
+
+        Assert.Equal([Named], Listed(page));
+        page.FindAll(".journey-failed button")[0].Click();
+        Assert.Equal([$"journey {Named} retry"], OrdersLeft.For(Orders, Sender));
+    }
+
+    [Fact]
+    public void APortWithNoFailedJourneyOffersNoAct()
+    {
+        IRenderedComponent<Cluster> page = At(Fine, Role.Operator);
 
         Assert.Single(page.FindAll(".drill-leaf"));
         Assert.Empty(page.FindAll(".journey-acts"));

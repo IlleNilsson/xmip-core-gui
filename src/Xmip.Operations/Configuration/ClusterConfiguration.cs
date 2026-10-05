@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Xmip.Surface;
 
 namespace Xmip.Operations.Configuration;
@@ -18,11 +20,18 @@ public sealed class ClusterConfiguration
     // file being written and may be edited before it declares a node.
     private readonly bool _begun;
 
-    private ClusterConfiguration(string path, string text, bool exists)
+    // The file as this editor last read or wrote it, as its SHA-256; empty
+    // where there was no file. A save compares the disk against it, so an
+    // edit made elsewhere meanwhile is never overwritten unseen — the VS Code
+    // designer refuses an edit on the same ground, by the document's version.
+    private string _read;
+
+    private ClusterConfiguration(string path, string text, bool exists, string read)
     {
         Path = path;
         Text = text;
         Exists = exists;
+        _read = read;
         _begun = string.IsNullOrWhiteSpace(text);
         Views = new ConfigurationViews(string.Empty, false, []);
         Read();
@@ -63,9 +72,15 @@ public sealed class ClusterConfiguration
     /// <exception cref="IOException">The file is there and cannot be read.</exception>
     public static ClusterConfiguration Open(string path)
     {
-        bool exists = File.Exists(path);
-        string text = exists ? File.ReadAllText(path) : string.Empty;
-        return new ClusterConfiguration(path, text, exists);
+        if (!File.Exists(path))
+        {
+            return new ClusterConfiguration(path, string.Empty, false, string.Empty);
+        }
+
+        // Read once: the text and its fingerprint are of the same bytes.
+        byte[] bytes = File.ReadAllBytes(path);
+        using StreamReader reader = new(new MemoryStream(bytes), Encoding.UTF8, true);
+        return new ClusterConfiguration(path, reader.ReadToEnd(), true, Fingerprint(bytes));
     }
 
     /// <summary>Make <paramref name="edit"/> through the runtime. False, with
@@ -94,9 +109,16 @@ public sealed class ClusterConfiguration
         return true;
     }
 
-    /// <summary>Save the text, replacing the file whole so a reader never
-    /// sees half of it.</summary>
-    public void Write()
+    /// <summary>
+    /// Save the text, replacing the file whole so a reader never sees half
+    /// of it: written to a temporary file of its own beside it, flushed to the
+    /// device, then renamed over it. False, with why, when the file changed
+    /// on disk since this editor read it — another editor saved meanwhile —
+    /// and nothing is written; <see cref="Open"/> it again to see that change.
+    /// </summary>
+    /// <exception cref="IOException">The file cannot be read or written.</exception>
+    /// <exception cref="UnauthorizedAccessException">The file may not be written.</exception>
+    public bool TryWrite(out string refusal)
     {
         string? directory = System.IO.Path.GetDirectoryName(Path);
         if (!string.IsNullOrEmpty(directory))
@@ -104,11 +126,44 @@ public sealed class ClusterConfiguration
             Directory.CreateDirectory(directory);
         }
 
-        string temp = Path + ".writing";
-        File.WriteAllText(temp, Text);
-        File.Move(temp, Path, overwrite: true);
+        // Compared at the last moment before the rename; what lands between
+        // the two is a window of microseconds, not the minutes of an edit.
+        string now = File.Exists(Path) ? Fingerprint(File.ReadAllBytes(Path)) : string.Empty;
+        if (!string.Equals(now, _read, StringComparison.Ordinal))
+        {
+            refusal = $"{System.IO.Path.GetFileName(Path)} changed on disk since it was opened "
+                + "here; nothing was saved. Reload it to see the other change, then edit again.";
+            return false;
+        }
+
+        byte[] bytes = new UTF8Encoding(false).GetBytes(Text);
+        string temp = $"{Path}.{Guid.NewGuid():n}.writing";
+
+        try
+        {
+            using (FileStream file = new(temp, FileMode.CreateNew, FileAccess.Write))
+            {
+                file.Write(bytes);
+                file.Flush(flushToDisk: true);
+            }
+
+            File.Move(temp, Path, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temp);
+        }
+
+        _read = Fingerprint(bytes);
         Exists = true;
         Changed = false;
+        refusal = string.Empty;
+        return true;
+    }
+
+    private static string Fingerprint(byte[] bytes)
+    {
+        return Convert.ToHexString(SHA256.HashData(bytes));
     }
 
     // What the runtime says of the text, and whether it may be edited: a

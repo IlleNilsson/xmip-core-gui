@@ -6,7 +6,7 @@ namespace Xmip.Operations.Test;
 /// <summary>
 /// The desktop's acts on the cluster's <c>xmip.toml</c> are the operator's
 /// and are audited (ADR-0062): a save, each node's slice and ship, a refused
-/// edit, a start. Each is read back here from the audit directory the
+/// edit, a plan. Each is read back here from the audit directory the
 /// desktop was told, as the audit capability wrote it.
 /// </summary>
 public sealed class RuntimeCommandsTest : IDisposable
@@ -87,29 +87,49 @@ public sealed class RuntimeCommandsTest : IDisposable
     }
 
     [Fact]
-    public void TheNodeThisDesktopStartsIsStartedFromItsSliceOfTheSavedFile()
+    public void TheNodeConfiguredHereIsPlannedFromItsSliceAndSaidNotToRun()
     {
         string here = Estate.Cluster.Nodes[0];
         ClusterConfiguration cluster = Estate.Written(_directory);
         RuntimeCommands commands = Commands(cluster.Path, here);
 
-        ConfigurationVerdict started = commands.StartNode();
+        ConfigurationVerdict planned = commands.PlanNode();
 
-        // Started from the slice, whatever the runtime then says of it.
-        Assert.Equal(commands.Delivery.PathOf(here), started.Path);
-        Assert.True(File.Exists(started.Path));
-        Assert.Contains("start node", Audited(), StringComparison.Ordinal);
+        // Planned from the slice, whatever the runtime then says of it, and
+        // never said to have started: xmip_start_v1 runs nothing.
+        Assert.Equal(commands.Delivery.PathOf(here), planned.Path);
+        Assert.True(File.Exists(planned.Path));
+        Assert.DoesNotContain("started", planned.Said, StringComparison.Ordinal);
+        Assert.Contains("plan node", Audited(), StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ADesktopNamingNoNodeStartsNone()
+    public void ADesktopNamingNoNodePlansNone()
     {
         ClusterConfiguration cluster = Estate.Written(_directory);
 
-        ConfigurationVerdict refused = Commands(cluster.Path, null).StartNode();
+        ConfigurationVerdict refused = Commands(cluster.Path, null).PlanNode();
 
         Assert.False(refused.Ok);
         Assert.Contains("names no Node", refused.Said, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ASaveOverAnotherEditorsChangeIsRefusedStaleAndAudited()
+    {
+        ClusterConfiguration cluster = Estate.Written(_directory);
+        Assert.True(cluster.TryEdit(
+            new ClusterEdit.Set(["service"], ["name"], "\"mine\""), out string edit), edit);
+        File.AppendAllText(cluster.Path, "# theirs\n");
+
+        ClusterSave saved = Commands(cluster.Path, null).Save(cluster);
+
+        Assert.False(saved.Saved);
+        Assert.True(saved.Stale);
+        Assert.Empty(saved.Nodes);
+        Assert.Contains("changed on disk", saved.Said, StringComparison.Ordinal);
+        Assert.Contains("# theirs", File.ReadAllText(cluster.Path), StringComparison.Ordinal);
+        Assert.Contains("save cluster configuration", Audited(), StringComparison.Ordinal);
     }
 
     public void Dispose()

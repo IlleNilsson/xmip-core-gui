@@ -8,7 +8,9 @@ namespace Xmip.Operations.Configuration;
 /// The commands the desktop can run that a browser cannot: validating the
 /// cluster's <c>xmip.toml</c>, saving it — which slices it for each node and
 /// ships each slice where it can go (ADR-0031, amendment 2026-10-05) — and
-/// starting this desktop's node from its slice through the native runtime.
+/// planning this desktop's node from its slice through the native runtime:
+/// <c>xmip_start_v1</c> reads, validates and publishes the plan, and runs
+/// nothing; a node runs in the program that links its technologies.
 /// A browser is sandboxed — no native library, no local file to hand it —
 /// which is why configuration and node control live in the desktop GUI
 /// (ADR-0014, amendment of 2026-09-05). When the board reads the runtime,
@@ -16,7 +18,7 @@ namespace Xmip.Operations.Configuration;
 /// is loaded here alone, from the library the one discovery rule found. Each
 /// is an operator's act and is audited with what the runtime answered
 /// (ADR-0062): a save, every node's slice and ship, a refused edit, a
-/// validate and a start.
+/// validate and a plan.
 /// </summary>
 public sealed class RuntimeCommands(
     IOperatorSurface surface, string libraryPath, ProgramAudit audit, SliceDelivery delivery)
@@ -24,7 +26,7 @@ public sealed class RuntimeCommands(
     private NativeOperator? _own;
 
     /// <summary>Where the cluster lives, where its slices go and which node
-    /// this desktop starts.</summary>
+    /// is configured here.</summary>
     public SliceDelivery Delivery => delivery;
 
     /// <summary>Validate the text the editor is holding through the native
@@ -38,8 +40,9 @@ public sealed class RuntimeCommands(
     /// <summary>
     /// Save the cluster's file and slice it for every node it declares,
     /// shipping each slice where it can go. A node's own document is never
-    /// saved here; a save writes the file whole, the runtime then judges what
-    /// is on disk, and every node's slice is audited, then its ship.
+    /// saved here, nor a file another editor changed since this one read it;
+    /// a save writes the file whole, the runtime then judges what is on disk,
+    /// and every node's slice is audited, then its ship.
     /// </summary>
     public ClusterSave Save(ClusterConfiguration cluster)
     {
@@ -54,7 +57,10 @@ public sealed class RuntimeCommands(
 
         try
         {
-            cluster.Write();
+            if (!cluster.TryWrite(out string stale))
+            {
+                return Failed(cluster.Path, stale) with { Stale = true };
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -103,32 +109,34 @@ public sealed class RuntimeCommands(
     }
 
     /// <summary>
-    /// Start this desktop's node from the saved cluster's file: its slice,
-    /// written where this desktop starts it, then started through the native
-    /// runtime as far as the runtime can. Refused, in words, where
+    /// Plan the node configured here from the saved cluster's file: its
+    /// slice, written where that node reads it, then read, validated and
+    /// planned by the native runtime, which publishes the plan for the board.
+    /// Nothing runs: running a node is the program that links its
+    /// technologies (ADR-0018, amendment 2026-09-26). Refused, in words, where
     /// <c>xmip.gui.toml</c> names no node or the runtime will not slice it.
     /// </summary>
-    public ConfigurationVerdict StartNode()
+    public ConfigurationVerdict PlanNode()
     {
         if (delivery.Node is not { Length: > 0 } node)
         {
-            return Audited("start node", new ConfigurationVerdict(
+            return Audited("plan node", new ConfigurationVerdict(
                 delivery.ClusterPath, XmipStatus.Invalid, [],
-                "this desktop starts no node: xmip.gui.toml names no Node"));
+                "no node is configured here: xmip.gui.toml names no Node"));
         }
 
         if (!File.Exists(delivery.ClusterPath))
         {
-            return Audited("start node", ConfigurationVerdict.NoFile(delivery.ClusterPath));
+            return Audited("plan node", ConfigurationVerdict.NoFile(delivery.ClusterPath));
         }
 
         NodeDelivery sliced = delivery.Deliver(File.ReadAllText(delivery.ClusterPath), node);
         Delivered(delivery.ClusterPath, sliced);
 
         return sliced.Outcome == NodeDelivery.Standing.Refused
-            ? Audited("start node", new ConfigurationVerdict(
+            ? Audited("plan node", new ConfigurationVerdict(
                 delivery.ClusterPath, XmipStatus.Invalid, [], sliced.Said))
-            : Audited("start node", Runtime().Start(sliced.Path));
+            : Audited("plan node", Runtime().Plan(sliced.Path));
     }
 
     // A save that wrote nothing, audited with why.

@@ -63,7 +63,7 @@ public static class MauiProgram
 
         // The cluster's xmip.toml the Configure page edits — the one file
         // anyone edits (ADR-0031, amendment 2026-10-05) — where each node's
-        // slice is written on save, and the node of it this desktop starts:
+        // slice is written on save, and the node of it configured here:
         // all three as xmip.gui.toml declares them, never read from a name.
         string? cluster = builder.Configuration["Xmip:ClusterConfiguration"];
         string? slices = builder.Configuration["Xmip:SliceDirectory"];
@@ -83,29 +83,17 @@ public static class MauiProgram
         // guessed (ADR-0052 clause 3), by the web host's one rule: one
         // snapshot per cluster where several are named, so the desktop moves
         // between clusters as the web does (the owner, 2026-10-02: "make it so
-        // that the desktop version opens multiple clusters too"). The desktop
-        // configures (ADR-0014, amendment of 2026-09-05), so when the surface
-        // is the runtime and a node is named, it starts that node from its
-        // slice of the cluster's file — the one thing a browser cannot do —
-        // audited as the Start button is (ADR-0062).
-        builder.Services.AddSingleton(services =>
-        {
-            ClusterSurfaces held = SurfaceChoice.OpenAll(builder.Configuration, basePath);
-
-            if (held.First is NativeOperator native && delivery.Node is not null)
-            {
-                _ = new RuntimeCommands(native, library, audit, delivery).StartNode();
-            }
-
-            return held;
-        });
+        // that the desktop version opens multiple clusters too"). Nothing is
+        // planned at launch: nothing starts itself, and a node is planned only
+        // when an operator presses Plan on the Configure page.
+        builder.Services.AddSingleton(_ => SurfaceChoice.OpenAll(builder.Configuration, basePath));
 
         // Configure's commands answer one surface: the first cluster's
-        // (SurfaceChoice.OpenFirst's rule), the one a node is started from.
+        // (SurfaceChoice.OpenFirst's rule), the one a node is planned on.
         builder.Services.AddSingleton(services =>
             services.GetRequiredService<ClusterSurfaces>().First);
 
-        // Validate, Save and Start on the Configure page go through the
+        // Validate, Save and Plan on the Configure page go through the
         // runtime the board reads when that is the native one; over a
         // snapshot, the runtime is found by the one rule and loaded for the
         // commands alone.

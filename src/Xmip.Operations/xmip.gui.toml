@@ -24,11 +24,13 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 # the app's data, written on the first save.
 ClusterConfiguration = "module/core/operation/gui/samples/xmip.toml"
 
-# The node of that cluster this desktop starts and watches when the surface
-# is native: its key under [nodes]. Its slice is written where this desktop
-# starts it from, so saving ships it; it is started at launch and by the
-# page's Start button — the one thing a browser cannot do (ADR-0014,
-# amendment of 2026-09-05). Remove the line to start nothing.
+# The node of that cluster configured here: its key under [nodes]. Its slice
+# is written where that node reads it, so saving ships it; when the surface
+# is native it is planned only by the page's Plan button, never at launch — read,
+# validated and its plan published through xmip_start_v1, the one thing a
+# browser cannot do (ADR-0014, amendment of 2026-09-05). Nothing runs it
+# here: a node runs in the program that links its technologies. Remove the
+# line to plan nothing.
 Node = "edge-01"
 
 # Where each node's slice is written on save, as <node>/xmip-node.toml, the
@@ -55,7 +57,7 @@ Node = "edge-01"
 # TrustAnchor = "anchor.pem"
 
 # Where this desktop's audit records go (ADR-0062): its start and stop, every
-# save, slice and ship, every refused edit, every validate and start of a
+# save, slice and ship, every refused edit, every validate and plan of a
 # node, and every error it logs, as
 # <AuditDirectory>/audit.toml. Unset, the audit capability decides:
 # XMIP_AUDIT_DIRECTORY, else the operating system's log.

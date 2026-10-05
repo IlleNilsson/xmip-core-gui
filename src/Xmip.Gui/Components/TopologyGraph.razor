@@ -9,7 +9,10 @@
    owner, 2026-09-18) — origin is never a filter here: a line configured and
    never used is dashed and says so on itself, a used one says its volume and
    rate (the owner, 2026-09-25). Every node is a link to its drill; a line is
-   selected by a click. The legend names the patterns. *@
+   selected by a click, or from the keyboard — each is a button in the tab
+   order, named for its ends, taken by Enter or Space — and the inspector's
+   Traffic list selects the same lines as text. The legend names the
+   patterns. *@
 @using Xmip.Gui.Surface
 
 <div class="topology-canvas">
@@ -52,8 +55,10 @@
         @foreach (RenderedLink link in RenderedLinks)
         {
             <g class="@LinkClass(link.Link)">
-                <path class="link-hit" d="@Curve(link)"
-                      @onclick="() => OnSelectLink.InvokeAsync(link.Link)" />
+                <path class="link-hit" d="@Curve(link)" tabindex="0" role="button"
+                      aria-label="@Named(link.Link)"
+                      @onclick="() => OnSelectLink.InvokeAsync(link.Link)"
+                      @onkeydown="key => Pressed(key, link.Link)" />
                 <path id="@SvgId(link.Link.Id)" class="link-line" d="@Curve(link)"
                       marker-end="url(#topology-arrow)" />
                 @* What passes over it, on the line: the owner, 2026-09-25 — the
@@ -358,6 +363,18 @@
 
         return Focus is null ? null : Outside;
     }
+
+    // A line as a reader of the screen hears it: what it is, between what,
+    // and what passes over it.
+    private string Named(CommunicationLink link) =>
+        $"Select {English.Name(link.Pattern)} from {Label(link.From)} to {Label(link.To)}: "
+        + English.Traffic(link);
+
+    private string Label(string id) =>
+        NodeById.TryGetValue(id, out TopologyNode? node) ? node.Label : id;
+
+    private Task Pressed(KeyboardEventArgs key, CommunicationLink link) =>
+        key.Key is "Enter" or " " ? OnSelectLink.InvokeAsync(link) : Task.CompletedTask;
 
     private static string LinkClass(CommunicationLink link) =>
         $"topology-link {MoodClass.Of(link.State)} {English.Word(link.Origin)} {English.Word(link.Pattern)}";
