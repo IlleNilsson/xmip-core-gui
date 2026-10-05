@@ -3,14 +3,17 @@
    to the runtime as an edit at the entry's section and the value's key. A
    value is added or removed the same way, and the entry removed whole.
    Nothing here knows what a value means; the runtime refuses what would
-   not read. *@
+   not read. Every control is named for the value it edits, for a reader of
+   the screen as for the eye; a removal is an edit like any other, undone
+   until saved by Discard changes. *@
 
 <div class="group">
     <div class="group-head">
         <h2>@Kind</h2>
         @if (Entry.Section.Count > 1)
         {
-            <button class="del" @onclick="() => Edit(new ClusterEdit.RemoveEntry(Entry.Section))">
+            <button class="del" aria-label="@($"Remove {Kind}")"
+                    @onclick="() => Edit(new ClusterEdit.RemoveEntry(Entry.Section))">
                 remove
             </button>
         }
@@ -25,12 +28,13 @@
             @foreach (ArtifactField field in Entry.Fields)
             {
                 ArtifactField held = field;
+                string key = string.Join('.', held.Key);
                 <tr>
-                    <td><code>@string.Join('.', held.Key)</code></td>
+                    <td><code>@key</code></td>
                     <td>
                         @if (held.Kind == "boolean")
                         {
-                            <select value="@held.Value"
+                            <select value="@held.Value" aria-label="@($"{key} value")"
                                     @onchange="change => Set(held.Key, change.Value)">
                                 <option value="true">true</option>
                                 <option value="false">false</option>
@@ -38,23 +42,30 @@
                         }
                         else
                         {
-                            <input value="@held.Value"
+                            <input value="@held.Value" aria-label="@($"{key} value")"
                                    @onchange="change => Set(held.Key, change.Value)" />
                         }
                     </td>
                     <td class="kind">@held.Kind</td>
                     <td>
-                        <button class="del" @onclick="() => Remove(held.Key)">✕</button>
+                        <button class="del" aria-label="@($"Remove {key}")"
+                                title="@($"Remove {key}")" @onclick="() => Remove(held.Key)">
+                            <span aria-hidden="true">✕</span>
+                        </button>
                     </td>
                 </tr>
             }
             <tr>
-                <td><input placeholder="key, a.b for a sub-table's" @bind="_key" /></td>
                 <td>
-                    <input placeholder="value as TOML: &quot;text&quot;, 4, true" @bind="_value" />
+                    <input placeholder="key, a.b for a sub-table's" aria-label="New key"
+                           @bind="_key" />
+                </td>
+                <td>
+                    <input placeholder="value as TOML: &quot;text&quot;, 4, true"
+                           aria-label="New value, as TOML" @bind="_value" />
                 </td>
                 <td></td>
-                <td><button @onclick="Add">+ add</button></td>
+                <td><button aria-label="@($"Add the value to {Kind}")" @onclick="Add">+ add</button></td>
             </tr>
         </tbody>
     </table>

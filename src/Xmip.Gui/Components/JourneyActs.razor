@@ -3,28 +3,49 @@
 @inject RoleContext Role
 @inject ProgramAudit Audited
 
-@* The acts on the last Journey that failed at a Send Port (runtime-model.md
-   section 13; ADR-0013), where its node publishes it: the Port's own record,
-   its evidence naming the Journey and why (JourneyOperation.FailedIn, the one
-   reader of that clause). An Operator retries or dismisses it; an Observer is
-   shown the evidence and no act. What the last act came to stays beside the
-   buttons while the publications tick under it. There is no list of failed
-   Journeys: only the one the Port says. *@
-@if (JourneyOperation.FailedIn(Record.Evidence) is { } journey)
+@* Every Journey that failed at a Send Port, at the Port's own record, with
+   Retry and Dismiss on each (runtime-model.md section 13; ADR-0013): the
+   list the surface reads (IOperatorSurface.FailedJourneys) — from Xmip
+   Storage a page at a time where the node runs in this process, the oldest
+   hundred its publication carries otherwise — each Journey with its place
+   and why, and how many wait at the Port. A surface that lists none falls
+   back to the one Journey the Port's evidence names
+   (JourneyOperation.FailedIn, the one reader of that clause). An Operator
+   retries or dismisses; an Observer is shown the Journeys and no act. What
+   the last act came to stays beside the list while the publications tick
+   under it. Until 2026-10-05 only the last Journey the evidence named was
+   offered. *@
+@if (Shown.Count > 0)
 {
     <div class="journey-acts">
-        @if (Role.MayOperate())
+        <span class="subs-act-said">@Counted</span>
+        <ul class="journey-list">
+            @foreach (FailedJourneyRecord failed in Shown)
+            {
+                <li class="journey-failed" data-journey="@failed.Journey">
+                    @if (Role.MayOperate())
+                    {
+                        <button class="act" title="@RetrySaid"
+                                @onclick="() => Act(failed.Journey, JourneyAct.Retry)">
+                            Retry
+                        </button>
+                        <button class="act" title="@DismissSaid"
+                                @onclick="() => Act(failed.Journey, JourneyAct.Dismiss)">
+                            Dismiss
+                        </button>
+                    }
+                    <span class="subs-act-said">the Journey @failed.Journey</span>
+                    @if (failed.Reason.Length > 0)
+                    {
+                        <span class="subs-act-said"> — @failed.Reason</span>
+                    }
+                </li>
+            }
+        </ul>
+        @if (Next is { } next)
         {
-            <button class="act" title="@RetrySaid"
-                    @onclick="() => Act(journey, JourneyAct.Retry)">
-                Retry
-            </button>
-            <button class="act" title="@DismissSaid"
-                    @onclick="() => Act(journey, JourneyAct.Dismiss)">
-                Dismiss
-            </button>
+            <button class="act more" @onclick="() => Page(next)">More</button>
         }
-        <span class="subs-act-said">the Journey @journey</span>
         @if (Answer.Length > 0)
         {
             <span class="subs-said @(Answer.StartsWith("REFUSED", StringComparison.Ordinal)
@@ -48,7 +69,8 @@
     [Parameter, EditorRequired]
     public IOperatorSurface Surface { get; set; } = default!;
 
-    /// <summary>The Send Port's own record, whose evidence names the Journey.</summary>
+    /// <summary>The Send Port's own record: its scope is where the Journeys
+    /// are listed, its evidence names the last that failed.</summary>
     [Parameter, EditorRequired]
     public HealthRecord Record { get; set; } = default!;
 
@@ -57,6 +79,54 @@
     public EventCallback Acted { get; set; }
 
     private string Answer { get; set; } = string.Empty;
+
+    private IReadOnlyList<FailedJourneyRecord> Shown { get; set; } = [];
+
+    private ulong Count { get; set; }
+
+    private ulong? Next { get; set; }
+
+    // Where the page shown starts in the Port's queue.
+    private ulong From { get; set; }
+
+    private string Counted => Count == 1
+        ? "1 Journey failed in its Send Port's queue"
+        : $"{Count} Journeys failed in its Send Port's queue";
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Read();
+    }
+
+    // The page from From of the Journeys that failed at the Port's scope; the
+    // one the evidence names where the surface lists none.
+    private void Read()
+    {
+        FailedJourneyList failed = Surface.FailedJourneys(Record.Scope, From);
+        FailedJourneyRecord[] listed = [.. failed.Journeys];
+
+        if (listed.Length > 0)
+        {
+            Shown = listed;
+            Count = failed.Ports.Aggregate(0ul, (sum, port) => sum + port.Count);
+            Next = failed.Ports.Select(port => port.Next).FirstOrDefault(next => next is not null);
+            return;
+        }
+
+        string? named = JourneyOperation.FailedIn(Record.Evidence);
+        Shown = named is null
+            ? []
+            : [new FailedJourneyRecord(string.Empty, string.Empty, named, 0, string.Empty)];
+        Count = (ulong)Shown.Count;
+        Next = null;
+    }
+
+    private void Page(ulong next)
+    {
+        From = next;
+        Read();
+    }
 
     // An act, by a role that may act: taken through the surface, recorded in
     // this host's audit with what came of it (ADR-0062) under the action

@@ -58,7 +58,11 @@ something is beneath it and its configuration where nothing is, so cluster to
 node to stage to endpoint is a chain of addresses. Every line says what passes
 over it — its volume and rate, or `configured · no traffic observed` on a path
 configured and never used, drawn dashed — and the inspector lists every link
-within the open node with its origin (ADR-0052, amendment 2026-09-25). Open at a
+within the open node with its origin (ADR-0052, amendment 2026-09-25). A line
+is selected by a click or from the keyboard: each is a button in the tab
+order, named for its pattern and its ends and taken by Enter or Space, and
+each link's ends in the inspector's Traffic list is a button that selects the
+same line as text. Open at a
 node, the canvas is that node framed with what is beneath it, and nothing
 beside it; traffic leaving it runs to one marker labeled *outside*, and the
 inspector names that end the same way. Where the publisher draws Parties
@@ -180,19 +184,22 @@ still matches nothing stays. The Replay goes through `IOperatorSurface.Act`
 publication says its publisher takes orders — and is recorded in the host's
 audit as `dead-message.replay`. An Observer is shown the list and no act.
 
-**A Journey that failed** (runtime-model.md section 13; ADR-0013) is acted
-on where the Monitor shows it: a Send Port's own record, at
-`<node>/send/<Port>`, says in its evidence what the Port sent, what failed and
-the last Journey that failed there and why. Drilled to that scope, an
-Operator is offered Retry — sent again, its tries begun anew — and Dismiss —
-given up, written Dismissed and taken out of the Port's queue — beside the
-Journey's identifier (`JourneyActs.razor`; the identifier read by
-`JourneyOperation.FailedIn`, the one reader of that clause). The act goes
-through `IOperatorSurface.Act` — applied in the node's process, or over a
-snapshot left where its publication says its publisher takes orders — and
-is recorded in the host's audit as `journey.retry` or `journey.dismiss`. An
-Observer is shown the Journey and no act. There is no list of failed
-Journeys.
+**The Journeys that failed** (runtime-model.md section 13; ADR-0013) are
+listed and acted on where the Monitor shows them: a Send Port's own record,
+at `<node>/send/<Port>`, says in its evidence what the Port sent, what
+failed, how many failed wait in its queue and the last that failed and why.
+Drilled to that scope, every Journey that failed there is listed with its
+identifier and why — read through `IOperatorSurface.FailedJourneys`, a page
+at a time from Xmip Storage in the node's process with More for the next,
+or the oldest hundred a snapshot's publication carries — how many wait, and
+for each an Operator is offered Retry — sent again, its tries begun anew —
+and Dismiss — given up, written Dismissed and taken out of the Port's queue
+(`JourneyActs.razor`). A surface that lists none offers the one Journey the
+evidence names (`JourneyOperation.FailedIn`, the one reader of that clause).
+The act goes through `IOperatorSurface.Act` — applied in the node's process,
+or over a snapshot left where its publication says its publisher takes
+orders — and is recorded in the host's audit as `journey.retry` or
+`journey.dismiss`. An Observer is shown the Journeys and no act.
 
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
@@ -304,8 +311,8 @@ Kestrel, not `xmip-core-library-tls`.
 A native window; needs the maui-windows workload; Windows is the only
 platform it carries. Same screen, same operator boundary, so the two cannot
 disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
-slices it for each node on save, and starts the node of it its configuration
-names.
+slices it for each node on save, and plans the node of it its configuration
+names — validated and its plan published; nothing runs it here.
 
 **The Configure page edits the cluster's `xmip.toml` and nothing else**
 (ADR-0031, amendment 2026-10-05: *node TOML files shall not be edited, only
@@ -321,7 +328,23 @@ does not define yet shows the runtime's note and nothing to edit. An entry
 opens with its values edited in place as TOML (`"text"`, `4`, `true`),
 values added and removed, entries added — with the values they must hold,
 which the runtime names where one is missing — and removed, nodes added
-and removed.
+and removed. Every value, key and entry control carries an accessible name
+for what it edits (`name value`, `Remove start`, `Open drop, cluster`), and a
+removal, like every edit, is undone until saved by **Discard changes**.
+
+**Edits not saved are never lost by leaving, and never overwrite another
+editor's.** While the text holds edits, *changed, not saved* shows beside
+**Discard changes**, which reads the file again as it is on disk; leaving the
+page is held, and the page asks: **Save and leave**, **Discard and leave** or
+**Stay** (Blazor's `NavigationLock`; a browser's own close asks too). The
+page keeps the SHA-256 of the file as it read or last wrote it, and a save
+first compares the disk against it: a file another editor saved meanwhile is
+not written over — the save is refused in words, audited, and offers
+**Reload from disk** — the same ground the VS Code designer refuses an edit
+on, by the document's version. A save writes a temporary file of its own
+beside the target (`xmip.toml.<guid>.writing`), flushes it to the device and
+renames it over the file, so a reader never sees half of one and two saves
+never share a temporary file.
 
 The page holds no configuration rule. Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
@@ -350,9 +373,14 @@ path yet that puts a file on another node — desired state slices the
 cluster's file on the node as it deploys it (the Ansible role `xmip_node`,
 `deploy/dsc/xmip-node.dsc.yaml`), and a node's operate listener (ADR-0067)
 takes no configuration; or *refused*, with the runtime's sentence, for a
-node that does not slice, which stops no other node. Start slices the saved
-file for the desktop's node and starts it from its slice through
-`xmip_start_v1`, as the desktop does at launch.
+node that does not slice, which stops no other node. **Plan** slices the saved
+file for the node configured here and hands its slice to `xmip_start_v1`,
+only when an operator presses it, never at launch: the runtime reads,
+validates and publishes the node's plan, which the board then shows, and
+runs nothing — a node runs in the program that links its technologies
+(ADR-0018, amendment 2026-09-26). The page says *planned … not running*, the
+node's badge says *configured here*, and nothing on it says started until
+there is lifecycle control that starts one.
 
 `src/Xmip.Operations.Test` proves it against the runtime's own build: the
 sample cluster, `samples/xmip.toml`, opens and validates; a value edited in
@@ -361,8 +389,16 @@ naming it, and added with it; a node is added; a refused edit leaves the text
 as it was; a node's own document is not editable; a cluster begun in an
 empty file becomes one when it declares a node; each node is sliced, the
 desktop's shipped and another not, and a node that does not slice is refused
-without stopping the others; and every save, slice, ship, refused edit and
-start lands in the audit.
+without stopping the others; a save over a file another editor changed, or
+one that appeared since an empty open, is refused and writes nothing, and a
+save leaves no temporary file; and every save, slice, ship, refused edit and
+plan lands in the audit. `ConfigurePageTest` renders the page with bUnit,
+compiling its Razor components where they live as it compiles the
+Configuration folder: leaving with edits is held and Stay keeps them, Discard
+and leave drops them, Save and leave writes them, leaving with nothing
+changed is not held, Discard changes is offered only while there are edits,
+a stale save offers a reload, the node is planned and never said to start,
+and every control has its accessible name.
 
 Configuration is each host's `xmip.gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
@@ -370,8 +406,8 @@ Configuration is each host's `xmip.gui.toml`, with the same keys under
 when the surface is a snapshot — a path with no file behind it is said so on
 the page — `Url = <web host>` when the surface is remote, `Role`, and, on the
 desktop only, `ClusterConfiguration` (the cluster's `xmip.toml`, else
-`xmip/xmip.toml` under the app's data), `Node` (the node of it the desktop
-starts; none when unset) and `SliceDirectory` (where each node's slice is
+`xmip/xmip.toml` under the app's data), `Node` (the node of it configured
+here, planned only by Plan; none when unset) and `SliceDirectory` (where each node's slice is
 written, else `xmip/slices` under the app's data). The web host serves its own surface at
 `/surface`: a SignalR hub every remote surface follows and is told through
 when this host's surface changes, so the CLI, the PowerShell module and a GUI
@@ -395,7 +431,7 @@ as *An unhandled error has occurred*, is logged by the framework at Error and
 so is a record; the web host's `AuditCircuitHandler` records who was
 connected — each circuit opened, its connection lost and regained, closed. The
 desktop records each save of the cluster's `xmip.toml`, each node's slice and
-its ship, every edit the runtime refused, and each validate and start of a
+its ship, every edit the runtime refused, and each validate and plan of a
 node, with what the runtime answered. A web host that cannot start records why, and when the
 runtime's library cannot be loaded at all the host writes one entry to the
 operating system's log itself, saying so. A Debug build of the web host has

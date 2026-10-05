@@ -463,6 +463,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .config-item .count { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .config-item.undefined .config-name { color: var(--muted); }
 .cfg .changed { color: var(--muted); font-size: 0.85rem; }
+/* Leaving with edits not saved: the page asks before it lets go. */
+.cfg .leaving { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.cfg .leaving p { margin: 0 auto 0 0; font-weight: 600; }
 .locs td.kind { color: var(--muted); font-size: 0.8rem; }
 .deliveries tr.refused td { color: var(--red); }
 .deliveries tr.notshipped td:nth-child(2) { color: var(--muted); }
@@ -582,7 +585,15 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node.party .node-body { rx: 34px; }
 .topology-node.selected .node-body { stroke: var(--brand); stroke-width: 3.5; }
 .topology-inspector h4.topology-facing { font-size: 0.8rem; margin: 0.6rem 0 0.25rem; }
-.topology-traffic .ends { font-family: ui-monospace, monospace; }
+.topology-traffic .ends {
+    font: inherit; font-family: ui-monospace, monospace; color: var(--brand-deep);
+    background: none; border: 0; padding: 0; text-align: left; cursor: pointer;
+}
+.topology-traffic .ends:hover { text-decoration: underline; }
+.topology-traffic .ends[aria-pressed="true"] { font-weight: 700; }
+/* A line taken from the keyboard shows where the focus is. */
+.topology-link .link-hit:focus { outline: none; }
+.topology-link .link-hit:focus-visible { stroke: var(--brand); stroke-opacity: 0.35; }
 .topology-traffic li.configured .figure { color: var(--muted); font-style: italic; }
 .topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
 .topology-link.retry .flow-particle { fill: var(--red); }

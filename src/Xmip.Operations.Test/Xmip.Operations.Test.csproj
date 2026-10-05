@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <!--
     The desktop configuration editor's tests (ADR-0052 clause 6). The cluster's
@@ -6,11 +6,15 @@
     edits, slices and judges it (xmip_operate.h section 10, xmip_validate_v1),
     and what the runtime says is what is asserted: an edit made or refused, a
     node's own document never edited, each node's slice shipped or not, and
-    every save, slice, ship and refused edit audited.
+    every save, slice, ship and refused edit audited. The Configure page and
+    its editing components are rendered with bUnit: edits not saved held on
+    leaving, discarded on request, a stale file never overwritten, and every
+    control named for what it edits.
 
     Xmip.Operations is a MAUI executable for Windows, which a test host cannot
-    reference; its Configuration folder depends on nothing of MAUI, so the
-    test compiles those files where they live. They are linked, not copied.
+    reference; its Configuration folder and its Razor components depend on
+    nothing of MAUI, so the test compiles those files where they live. They
+    are linked, not copied.
 
     Target framework and the rest come from Directory.Build.props.
   -->
@@ -25,6 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="bunit" Version="2.11.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
@@ -37,6 +42,10 @@
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
     <Compile Include="..\Xmip.Operations\Configuration\*.cs"
              Link="Configuration\%(Filename)%(Extension)" />
+    <Content Include="..\Xmip.Operations\Components\Editing\*.razor"
+             Link="Components\Editing\%(Filename)%(Extension)" />
+    <Content Include="..\Xmip.Operations\Components\Pages\Configure.razor"
+             Link="Components\Pages\Configure.razor" />
     <!-- The test cluster's names, read by the one helper every .NET test
          shares (ADR-0056, amendment 2026-10-03). -->
     <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"

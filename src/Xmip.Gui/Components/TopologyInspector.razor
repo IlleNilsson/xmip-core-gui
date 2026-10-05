@@ -5,7 +5,8 @@
    out of the open node with what passes over it — configured, observed or
    both, and a path configured and never used named as such (ADR-0052, amendment
    2026-09-25). The lists are what a page prerendered without a circuit, a
-   reader of the page, and a test can all follow. *@
+   reader of the page, and a test can all follow; each link's ends are a
+   button that selects it, the canvas's line by keyboard and as text. *@
 @using Xmip.Gui.Surface
 
 <aside class="topology-inspector">
@@ -122,8 +123,11 @@
         <ul class="topology-traffic">
             @foreach (CommunicationLink link in Traffic)
             {
+                CommunicationLink held = link;
                 <li class="@English.Word(link.Origin) @MoodClass.Of(link.State)" title="@link.Evidence">
-                    <span class="ends">@Within(link.From) → @Within(link.To)</span>
+                    <button type="button" class="ends"
+                            aria-pressed="@(held == SelectedLink ? "true" : "false")"
+                            @onclick="() => OnSelectLink.InvokeAsync(held)">@Within(link.From) → @Within(link.To)</button>
                     <span class="figure">@English.Traffic(link)</span>
                     <span class="origin">@English.Name(link.Origin)</span>
                 </li>
@@ -149,6 +153,10 @@
     /// <summary>The selected communication relationship, or null.</summary>
     [Parameter]
     public CommunicationLink? SelectedLink { get; set; }
+
+    /// <summary>Raised with the relationship chosen from the Traffic list.</summary>
+    [Parameter]
+    public EventCallback<CommunicationLink> OnSelectLink { get; set; }
 
     /// <summary>The node the topology is open at, or null for infrastructure.</summary>
     [Parameter]

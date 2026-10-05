@@ -11,5 +11,7 @@ namespace Xmip.Operations.Configuration;
 /// <param name="Said">The sentence for a person.</param>
 /// <param name="Nodes">Each node's slice, in the order the file declares
 /// them; empty when nothing was written.</param>
+/// <param name="Stale">Whether nothing was written because the file changed
+/// on disk since the editor read it; reloading it is the way on.</param>
 public sealed record ClusterSave(
-    bool Saved, bool Valid, string Said, IReadOnlyList<NodeDelivery> Nodes);
+    bool Saved, bool Valid, string Said, IReadOnlyList<NodeDelivery> Nodes, bool Stale = false);

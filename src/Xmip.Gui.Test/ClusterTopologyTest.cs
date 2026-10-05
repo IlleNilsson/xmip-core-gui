@@ -1,6 +1,7 @@
 using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
@@ -366,6 +367,42 @@ public sealed class ClusterTopologyTest : BunitContext
         // The scopes the topology drills to are rows of the configuration.
         IRenderedComponent<Configuration> tree = Render<Configuration>();
         Assert.NotNull(tree.Find($"#{ScopeLink.Anchor($"{Nodes}/{Sender}/send/tcp")}"));
+    }
+
+    /// <summary>
+    /// A relationship is not the mouse's alone: every line on the canvas is a
+    /// button in the tab order, named for its ends and taken by Enter, and
+    /// the inspector's Traffic list selects the same lines as text.
+    /// </summary>
+    [Fact]
+    public void ARelationshipIsSelectedFromTheKeyboardAndFromTheTrafficList()
+    {
+        IRenderedComponent<Topology> page = Render<Topology>();
+        IReadOnlyList<IElement> lines = page.FindAll("g.topology-link path.link-hit");
+
+        Assert.NotEmpty(lines);
+        Assert.All(lines, line =>
+        {
+            Assert.Equal("0", line.GetAttribute("tabindex"));
+            Assert.Equal("button", line.GetAttribute("role"));
+            string named = line.GetAttribute("aria-label") ?? string.Empty;
+            Assert.StartsWith("Select ", named, StringComparison.Ordinal);
+            Assert.Contains(" from ", named, StringComparison.Ordinal);
+            Assert.Contains(" to ", named, StringComparison.Ordinal);
+        });
+        Assert.DoesNotContain(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+
+        lines[0].KeyDown(new KeyboardEventArgs { Key = "Tab" });
+        Assert.DoesNotContain(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+
+        page.FindAll("g.topology-link path.link-hit")[0].KeyDown(new KeyboardEventArgs { Key = "Enter" });
+        Assert.Contains(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+
+        page.FindAll(".topology-traffic li button.ends")[1].Click();
+        IElement pressed = Assert.Single(
+            page.FindAll(".topology-traffic button.ends"),
+            ends => ends.GetAttribute("aria-pressed") == "true");
+        Assert.Equal(page.FindAll(".topology-traffic li button.ends")[1].TextContent, pressed.TextContent);
     }
 
     private void Address(string uri)
