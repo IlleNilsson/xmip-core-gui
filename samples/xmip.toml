@@ -1,0 +1,59 @@
+# A cluster's xmip.toml the Operation Desktop opens, so there is something to
+# configure and a node to start. Only this file is edited; each node's
+# document is sliced from it by the one slicing when it is saved (ADR-0031,
+# amendment 2026-10-05; module/platform/configure/doc/cluster-configuration.md).
+#
+# The runtime performs startup phases 1 to 3 on a node's slice: read, build
+# the execution tree, validate. It does not load the module or run the
+# process yet, and every record it publishes says so.
+
+[service]
+name = "xmip"
+cluster_name = "lab"
+
+[[modules]]
+name = "file"
+start = true
+
+[modules.manifest.identity]
+name = "file"
+version = "0.1.0"
+
+[[modules.manifest.capabilities]]
+capability = "transport:file"
+execution_host = "native-rust"
+trusted_required = true
+
+[modules.manifest.entrypoint]
+library_path = "xmip_core_transport_file"
+symbol = "xmip_create_module_v1"
+
+[[xmip_processes]]
+name = "approval"
+start = true
+required_modules = ["file"]
+
+# Where Xmip starts working, and where a Message leaves. The transport names
+# the module above; the address is in that transport's own terms.
+
+[[receive_locations]]
+name = "orders-in"
+start = true
+transport = "file"
+address = "C:/xmip/in/orders"
+
+[[send_locations]]
+name = "billing-out"
+start = true
+transport = "file"
+address = "C:/xmip/out/billing"
+
+# The node this desktop starts (xmip.gui.toml's Node): its own values win
+# over the cluster's.
+
+[nodes.edge-01.service]
+name = "xmip-edge-01"
+
+[[nodes.edge-01.receive_locations]]
+name = "orders-in"
+address = "C:/xmip/edge-01/in/orders"

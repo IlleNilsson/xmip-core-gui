@@ -1,14 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The desktop configuration editor's tests (ADR-0052 clause 6). The editor's
-    view of a node configuration is proved here against the runtime that
-    judges it: a document the editor saves is handed to xmip_validate_v1, and
-    what the runtime says is what is asserted.
+    The desktop configuration editor's tests (ADR-0052 clause 6). The cluster's
+    xmip.toml the editor edits is proved here against the runtime that views,
+    edits, slices and judges it (xmip_operate.h section 10, xmip_validate_v1),
+    and what the runtime says is what is asserted: an edit made or refused, a
+    node's own document never edited, each node's slice shipped or not, and
+    every save, slice, ship and refused edit audited.
 
     Xmip.Operations is a MAUI executable for Windows, which a test host cannot
-    reference; NodeConfiguration depends on nothing of MAUI, so the test
-    compiles that one file where it lives. It is linked, not copied.
+    reference; its Configuration folder depends on nothing of MAUI, so the
+    test compiles those files where they live. They are linked, not copied.
 
     Target framework and the rest come from Directory.Build.props.
   -->
@@ -33,10 +35,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
-    <Compile Include="..\Xmip.Operations\Configuration\NodeConfiguration.cs"
-             Link="Configuration\NodeConfiguration.cs" />
-    <Compile Include="..\Xmip.Operations\Configuration\ConfigStore.cs"
-             Link="Configuration\ConfigStore.cs" />
+    <Compile Include="..\Xmip.Operations\Configuration\*.cs"
+             Link="Configuration\%(Filename)%(Extension)" />
     <!-- The test cluster's names, read by the one helper every .NET test
          shares (ADR-0056, amendment 2026-10-03). -->
     <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"

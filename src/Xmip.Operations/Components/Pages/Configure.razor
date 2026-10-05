@@ -1,218 +1,170 @@
 @page "/configure"
-@using Microsoft.Extensions.Configuration
 @using Xmip.Operations.Configuration
-@inject ConfigStore Store
 @inject RuntimeCommands Runtime
 @inject RoleContext Role
 @inject NavigationManager Nav
 
 <PageTitle>Xmip — Configure</PageTitle>
 
+@* The cluster's xmip.toml, the one file anyone edits (ADR-0031, amendment
+   2026-10-05): an overview of the cluster, drilling down to a node and to
+   its artifacts by kind, then to an entry whose values are edited in place.
+   Every view, edit and refusal is the runtime's (xmip_operate.h section
+   10); the page draws what it answers and sends the edits. *@
 <section class="cfg-layout">
     <aside class="configs">
-        <h2>Configurations</h2>
-        @foreach (ConfigStore.Entry entry in _entries)
+        <h2>Cluster</h2>
+        <button class="config-item @Sel(Overview)" @onclick="() => Show(Overview)">
+            <span class="config-name">@Say(_cluster?.Name, "Overview")</span>
+        </button>
+
+        <h2>Nodes</h2>
+        @foreach (string node in _cluster?.Nodes ?? [])
         {
-            <button class="config-item @(entry.Path == _path ? "selected" : "")"
-                    @onclick="() => Open(entry.Path)">
-                <span class="config-name">@entry.Name</span>
-                @if (entry.Started)
+            string name = node;
+            <button class="config-item @Sel(NodeKey(name))" @onclick="() => Show(NodeKey(name))">
+                <span class="config-name">@name</span>
+                @if (name == Runtime.Delivery.Node)
                 {
-                    <span class="badge" title="the NodeConfiguration xmip.gui.toml names">started here</span>
+                    <span class="badge" title="the Node xmip.gui.toml names">started here</span>
                 }
             </button>
         }
-        <p class="dir">@Store.Directory()</p>
+
+        <h2>Artifacts</h2>
+        @foreach (ArtifactView view in Artifacts())
+        {
+            ArtifactView kind = view;
+            <button class="config-item @Sel(KindKey(kind.Kind)) @(kind.Defined ? "" : "undefined")"
+                    @onclick="() => Show(KindKey(kind.Kind))">
+                <span class="config-name">@kind.Title</span>
+                @if (kind.Defined)
+                {
+                    <span class="count">@kind.Entries.Count</span>
+                }
+            </button>
+        }
+        <p class="dir">@Runtime.Delivery.ClusterPath</p>
     </aside>
 
-    @if (_node is not null)
-    {
-        @* The tree: navigate the node, its Processes and its Locations, and edit
-           each. Opens on Execution Style — the Processes — by default. *@
-        <nav class="tree">
-            <button class="tree-node @Sel("node")" @onclick='() => _selection = "node"'>Node</button>
-
-            <div class="tree-branch">
-                <button class="tree-node @Sel("processes")" @onclick='() => _selection = "processes"'>
-                    Execution style
-                </button>
-                @for (int i = 0; i < _node.Processes.Count; i++)
-                {
-                    int index = i;
-                    <button class="tree-leaf @Sel($"process:{index}")"
-                            @onclick='() => Select("process", index)'>
-                        @Name(_node.Processes[index].Name)
-                        <span class="tag">@(_node.Processes[index].ExecutionStyle ?? "style not set")</span>
-                    </button>
-                }
-            </div>
-
-            @foreach ((string key, string title, List<NodeConfiguration.Location> locations) in Branches())
+    <div class="cfg">
+        <div class="path">
+            <button class="primary" disabled="@(_cluster is not { Editable: true })"
+                    @onclick="Save">Save</button>
+            <button disabled="@(_cluster is null)" @onclick="Validate">Validate</button>
+            @if (Runtime.Delivery.Node is { } started)
             {
-                string branch = key;
-                <div class="tree-branch">
-                    <button class="tree-node @Sel(branch)" @onclick="() => _selection = branch">@title</button>
-                    @for (int i = 0; i < locations.Count; i++)
-                    {
-                        int index = i;
-                        <button class="tree-leaf @Sel($"{branch}:{index}")"
-                                @onclick="() => Select(branch, index)">
-                            @Name(locations[index].Name)
-                            <span class="tag">@(locations[index].Transport ?? "no transport")</span>
-                        </button>
-                    }
-                </div>
+                <button @onclick="StartNode">Start @started</button>
             }
-        </nav>
-
-        <div class="cfg">
-            <div class="path">
-                <button class="primary" @onclick="Save">Save</button>
-                <button @onclick="Validate">Validate</button>
-                <button @onclick="StartNode">Start node</button>
-                <span class="status @(_ok ? "ok" : "bad")">@_status</span>
-            </div>
-
-            @if (_selection == "node")
+            @if (_cluster is { Changed: true })
             {
-                <div class="group">
-                    <h2>Cluster and node</h2>
-                    <div class="fields">
-                        <label>Service name<input @bind="_node.ServiceName" /></label>
-                        <label>Cluster<input @bind="_node.ClusterName" /></label>
-                        <label>Node<input @bind="_node.NodeName" /></label>
-                    </div>
-                </div>
+                <span class="changed">changed, not saved</span>
             }
-            else if (_selection == "processes")
+            <span class="status @(_ok ? "ok" : "bad")">@_status</span>
+        </div>
+
+        @if (_deliveries.Count > 0)
+        {
+            <div class="group">
+                <h2>Each node's slice</h2>
+                <table class="locs deliveries">
+                    <thead><tr><th>Node</th><th>Outcome</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (NodeDelivery delivered in _deliveries)
+                        {
+                            <tr class="@delivered.Outcome.ToString().ToLowerInvariant()">
+                                <td>@delivered.Node</td>
+                                <td>@delivered.Word</td>
+                                <td>@delivered.Said</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (_cluster is null)
+        {
+        }
+        else if (!_cluster.Editable)
+        {
+            <div class="group">
+                <h2>Not a cluster's xmip.toml</h2>
+                <p class="empty">@_cluster.Refusal</p>
+            </div>
+        }
+        else if (CurrentEntry() is { } entry)
+        {
+            <EntryEditor Entry="entry" Kind="EntryKind(entry)" Edit="Edit" />
+        }
+        else if (_selection == Overview)
+        {
+            @foreach (ArtifactEntry shared in _cluster.Views.Of("cluster")?.Entries ?? [])
+            {
+                <EntryEditor Entry="shared" Kind="Shared" Edit="Edit" />
+            }
+            <div class="group">
+                <div class="group-head">
+                    <h2>Nodes</h2>
+                    <input placeholder="node name" @bind="_newNode" />
+                    <button @onclick="AddNode">+ add node</button>
+                </div>
+                <EntryList Entries="NodeEntries()" Open="Open" Edit="Edit" />
+            </div>
+        }
+        else if (_selection.StartsWith(NodePrefix, StringComparison.Ordinal))
+        {
+            string node = _selection[NodePrefix.Length..];
+            @if (NodeEntries().FirstOrDefault(own => own.Name == node) is { } own)
+            {
+                <EntryEditor Entry="own" Kind="NodeTitle" Edit="Edit" />
+            }
+            @foreach (ArtifactView view in Artifacts().Where(view => view.Defined))
             {
                 <div class="group">
                     <div class="group-head">
-                        <h2>Execution style</h2>
-                        <button @onclick="AddProcess">+ add Process</button>
+                        <h2>@view.Title</h2>
+                        <AddEntry Places="Places(view, node)" Edit="Edit" />
                     </div>
-                    @if (_node.Processes.Count == 0)
-                    {
-                        <p class="empty">No Xmip Processes yet. Add one to set how its work runs
-                            — Sequential keeps order, Parallel and Concurrent trade it for throughput.</p>
-                    }
-                    else
-                    {
-                        <table class="locs">
-                            <thead>
-                                <tr><th>Process</th><th>Execution style</th><th>On</th><th></th></tr>
-                            </thead>
-                            <tbody>
-                                @foreach (NodeConfiguration.XmipProcess process in _node.Processes)
-                                {
-                                    <tr>
-                                        <td><input @bind="process.Name" /></td>
-                                        <td>
-                                            <select @bind="process.ExecutionStyle">
-                                                @foreach (string style in Choices(NodeConfiguration.ExecutionStyles, process.ExecutionStyle))
-                                                {
-                                                    <option value="@style">@Say(style, "not set: sequential")</option>
-                                                }
-                                            </select>
-                                        </td>
-                                        <td>@StartPicker(process.Start, value => process.Start = value)</td>
-                                        <td><button class="del" @onclick="() => _node.Processes.Remove(process)">✕</button></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
+                    <EntryList Entries="Within(view, node)" Open="Open" Edit="Edit" />
                 </div>
             }
-            else if (_selection.StartsWith("process:", StringComparison.Ordinal) && CurrentProcess() is { } proc)
-            {
-                <div class="group">
-                    <h2>Process</h2>
-                    <div class="fields">
-                        <label>Name<input @bind="proc.Name" /></label>
-                        <label>Execution style
-                            <select @bind="proc.ExecutionStyle">
-                                @foreach (string style in Choices(NodeConfiguration.ExecutionStyles, proc.ExecutionStyle))
-                                {
-                                    <option value="@style">@Say(style, "not set: sequential")</option>
-                                }
-                            </select>
-                        </label>
-                        <label>Start @StartPicker(proc.Start, value => proc.Start = value)</label>
-                    </div>
+        }
+        else if (_cluster.Views.Of(_selection[KindPrefix.Length..]) is { } view)
+        {
+            <div class="group">
+                <div class="group-head">
+                    <h2>@view.Title</h2>
+                    @if (view.Defined)
+                    {
+                        <AddEntry Places="view.Places" Edit="Edit" />
+                    }
                 </div>
-            }
-            else if (CurrentLocations() is { } locations)
-            {
-                @if (CurrentLocation() is { } loc)
+                @if (view.Note is { } note)
                 {
-                    <div class="group">
-                        <h2>Location</h2>
-                        <div class="fields">
-                            <label>Name<input @bind="loc.Name" /></label>
-                            <label>Transport
-                                <select @bind="loc.Transport">
-                                    @foreach (string transport in Choices(Transports, loc.Transport))
-                                    {
-                                        <option value="@transport">@Say(transport, "choose a transport")</option>
-                                    }
-                                </select>
-                            </label>
-                            <label>Address<input @bind="loc.Address" /></label>
-                            <label>Start @StartPicker(loc.Start, value => loc.Start = value)</label>
-                        </div>
-                    </div>
+                    <p class="empty">@note</p>
                 }
-                else
+                @if (view.Defined)
                 {
-                    <div class="group">
-                        <div class="group-head">
-                            <h2>@BranchTitle()</h2>
-                            <button @onclick="() => locations.Add(new NodeConfiguration.Location())">+ add</button>
-                        </div>
-                        @if (locations.Count == 0)
-                        {
-                            <p class="empty">None configured.</p>
-                        }
-                        else
-                        {
-                            <table class="locs">
-                                <thead>
-                                    <tr><th>Name</th><th>Transport</th><th>Address</th><th>On</th><th></th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (NodeConfiguration.Location location in locations)
-                                    {
-                                        <tr>
-                                            <td><input @bind="location.Name" /></td>
-                                            <td>
-                                                <select @bind="location.Transport">
-                                                    @foreach (string transport in Choices(Transports, location.Transport))
-                                                    {
-                                                        <option value="@transport">@Say(transport, "choose a transport")</option>
-                                                    }
-                                                </select>
-                                            </td>
-                                            <td><input class="addr" @bind="location.Address" /></td>
-                                            <td>@StartPicker(location.Start, value => location.Start = value)</td>
-                                            <td><button class="del" @onclick="() => locations.Remove(location)">✕</button></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        }
-                    </div>
+                    <EntryList Entries="view.Entries" Open="Open" Edit="Edit" />
                 }
-            }
-        </div>
-    }
+            </div>
+        }
+    </div>
 </section>
 
 @code {
-    private IReadOnlyList<ConfigStore.Entry> _entries = [];
-    private string _path = "";
-    private NodeConfiguration? _node;
-    private string _selection = "processes";
+    private const string Overview = "overview";
+    private const string NodePrefix = "node:";
+    private const string KindPrefix = "kind:";
+    private const string Shared = "Shared by the cluster";
+    private const string NodeTitle = "The node's own";
+
+    private ClusterConfiguration? _cluster;
+    private string _selection = Overview;
+    private IReadOnlyList<string>? _entry;
+    private IReadOnlyList<NodeDelivery> _deliveries = [];
+    private string _newNode = "";
     private string _status = "";
     private bool _ok = true;
 
@@ -227,69 +179,12 @@
             return;
         }
 
-        _entries = Store.List();
-        if (_entries.Count > 0)
-        {
-            Open(_entries[0].Path);
-        }
-    }
-
-    private void Open(string path)
-    {
-        _path = path;
-        _selection = "processes";
         try
         {
-            _node = NodeConfiguration.Read(_path);
-            _status = File.Exists(_path) ? $"editing {Path.GetFileName(_path)}" : "new configuration";
-            _ok = true;
-        }
-        catch (Exception exception) when (exception is IOException or FormatException)
-        {
-            _node = null;
-            _status = exception.Message;
-            _ok = false;
-        }
-    }
-
-    private void Select(string branch, int index)
-    {
-        _selection = $"{branch}:{index}";
-    }
-
-    private string Sel(string key)
-    {
-        return _selection == key ? "selected" : "";
-    }
-
-    private static string Name(string name)
-    {
-        return string.IsNullOrWhiteSpace(name) ? "(unnamed)" : name;
-    }
-
-    private void AddProcess()
-    {
-        _node?.Processes.Add(new NodeConfiguration.XmipProcess { Name = "process" });
-    }
-
-    private void Save()
-    {
-        if (_node is null)
-        {
-            return;
-        }
-
-        try
-        {
-            // Saved as it stands, a half-built document included, and then
-            // judged by the runtime: what the operator reads after Save is the
-            // runtime's verdict on what is on disk, never the editor's.
-            string text = _node.ToToml();
-            _node.Write(_path);
-            _entries = Store.List();
-            ConfigurationVerdict verdict = Runtime.Validate(_path, text);
-            _status = $"saved {Path.GetFileName(_path)}; {verdict.Said}";
-            _ok = verdict.Ok;
+            _cluster = ClusterConfiguration.Open(Runtime.Delivery.ClusterPath);
+            _status = _cluster.Exists
+                ? $"editing {Path.GetFileName(_cluster.Path)}"
+                : $"no file at {_cluster.Path} yet: add a node, then save";
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -298,135 +193,137 @@
         }
     }
 
+    // The kinds below the cluster and its nodes, as the runtime lists them.
+    private IEnumerable<ArtifactView> Artifacts()
+    {
+        return _cluster?.Views.Views.Where(view => view.Kind is not ("cluster" or "node")) ?? [];
+    }
+
+    private IReadOnlyList<ArtifactEntry> NodeEntries()
+    {
+        return _cluster?.Views.Of("node")?.Entries ?? [];
+    }
+
+    // A node's own entries of a kind: those whose table is beneath the node's.
+    private static IReadOnlyList<ArtifactEntry> Within(ArtifactView view, string node)
+    {
+        return (ArtifactEntry[])[.. view.Entries.Where(entry => Beneath(entry.Section, node))];
+    }
+
+    private static IReadOnlyList<ArtifactPlace> Places(ArtifactView view, string node)
+    {
+        return (ArtifactPlace[])[.. view.Places.Where(place => Beneath(place.Section, node))];
+    }
+
+    private static bool Beneath(IReadOnlyList<string> section, string node)
+    {
+        return section.Count > 2 && section[0] == "nodes" && section[1] == node;
+    }
+
+    private static string NodeKey(string node) => NodePrefix + node;
+
+    private static string KindKey(string kind) => KindPrefix + kind;
+
+    private string Sel(string key) => _entry is null && _selection == key ? "selected" : "";
+
+    private static string Say(string? text, string unset) =>
+        string.IsNullOrEmpty(text) ? unset : text;
+
+    private void Show(string selection)
+    {
+        _selection = selection;
+        _entry = null;
+    }
+
+    private void Open(ArtifactEntry entry)
+    {
+        _entry = entry.Section;
+    }
+
+    // The entry open now, found again by its section after every edit; one
+    // that is gone — renamed or removed — returns the page to its list.
+    private ArtifactEntry? CurrentEntry()
+    {
+        return _entry is null
+            ? null
+            : _cluster?.Views.Views
+                .SelectMany(view => view.Entries)
+                .FirstOrDefault(entry => entry.Section.SequenceEqual(_entry));
+    }
+
+    private string EntryKind(ArtifactEntry entry)
+    {
+        ArtifactView? view =
+            _cluster?.Views.Views.FirstOrDefault(view => view.Entries.Contains(entry));
+        return $"{view?.Title} {entry.Name}, {entry.Scope}";
+    }
+
+    // Every edit through the runtime: made, or refused in its words and
+    // audited (ADR-0062).
+    private bool Edit(ClusterEdit edit)
+    {
+        if (_cluster is null)
+        {
+            return false;
+        }
+
+        if (_cluster.TryEdit(edit, out string refusal))
+        {
+            _status = "edited; not saved";
+            _ok = true;
+            return true;
+        }
+
+        Runtime.Refused(edit, _cluster.Path, refusal);
+        _status = refusal;
+        _ok = false;
+        return false;
+    }
+
+    private void AddNode()
+    {
+        if (Edit(new ClusterEdit.AddNode(_newNode.Trim())))
+        {
+            _newNode = "";
+        }
+    }
+
+    // Saved as it stands, then judged by the runtime, then sliced for each
+    // node and each slice shipped where it can go (ADR-0031, amendment
+    // 2026-10-05): what the operator reads is the runtime's verdict on what
+    // is on disk and every node's outcome.
+    private void Save()
+    {
+        if (_cluster is null)
+        {
+            return;
+        }
+
+        ClusterSave saved = Runtime.Save(_cluster);
+        _deliveries = saved.Nodes;
+        _status = saved.Said;
+        _ok = saved.Valid && saved.Nodes.All(node => node.Outcome != NodeDelivery.Standing.Refused);
+    }
+
     // The verdict is decided from the record and the sentence is shown
-    // (ADR-0052 clause 4); the page never reads its own English back.
-    // What is validated is the document the editor holds, saved or not
-    // (ADR-0027, amendment 2026-09-05).
+    // (ADR-0052 clause 4). What is validated is the text the editor holds,
+    // saved or not (ADR-0027, amendment 2026-09-05).
     private void Validate()
     {
-        if (_node is not null)
+        if (_cluster is not null)
         {
-            Show(Runtime.Validate(_path, _node.ToToml()));
+            Show(Runtime.Validate(_cluster.Path, _cluster.Text));
         }
     }
 
     private void StartNode()
     {
-        Show(Runtime.Start(_path));
+        Show(Runtime.StartNode());
     }
 
     private void Show(ConfigurationVerdict verdict)
     {
         _status = verdict.Said;
         _ok = verdict.Ok;
-    }
-
-    private (string Key, string Title, List<NodeConfiguration.Location> Locations)[] Branches()
-    {
-        return
-        [
-            ("receive", "Receive Locations", _node!.ReceiveLocations),
-            ("send", "Send Locations", _node!.SendLocations),
-        ];
-    }
-
-    private NodeConfiguration.XmipProcess? CurrentProcess()
-    {
-        return _selection.StartsWith("process:", StringComparison.Ordinal)
-            && int.TryParse(_selection.AsSpan(8), out int index)
-            && _node is not null
-            && index < _node.Processes.Count
-                ? _node.Processes[index]
-                : null;
-    }
-
-    private List<NodeConfiguration.Location>? CurrentLocations()
-    {
-        if (_node is null)
-        {
-            return null;
-        }
-
-        if (_selection.StartsWith("receive", StringComparison.Ordinal))
-        {
-            return _node.ReceiveLocations;
-        }
-
-        return _selection.StartsWith("send", StringComparison.Ordinal) ? _node.SendLocations : null;
-    }
-
-    private NodeConfiguration.Location? CurrentLocation()
-    {
-        int colon = _selection.IndexOf(':', StringComparison.Ordinal);
-        if (colon < 0 || !int.TryParse(_selection.AsSpan(colon + 1), out int index))
-        {
-            return null;
-        }
-
-        List<NodeConfiguration.Location>? locations = CurrentLocations();
-        return locations is not null && index < locations.Count ? locations[index] : null;
-    }
-
-    private string BranchTitle()
-    {
-        return _selection.StartsWith("receive", StringComparison.Ordinal)
-            ? "Receive Locations"
-            : "Send Locations";
-    }
-
-    private static readonly string[] Transports =
-        ["file", "tcp", "udp", "http", "smtp", "websocket"];
-
-    // The offered values, with the one the document holds kept even when it is
-    // not among them, and an empty first choice for "not set": the editor shows
-    // what the file says and supplies nothing the runtime requires.
-    private static IEnumerable<string> Choices(string[] offered, string? current)
-    {
-        yield return "";
-        foreach (string value in offered)
-        {
-            yield return value;
-        }
-
-        if (!string.IsNullOrEmpty(current) && Array.IndexOf(offered, current) < 0)
-        {
-            yield return current;
-        }
-    }
-
-    private static string Say(string value, string unset)
-    {
-        return value.Length == 0 ? $"({unset})" : value;
-    }
-
-    // `start` is required and has no default, so it is a three-way choice —
-    // not set, yes, no — rather than a checkbox that reads an absent key as no.
-    private RenderFragment StartPicker(bool? start, Action<bool?> set) => __builder =>
-    {
-        <select value="@StartText(start)" @onchange="change => set(StartValue(change.Value))">
-            <option value="">(not set)</option>
-            <option value="true">yes</option>
-            <option value="false">no</option>
-        </select>
-    };
-
-    private static string StartText(bool? start)
-    {
-        return start switch
-        {
-            true => "true",
-            false => "false",
-            null => "",
-        };
-    }
-
-    private static bool? StartValue(object? chosen)
-    {
-        return (chosen as string) switch
-        {
-            "true" => true,
-            "false" => false,
-            _ => null,
-        };
     }
 }
