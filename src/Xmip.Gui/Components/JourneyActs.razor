@@ -1,0 +1,94 @@
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+@inject RoleContext Role
+@inject ProgramAudit Audited
+
+@* The acts on the last Journey that failed at a Send Port (runtime-model.md
+   section 13; ADR-0013), where its node publishes it: the Port's own record,
+   its evidence naming the Journey and why (JourneyOperation.FailedIn, the one
+   reader of that clause). An Operator retries or dismisses it; an Observer is
+   shown the evidence and no act. What the last act came to stays beside the
+   buttons while the publications tick under it. There is no list of failed
+   Journeys: only the one the Port says. *@
+@if (JourneyOperation.FailedIn(Record.Evidence) is { } journey)
+{
+    <div class="journey-acts">
+        @if (Role.MayOperate())
+        {
+            <button class="act" title="@RetrySaid"
+                    @onclick="() => Act(journey, JourneyAct.Retry)">
+                Retry
+            </button>
+            <button class="act" title="@DismissSaid"
+                    @onclick="() => Act(journey, JourneyAct.Dismiss)">
+                Dismiss
+            </button>
+        }
+        <span class="subs-act-said">the Journey @journey</span>
+        @if (Answer.Length > 0)
+        {
+            <span class="subs-said @(Answer.StartsWith("REFUSED", StringComparison.Ordinal)
+                ? "refused" : "")">@Answer</span>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>What a Retry does, in the words the view says it.</summary>
+    public const string RetrySaid =
+        "Sent again, its tries begun anew, from the end of its Send Port's queue — or from its "
+        + "place, where it blocks a Sequential Send Port.";
+
+    /// <summary>What a Dismiss does, in the words the view says it.</summary>
+    public const string DismissSaid =
+        "Given up: written Dismissed, its history, Message and Stream kept, and taken out of "
+        + "its Send Port's queue.";
+
+    /// <summary>The surface the view reads and acts through.</summary>
+    [Parameter, EditorRequired]
+    public IOperatorSurface Surface { get; set; } = default!;
+
+    /// <summary>The Send Port's own record, whose evidence names the Journey.</summary>
+    [Parameter, EditorRequired]
+    public HealthRecord Record { get; set; } = default!;
+
+    /// <summary>Raised once an act was taken, for the view to read again.</summary>
+    [Parameter]
+    public EventCallback Acted { get; set; }
+
+    private string Answer { get; set; } = string.Empty;
+
+    // An act, by a role that may act: taken through the surface, recorded in
+    // this host's audit with what came of it (ADR-0062) under the action
+    // observe::Noun::Journey gives it — journey.retry or journey.dismiss — and
+    // said. An Observer is shown no act; one that reached here anyway is
+    // refused.
+    private async Task Act(string journey, JourneyAct act)
+    {
+        string action = $"{JourneyOperation.Noun}.{JourneyOperation.Word(act)}";
+
+        if (!Role.MayOperate())
+        {
+            Answer = ActSaid.Refused(
+                Role.Role, JourneyOperation.Word(act), "a Journey that failed");
+            Audited.Record(action, AuditPhase.Failure, AuditSeverity.Warning, Answer);
+            return;
+        }
+
+        string who = ScopeOperation.Who(null);
+        JourneyOperation done = Surface.Act(Record.Scope, journey, act, who);
+        Audited.Record(
+            action,
+            done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
+            done.Applied ? AuditSeverity.Information : AuditSeverity.Warning,
+            done.Result,
+            new Dictionary<string, string>
+            {
+                ["node"] = done.Node,
+                ["journey"] = journey,
+                ["who"] = who,
+            });
+        Answer = ActSaid.Answer(done.Applied, done.Result);
+        await Acted.InvokeAsync().ConfigureAwait(true);
+    }
+}

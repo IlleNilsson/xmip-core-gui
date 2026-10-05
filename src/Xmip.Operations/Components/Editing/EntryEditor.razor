@@ -1,0 +1,100 @@
+@* One table of the cluster's xmip.toml, its values edited in place: each
+   value is TOML as the file writes it ("text", 4, true, ["a", "b"]), sent
+   to the runtime as an edit at the entry's section and the value's key. A
+   value is added or removed the same way, and the entry removed whole.
+   Nothing here knows what a value means; the runtime refuses what would
+   not read. *@
+
+<div class="group">
+    <div class="group-head">
+        <h2>@Kind</h2>
+        @if (Entry.Section.Count > 1)
+        {
+            <button class="del" @onclick="() => Edit(new ClusterEdit.RemoveEntry(Entry.Section))">
+                remove
+            </button>
+        }
+    </div>
+    @foreach (string problem in Entry.Problems)
+    {
+        <p class="empty">@problem</p>
+    }
+    <table class="locs">
+        <thead><tr><th>Key</th><th>Value</th><th>Kind</th><th></th></tr></thead>
+        <tbody>
+            @foreach (ArtifactField field in Entry.Fields)
+            {
+                ArtifactField held = field;
+                <tr>
+                    <td><code>@string.Join('.', held.Key)</code></td>
+                    <td>
+                        @if (held.Kind == "boolean")
+                        {
+                            <select value="@held.Value"
+                                    @onchange="change => Set(held.Key, change.Value)">
+                                <option value="true">true</option>
+                                <option value="false">false</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <input value="@held.Value"
+                                   @onchange="change => Set(held.Key, change.Value)" />
+                        }
+                    </td>
+                    <td class="kind">@held.Kind</td>
+                    <td>
+                        <button class="del" @onclick="() => Remove(held.Key)">✕</button>
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td><input placeholder="key, a.b for a sub-table's" @bind="_key" /></td>
+                <td>
+                    <input placeholder="value as TOML: &quot;text&quot;, 4, true" @bind="_value" />
+                </td>
+                <td></td>
+                <td><button @onclick="Add">+ add</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private string _key = "";
+    private string _value = "";
+
+    /// <summary>The entry, as the runtime's views answer it.</summary>
+    [Parameter, EditorRequired]
+    public ArtifactEntry Entry { get; set; } = default!;
+
+    /// <summary>What the entry is, as a person reads it.</summary>
+    [Parameter, EditorRequired]
+    public string Kind { get; set; } = "";
+
+    /// <summary>Sends an edit to the runtime; true when it was made.</summary>
+    [Parameter, EditorRequired]
+    public Func<ClusterEdit, bool> Edit { get; set; } = default!;
+
+    private bool Set(IReadOnlyList<string> key, object? value)
+    {
+        return Edit(new ClusterEdit.Set(Entry.Section, key, $"{value}"));
+    }
+
+    private bool Remove(IReadOnlyList<string> key)
+    {
+        return Edit(new ClusterEdit.Remove(Entry.Section, key));
+    }
+
+    private void Add()
+    {
+        string[] key = _key.Split(
+            '.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (key.Length > 0 && Set(key, _value))
+        {
+            _key = "";
+            _value = "";
+        }
+    }
+}

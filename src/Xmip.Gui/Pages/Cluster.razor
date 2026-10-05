@@ -84,6 +84,12 @@
             <span class="evidence">@Evidence(own)</span>
             <span class="age">@English.Age(own.Observed)</span>
             <span class="figures">@English.Figures(Surface.Figures(own.Scope))</span>
+            @* A Send Port's record names the last Journey that failed there:
+               its acts are offered on the spot. *@
+            @if (JourneyOperation.FailedIn(own.Evidence) is not null)
+            {
+                <JourneyActs Surface="Surface" Record="own" Acted="Read" />
+            }
         </div>
     }
     @if (branches.Count == 0 && own is null)

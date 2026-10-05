@@ -12,20 +12,31 @@
 # keys as the web host's xmip.gui.toml.
 Surface = "native"
 
-# The runtime's native library, exporting xmip_operate_v1, xmip_start_v1 and
-# xmip_validate_v1. Found by one rule for every surface: this key, else
+# The runtime's native library, exporting xmip_operate_v1, xmip_start_v1,
+# xmip_validate_v1 and the cluster's views, edit and slices (xmip_operate.h
+# section 10). Found by one rule for every surface: this key, else
 # XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
-# The node to start and watch when the surface is native — the desktop
-# configures, and starting a node is the one thing a browser cannot do
-# (ADR-0014, amendment of 2026-09-05). Remove the line to start nothing.
-NodeConfiguration = "module/core/operation/gui/samples/edge-01.xmip.toml"
+# The cluster's xmip.toml the Configure page edits: the one configuration
+# anyone edits, a node's own file never (ADR-0031, amendment 2026-10-05).
+# Saving it slices it for every node it declares. Unset, xmip/xmip.toml under
+# the app's data, written on the first save.
+ClusterConfiguration = "module/core/operation/gui/samples/xmip.toml"
 
-# The directory the Configure page lists node configurations from, a file per
-# node. Unset, a directory under the app's data. The one NodeConfiguration
-# names is marked as the one this desktop starts, whatever the file is called.
-# ConfigDirectory = "module/core/operation/gui/samples"
+# The node of that cluster this desktop starts and watches when the surface
+# is native: its key under [nodes]. Its slice is written where this desktop
+# starts it from, so saving ships it; it is started at launch and by the
+# page's Start button — the one thing a browser cannot do (ADR-0014,
+# amendment of 2026-09-05). Remove the line to start nothing.
+Node = "edge-01"
+
+# Where each node's slice is written on save, as <node>/xmip-node.toml, the
+# name desired state writes it by. The slice of the Node above is shipped by
+# being written here; another node's is written and said not shipped, since
+# Xmip has no path yet that puts a file on another node. Unset, xmip/slices
+# under the app's data.
+# SliceDirectory = ".local-work/slices"
 
 # The file to read when Surface = "snapshot". The Playground writes
 # <cluster>-snapshot.toml, named for whatever the roll's cluster was called;
@@ -44,7 +55,8 @@ NodeConfiguration = "module/core/operation/gui/samples/edge-01.xmip.toml"
 # TrustAnchor = "anchor.pem"
 
 # Where this desktop's audit records go (ADR-0062): its start and stop, every
-# validate and start of a node, and every error it logs, as
+# save, slice and ship, every refused edit, every validate and start of a
+# node, and every error it logs, as
 # <AuditDirectory>/audit.toml. Unset, the audit capability decides:
 # XMIP_AUDIT_DIRECTORY, else the operating system's log.
 # AuditDirectory = ".local-work/audit"

@@ -1,0 +1,44 @@
+@* The entries of one kind, or a node's, each opened to edit its values or
+   removed whole through the runtime. *@
+
+@if (Entries.Count == 0)
+{
+    <p class="empty">None configured.</p>
+}
+else
+{
+    <table class="locs">
+        <thead><tr><th>Name</th><th>Whose</th><th></th><th></th></tr></thead>
+        <tbody>
+            @foreach (ArtifactEntry entry in Entries)
+            {
+                ArtifactEntry held = entry;
+                <tr>
+                    <td>@(string.IsNullOrEmpty(held.Name) ? "(unnamed)" : held.Name)</td>
+                    <td>@held.Scope</td>
+                    <td><button @onclick="() => Open(held)">open</button></td>
+                    <td>
+                        <button class="del"
+                                @onclick="() => Edit(new ClusterEdit.RemoveEntry(held.Section))">
+                            ✕
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    /// <summary>The entries, as the runtime's views answer them.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ArtifactEntry> Entries { get; set; } = [];
+
+    /// <summary>Opens an entry to edit its values.</summary>
+    [Parameter, EditorRequired]
+    public Action<ArtifactEntry> Open { get; set; } = default!;
+
+    /// <summary>Sends an edit to the runtime; true when it was made.</summary>
+    [Parameter, EditorRequired]
+    public Func<ClusterEdit, bool> Edit { get; set; } = default!;
+}

@@ -180,6 +180,20 @@ still matches nothing stays. The Replay goes through `IOperatorSurface.Act`
 publication says its publisher takes orders — and is recorded in the host's
 audit as `dead-message.replay`. An Observer is shown the list and no act.
 
+**A Journey that failed** (runtime-model.md section 13; ADR-0013) is acted
+on where the Monitor shows it: a Send Port's own record, at
+`<node>/send/<Port>`, says in its evidence what the Port sent, what failed and
+the last Journey that failed there and why. Drilled to that scope, an
+Operator is offered Retry — sent again, its tries begun anew — and Dismiss —
+given up, written Dismissed and taken out of the Port's queue — beside the
+Journey's identifier (`JourneyActs.razor`; the identifier read by
+`JourneyOperation.FailedIn`, the one reader of that clause). The act goes
+through `IOperatorSurface.Act` — applied in the node's process, or over a
+snapshot left where its publication says its publisher takes orders — and
+is recorded in the host's audit as `journey.retry` or `journey.dismiss`. An
+Observer is shown the Journey and no act. There is no list of failed
+Journeys.
+
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
 One should be able to pause, resume and remove event subscriptions*) lists
@@ -289,41 +303,76 @@ Kestrel, not `xmip-core-library-tls`.
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
 A native window; needs the maui-windows workload; Windows is the only
 platform it carries. Same screen, same operator boundary, so the two cannot
-disagree — and the desktop configures: it starts the node its configuration
-names, and its Configure page validates and starts through the runtime.
+disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
+slices it for each node on save, and starts the node of it its configuration
+names.
 
-The Configure page edits the one node configuration document
-`xmip-core-configure` reads, and holds no model of its own:
-`NodeConfiguration` is a view over the document's syntax tree, parsed and
-edited by `Xmip.Surface`'s `TomlDocument`, each field one key matched whole,
-strings escaped and unescaped by the TOML library. An edit replaces one value
-in place; everything else — comments, blank lines, the order of keys and
-tables, modules, Subprocesses, Extensions, unknown keys — is written back as
-read. A Process it adds writes no `required_modules`, `xmip_subprocesses` or
-`extensions`; the document reads them as empty (ADR-0031, amendment
-2026-09-24).
-It supplies nothing the runtime requires: a Location or Process without
-`start`, or a Location without `transport`, is shown as not set and saved
-without it. Validate hands the runtime the text the editor holds, saved or
-not, through `xmip_validate_v1` (ADR-0027, amendment 2026-09-05), and Save
-reports the runtime's verdict on what it wrote; the editor has no verdict of
-its own (open problem 25, row b). `src/Xmip.Operations.Test` proves it
-against the runtime's own build: a saved document validates, a missing
-`start` or `transport` is refused and not defaulted, an escaped string
-round-trips, a Process added with only a name and `start` validates, and
-comments and layout survive an edit and a save.
+**The Configure page edits the cluster's `xmip.toml` and nothing else**
+(ADR-0031, amendment 2026-10-05: *node TOML files shall not be edited, only
+cluster TOML files, the files are sliced / node and distributed*). It opens
+on an overview of the cluster — its shared sections (`[service]`,
+`[tuning]`, `[storage]`, `[store]`) and its nodes — and drills down to a
+node, with its own values and its artifacts, and to the artifacts by kind:
+Receive Port, Receive Location, Send Port, Send Location, Send Port Group,
+Prepare, Promote, Demote, Route (an Xmip Application, its routes listed as
+entries; the route canvas is the VS Code designer's), Transformation and
+Process — whatever the runtime's views answer. A kind the configuration
+does not define yet shows the runtime's note and nothing to edit. An entry
+opens with its values edited in place as TOML (`"text"`, `4`, `true`),
+values added and removed, entries added — with the values they must hold,
+which the runtime names where one is missing — and removed, nodes added
+and removed.
 
-The page lists every document in `ConfigDirectory` (else a directory under
-the app's data), and marks as *started here* the one the desktop's
-`NodeConfiguration` names — declared, never read from a file's name. An empty
-directory is an empty list: nothing is written into it unasked.
+The page holds no configuration rule. Every view, edit and slice is the
+runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
+`RuntimeDesign` (`RuntimeRules.Design`) and read in `Xmip.Surface` as
+`ConfigurationViews` (`ArtifactView`, `ArtifactEntry`, `ArtifactField`,
+`ArtifactPlace`), `ClusterEdit` and `NodeSlice` — the views and edits the VS
+Code designer's language server asks for (`vscode/README.md`). An edit is
+made by `xmip_cluster_edit_v1`, comments and layout kept, and one that would
+leave a node unable to read its slice is refused in the runtime's words and
+audited. A node's own document is never offered for editing: the views say
+which document a text is, and the slicing's refusal is shown in its place.
+Validate hands the runtime the text the editor holds, saved or not, through
+`xmip_validate_v1`, which reads a cluster's file node by node (ADR-0027,
+amendment 2026-09-05).
+
+**Save slices and ships** (the owner, 2026-10-05: *When editing is done, the
+cluster TOML file is sliced into node TOML files and shipped to each node on
+save*). Save writes the cluster's file whole, has the runtime judge what is
+on disk, then slices it for each node it declares through the one slicing,
+`xmip_cluster_slices_v1` (`configure::slice`), and writes each slice as
+`<SliceDirectory>/<node>/xmip-node.toml`, the name desired state writes it
+by. The page shows each node's outcome: *shipped* for the node this desktop
+starts, whose slice is written where it starts from and takes effect when it
+starts again; *sliced, not shipped* for every other node, since Xmip has no
+path yet that puts a file on another node — desired state slices the
+cluster's file on the node as it deploys it (the Ansible role `xmip_node`,
+`deploy/dsc/xmip-node.dsc.yaml`), and a node's operate listener (ADR-0067)
+takes no configuration; or *refused*, with the runtime's sentence, for a
+node that does not slice, which stops no other node. Start slices the saved
+file for the desktop's node and starts it from its slice through
+`xmip_start_v1`, as the desktop does at launch.
+
+`src/Xmip.Operations.Test` proves it against the runtime's own build: the
+sample cluster, `samples/xmip.toml`, opens and validates; a value edited in
+place keeps every comment; an entry missing what it must hold is refused
+naming it, and added with it; a node is added; a refused edit leaves the text
+as it was; a node's own document is not editable; a cluster begun in an
+empty file becomes one when it declares a node; each node is sliced, the
+desktop's shipped and another not, and a node that does not slice is refused
+without stopping the others; and every save, slice, ship, refused edit and
+start lands in the audit.
 
 Configuration is each host's `xmip.gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
-the page — `Url = <web host>` when the surface is remote, and, on the desktop
-only, `NodeConfiguration`, `ConfigDirectory` and `Role`. The web host serves its own surface at
+the page — `Url = <web host>` when the surface is remote, `Role`, and, on the
+desktop only, `ClusterConfiguration` (the cluster's `xmip.toml`, else
+`xmip/xmip.toml` under the app's data), `Node` (the node of it the desktop
+starts; none when unset) and `SliceDirectory` (where each node's slice is
+written, else `xmip/slices` under the app's data). The web host serves its own surface at
 `/surface`: a SignalR hub every remote surface follows and is told through
 when this host's surface changes, so the CLI, the PowerShell module and a GUI
 on another machine follow it without polling (ADR-0052, amendment
@@ -345,8 +394,9 @@ category and the event. A Blazor circuit that dies, which the browser shows
 as *An unhandled error has occurred*, is logged by the framework at Error and
 so is a record; the web host's `AuditCircuitHandler` records who was
 connected — each circuit opened, its connection lost and regained, closed. The
-desktop records each validate and start of a node configuration with what
-the runtime answered. A web host that cannot start records why, and when the
+desktop records each save of the cluster's `xmip.toml`, each node's slice and
+its ship, every edit the runtime refused, and each validate and start of a
+node, with what the runtime answered. A web host that cannot start records why, and when the
 runtime's library cannot be loaded at all the host writes one entry to the
 operating system's log itself, saying so. A Debug build of the web host has
 `/debug/unhandled`, which throws, so the path from a failure to its record

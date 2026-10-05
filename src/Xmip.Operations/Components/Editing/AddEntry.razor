@@ -1,0 +1,60 @@
+@* A new entry of a kind, named and added to one of the lists the runtime
+   says it may be added to — the cluster's own, a node's, a binding's or an
+   Xmip Application's — with the values it must hold to read, one per line
+   as key = value, the value TOML. What it must hold is the runtime's to
+   say: an entry missing one is refused, naming it. *@
+
+@if (Places.Count > 0)
+{
+    <div class="add-entry">
+        <select @bind="_at">
+            @for (int i = 0; i < Places.Count; i++)
+            {
+                <option value="@i">@Places[i].Scope</option>
+            }
+        </select>
+        <input placeholder="name" @bind="_name" />
+        <textarea rows="2" placeholder="start = true&#10;transport = &quot;file&quot;"
+                  @bind="_values"></textarea>
+        <button @onclick="Add">+ add</button>
+    </div>
+}
+
+@code {
+    private int _at;
+    private string _name = "";
+    private string _values = "";
+
+    /// <summary>Where a new entry may be added, as the runtime answers.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ArtifactPlace> Places { get; set; } = [];
+
+    /// <summary>Sends an edit to the runtime; true when it was made.</summary>
+    [Parameter, EditorRequired]
+    public Func<ClusterEdit, bool> Edit { get; set; } = default!;
+
+    private void Add()
+    {
+        if (_at >= Places.Count)
+        {
+            return;
+        }
+
+        // Each line split at its first '=': the key, a sub-table's by dots,
+        // and the value as written. Whether it is TOML is the runtime's to say.
+        ArtifactField[] values =
+        [
+            .. _values
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(line => line.Split('=', 2, StringSplitOptions.TrimEntries))
+                .Where(pair => pair.Length == 2 && pair[0].Length > 0)
+                .Select(pair => new ArtifactField(pair[0].Split('.'), pair[1], "")),
+        ];
+
+        if (Edit(new ClusterEdit.AddEntry(Places[_at].Section, _name.Trim(), values)))
+        {
+            _name = "";
+            _values = "";
+        }
+    }
+}

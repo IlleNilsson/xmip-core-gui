@@ -386,6 +386,11 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .drill-leaf { cursor: default; }
 .drill-leaf .evidence { font-size: 0.9rem; color: var(--ink); white-space: normal; }
 .drill-leaf:not(.fine) .worst { color: var(--mood); }
+/* Retry and Dismiss on the last Journey that failed at a Send Port, beneath
+   its evidence, with what the last act came to beside them. */
+.drill-leaf .journey-acts {
+    grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+}
 .row a.scope { color: inherit; text-decoration: none; }
 .row a.scope:hover, .why a.leaf:hover { text-decoration: underline; }
 
@@ -439,7 +444,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .locs input.addr { min-width: 16rem; }
 .locs button.del { border-color: var(--red); color: var(--red); padding: 0.2rem 0.5rem; }
 
-/* Configuration editor: a list of the main and node configs, and the editor. */
+/* Configuration editor: the cluster's xmip.toml — its overview, its nodes and
+   its artifacts by kind — and the entry open beside them. */
 .cfg-layout { display: grid; grid-template-columns: 15rem 1fr; align-items: start; }
 .configs { padding: 1.25rem 1rem; border-right: 1px solid var(--line); display: grid; gap: 0.35rem; align-content: start; }
 .configs h2 { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -453,6 +459,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .config-item .config-name { flex: 1; }
 .config-item .badge { font-size: 0.7rem; color: var(--ink); background: var(--brand); padding: 0.05rem 0.4rem; border-radius: 999px; }
 .configs .dir { margin-top: 0.75rem; color: var(--muted); font-size: 0.72rem; word-break: break-all; font-family: ui-monospace, monospace; }
+.configs h2 + .config-item { margin-top: 0; }
+.config-item .count { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.config-item.undefined .config-name { color: var(--muted); }
+.cfg .changed { color: var(--muted); font-size: 0.85rem; }
+.locs td.kind { color: var(--muted); font-size: 0.8rem; }
+.deliveries tr.refused td { color: var(--red); }
+.deliveries tr.notshipped td:nth-child(2) { color: var(--muted); }
+.add-entry { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
+.add-entry input, .add-entry select, .add-entry textarea {
+    padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; font: inherit;
+}
+.add-entry textarea { font-family: ui-monospace, monospace; font-size: 0.8rem; min-width: 16rem; }
 
 
 /* Communication topology: structure stays visible; movement adds operational
