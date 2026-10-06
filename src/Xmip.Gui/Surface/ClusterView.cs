@@ -35,6 +35,11 @@ public abstract class ClusterView : ComponentBase, IDisposable
 
     private string? watched;
 
+    // The watch running for the cluster in view; one that ended on its own —
+    // a surface that gave up, or a feed that closed — is begun again on the
+    // next parameter change rather than left silent.
+    private Task? watching;
+
     /// <summary>Every cluster this host holds.</summary>
     [Inject]
     protected ClusterSurfaces Surfaces { get; set; } = default!;
@@ -110,7 +115,9 @@ public abstract class ClusterView : ComponentBase, IDisposable
     {
         Read();
 
-        if (stop is not null && string.Equals(watched, Cluster, StringComparison.Ordinal))
+        if (stop is not null
+            && watching is { IsCompleted: false }
+            && string.Equals(watched, Cluster, StringComparison.Ordinal))
         {
             return;
         }
@@ -118,7 +125,7 @@ public abstract class ClusterView : ComponentBase, IDisposable
         watched = Cluster;
         End();
         stop = new CancellationTokenSource();
-        _ = ObserveAsync(Surface, stop.Token);
+        watching = ObserveAsync(Surface, stop.Token);
     }
 
     private async Task ObserveAsync(IOperatorSurface surface, CancellationToken ending)
@@ -145,5 +152,6 @@ public abstract class ClusterView : ComponentBase, IDisposable
         stop?.Cancel();
         stop?.Dispose();
         stop = null;
+        watching = null;
     }
 }

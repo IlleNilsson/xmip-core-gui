@@ -16,8 +16,8 @@ namespace Xmip.Gui.Test;
 /// evidence names a Journey the publication lists none for, and one without,
 /// and whose publisher takes orders. Each Journey listed with why and both
 /// acts for an Operator, each left for the sending node; the Journeys and no
-/// act for an Observer; the evidence's one Journey where none is listed;
-/// nothing at a Port with no failed Journey; and every act in the host's
+/// act for an Observer; nothing where the publication lists none, whatever
+/// Journey the evidence names; nothing at a Port with no failed Journey; and every act in the host's
 /// audit as <c>journey.retry</c> or <c>journey.dismiss</c>.
 /// </summary>
 public sealed class JourneyActsViewTest : BunitContext, IDisposable
@@ -109,6 +109,7 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
 
         page.FindAll(".journey-failed")[0].QuerySelectorAll("button")[0].Click();
         page.FindAll(".journey-failed")[1].QuerySelectorAll("button")[1].Click();
+        page.Find(".journey-confirm button.dismiss-confirm").Click();
 
         Assert.Equal(
             [$"journey {First} retry", $"journey {Second} dismiss"],
@@ -135,13 +136,13 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
     }
 
     [Fact]
-    public void WhereNoneIsListedTheJourneyTheEvidenceNamesIsOffered()
+    public void APublicationThatListsNoneAtAPortOffersNoActWhateverItsEvidenceNames()
     {
         IRenderedComponent<Cluster> page = At(Evidenced, Role.Operator);
 
-        Assert.Equal([Named], Listed(page));
-        page.FindAll(".journey-failed button")[0].Click();
-        Assert.Equal([$"journey {Named} retry"], OrdersLeft.For(Orders, Sender));
+        Assert.Empty(Listed(page));
+        Assert.Empty(page.FindAll(".journey-acts"));
+        Assert.False(Directory.Exists(Orders));
     }
 
     [Fact]

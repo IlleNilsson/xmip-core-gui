@@ -114,7 +114,8 @@ public sealed class ClusterConfiguration
     /// of it: written to a temporary file of its own beside it, flushed to the
     /// device, then renamed over it. False, with why, when the file changed
     /// on disk since this editor read it — another editor saved meanwhile —
-    /// and nothing is written; <see cref="Open"/> it again to see that change.
+    /// or another save holds the file now, and nothing is written;
+    /// <see cref="Open"/> it again to see that change.
     /// </summary>
     /// <exception cref="IOException">The file cannot be read or written.</exception>
     /// <exception cref="UnauthorizedAccessException">The file may not be written.</exception>
@@ -126,8 +127,19 @@ public sealed class ClusterConfiguration
             Directory.CreateDirectory(directory);
         }
 
-        // Compared at the last moment before the rename; what lands between
-        // the two is a window of microseconds, not the minutes of an edit.
+        // The check and the rename are one step for every Xmip writer: each
+        // holds <file>.lock, opened exclusively, from before the comparison
+        // until after the rename, so two saves never both pass the check. A
+        // save that finds the lock held is refused, not queued: the other
+        // save changes the file, and this editor has to see that change.
+        using FileStream? held = Hold();
+        if (held is null)
+        {
+            refusal = $"another save of {System.IO.Path.GetFileName(Path)} is under way; "
+                + "nothing was saved. Reload it to see the other change, then edit again.";
+            return false;
+        }
+
         string now = File.Exists(Path) ? Fingerprint(File.ReadAllBytes(Path)) : string.Empty;
         if (!string.Equals(now, _read, StringComparison.Ordinal))
         {
@@ -159,6 +171,27 @@ public sealed class ClusterConfiguration
         Changed = false;
         refusal = string.Empty;
         return true;
+    }
+
+    // The save lock: <file>.lock, shared with nobody and deleted when it is
+    // closed. Null when another save holds it; any other failure to open it
+    // is the caller's, as for the file itself.
+    private FileStream? Hold()
+    {
+        try
+        {
+            return new FileStream(
+                $"{Path}.lock",
+                FileMode.OpenOrCreate,
+                FileAccess.ReadWrite,
+                FileShare.None,
+                bufferSize: 1,
+                FileOptions.DeleteOnClose);
+        }
+        catch (IOException) when (File.Exists($"{Path}.lock"))
+        {
+            return null;
+        }
     }
 
     private static string Fingerprint(byte[] bytes)
