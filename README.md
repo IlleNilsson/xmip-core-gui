@@ -23,9 +23,12 @@ read, the scope tree and its rollup, the worst leaf beneath a scope, runtime
 discovery and the English live in `Xmip.Surface` beside the binding in
 xmip-core-abi (`dotnet/Xmip.Surface`), shared with the cli and the PowerShell
 module; `Xmip.Gui` keeps the Razor and the role. There is no sample surface: a
-host reads the runtime's own table (`NativeOperator` over `Xmip.Abi`) or a
-snapshot a node published (`SnapshotOperator`), and which one is stated in its
-`xmip.gui.toml`, never guessed. A scope that is Holding says why beside the
+host reads the runtime's own table (`NativeOperator` over `Xmip.Abi`), a
+snapshot a node published (`SnapshotOperator`) or another web host's surface
+hub (`RemoteOperator`), and which one is stated in its `xmip.gui.toml`, never
+guessed. What each answers — topology, the failed Journeys, and whether an
+act applies at once or is submitted as an order — is xmip-core-abi's README,
+*What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
