@@ -30,7 +30,7 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
     public JourneyPagingTest()
     {
         Directory.CreateDirectory(_place);
-        Services.AddSingleton(new RoleContext(Role.Operator));
+        Services.AddSingleton(new RoleContext(Role.Operator, "tester"));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
     }
 

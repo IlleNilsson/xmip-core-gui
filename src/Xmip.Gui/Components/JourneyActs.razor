@@ -219,26 +219,19 @@
         Read();
     }
 
-    // An act, by a role that may act: taken through the surface, recorded in
-    // this host's audit with what came of it (ADR-0062) under the action
+    // An act, through the one gate as the proven caller (ADR-0009, amendment
+    // 2026-10-06), which refuses one whose role may not act; recorded in this
+    // host's audit with what came of it (ADR-0062) under the action
     // observe::Noun::Journey gives it — journey.retry or journey.dismiss — and
-    // said. An Observer is shown no act; one that reached here anyway is
-    // refused.
+    // said. An Observer is shown no act.
     private async Task Act(string journey, JourneyAct act)
     {
         string action = $"{JourneyOperation.Noun}.{JourneyOperation.Word(act)}";
+        string who = Role.Who ?? string.Empty;
         Confirming = null;
 
-        if (!Role.MayOperate())
-        {
-            Answer = ActSaid.Refused(
-                Role.Role, JourneyOperation.Word(act), "a Journey that failed");
-            Audited.Record(action, AuditPhase.Failure, AuditSeverity.Warning, Answer);
-            return;
-        }
-
-        string who = ScopeOperation.Who(null);
-        JourneyOperation done = Surface.Act(Record.Scope, journey, act, who);
+        JourneyOperation done = new GatedOperator(Surface, Role, Audited)
+            .Act(Record.Scope, journey, act, who);
         Audited.Record(
             action,
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,

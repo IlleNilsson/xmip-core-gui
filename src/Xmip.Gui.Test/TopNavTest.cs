@@ -16,7 +16,7 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void TheBarLinksTheSevenViewsInOrderAndDescribesTheRoleOnce()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer));
+        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
 
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
@@ -44,7 +44,7 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void AHostAddsItsOwnLinksAfterTheViews()
     {
-        Services.AddSingleton(new RoleContext(Role.Operator));
+        Services.AddSingleton(new RoleContext(Role.Operator, "tester"));
 
         IRenderedComponent<TopNav> bar = Render<TopNav>(parameters => parameters
             .AddChildContent("<a class=\"topnav-link\" href=\"/configure\">Configure</a>"));

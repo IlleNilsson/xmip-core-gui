@@ -39,7 +39,8 @@ public sealed class ThreeViewsTest : BunitContext
     public ThreeViewsTest()
     {
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(Fixture)));
-        Services.AddSingleton(new RoleContext(Role.Observer));
+        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
     }
 
     [Fact]

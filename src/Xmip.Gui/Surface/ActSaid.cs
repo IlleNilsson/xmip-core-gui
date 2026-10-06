@@ -6,8 +6,8 @@ namespace Xmip.Gui.Surface;
 /// What a view that acts on what a node publishes says of an act, written
 /// once for every kind — the Subscriptions (ADR-0013, amendment 2026-09-30),
 /// the Event subscriptions (ADR-0065, amendment 2026-09-29) and the Dead
-/// Message Queue (ADR-0052, amendment 2026-10-01): where an act goes, what
-/// came of it, and the refusal a role that only watches is given.
+/// Message Queue (ADR-0052, amendment 2026-10-01): where an act goes and what
+/// came of it.
 /// </summary>
 public static class ActSaid
 {
@@ -32,11 +32,5 @@ public static class ActSaid
         return applied || result.StartsWith("REFUSED", StringComparison.Ordinal)
             ? result
             : $"REFUSED: {result}";
-    }
-
-    /// <summary>The act a role that may not act reached anyway.</summary>
-    public static string Refused(Role role, string word, string what)
-    {
-        return $"REFUSED: an {role} watches; to {word} {what} is an Operator's.";
     }
 }

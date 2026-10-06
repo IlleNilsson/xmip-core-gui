@@ -1,6 +1,5 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Gui.Pages;
 using Xmip.Surface;
@@ -69,7 +68,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
 
     private IRenderedComponent<EventSubscriptions> At(string address, Role role)
     {
-        Services.AddSingleton(new RoleContext(role));
+        Services.AddSingleton(new RoleContext(role, "tester"));
         Services.GetRequiredService<NavigationManager>().NavigateTo(address);
         return Render<EventSubscriptions>();
     }
@@ -191,30 +190,5 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
             At("/event-subscriptions?sort=queued&order=descending", Role.Observer);
         Assert.Equal(["9 of 64", "3 of 64", "0 of 64"], Column(sorted, "subs-figure").Where(
             (_, index) => index % 3 == 0));
-    }
-
-    [Theory]
-    [InlineData(null, Role.Developer)]
-    [InlineData("operator", Role.Operator)]
-    [InlineData("observer", Role.Observer)]
-    [InlineData("sovereign", Role.Observer)]
-    public void BothHostsTakeTheRoleByOneRule(string? stated, Role expected)
-    {
-        string? before = Environment.GetEnvironmentVariable(RoleContext.EnvironmentVariable);
-        Environment.SetEnvironmentVariable(RoleContext.EnvironmentVariable, null);
-
-        try
-        {
-            IConfiguration configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(
-                    stated is null ? [] : [new(RoleContext.ConfigurationKey, stated)])
-                .Build();
-
-            Assert.Equal(expected, RoleContext.Assigned(configuration));
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable(RoleContext.EnvironmentVariable, before);
-        }
     }
 }

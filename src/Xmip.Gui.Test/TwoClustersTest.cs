@@ -31,7 +31,8 @@ public sealed class TwoClustersTest : BunitContext
             [Snapshot("cluster.toml"), Snapshot("cluster-c2.toml")]);
         second = surfaces.Clusters.Single(name => name != First);
         Services.AddSingleton(surfaces);
-        Services.AddSingleton(new RoleContext(Role.Observer));
+        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
     }
 
     private static SnapshotOperator Snapshot(string fixture)
@@ -165,7 +166,8 @@ public sealed class TwoClustersTest : BunitContext
     {
         using BunitContext alone = new();
         alone.Services.AddSingleton(ClusterSurfaces.Over(Snapshot("cluster.toml")));
-        alone.Services.AddSingleton(new RoleContext(Role.Observer));
+        alone.Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        alone.Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
 
         IRenderedComponent<Configuration> page = alone.Render<Configuration>();
 

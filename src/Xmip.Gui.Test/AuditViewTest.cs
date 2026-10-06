@@ -55,7 +55,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
 
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
-        Services.AddSingleton(new RoleContext(Role.Observer));
+        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
     }
 

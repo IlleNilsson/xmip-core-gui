@@ -249,6 +249,10 @@
     [Inject]
     private RoleContext Role { get; set; } = default!;
 
+    // Where every act is recorded, taken or refused (ADR-0062).
+    [Inject]
+    private ProgramAudit Audited { get; set; } = default!;
+
     // Read once per publication, not once per property access: the index is
     // the publication as its tree, and every question here is a lookup in it
     // (ADR-0052, amendment 2026-09-15).
@@ -350,15 +354,17 @@
         Selected = Selected == stage ? null : stage;
     }
 
+    // Through the one gate as the proven caller, which refuses one whose
+    // role may not act and audits both (ADR-0009, amendment 2026-10-06).
     private void Pause(string scope)
     {
-        Surface.PauseScope(scope, ScopeOperation.Who(null));
+        new GatedOperator(Surface, Role, Audited).PauseScope(scope, Role.Who ?? string.Empty);
         Read();
     }
 
     private void Resume(string scope)
     {
-        Surface.ResumeScope(scope);
+        new GatedOperator(Surface, Role, Audited).ResumeScope(scope);
         Read();
     }
 
