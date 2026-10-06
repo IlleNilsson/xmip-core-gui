@@ -178,9 +178,11 @@ else
             ? Opened
             : Roots.Count == 1 ? Roots[0].Id : null;
 
-        if (SelectedLink is not null && !Snapshot.Links.Any(link => link.Id == SelectedLink.Id))
-        {
-            SelectedLink = null;
-        }
+        // The selection is the link's id: taken again from the new snapshot so
+        // the inspector shows what passes over it now, and cleared only when
+        // the link is gone.
+        SelectedLink = SelectedLink is { } selected
+            ? Snapshot.Links.FirstOrDefault(link => link.Id == selected.Id)
+            : null;
     }
 }

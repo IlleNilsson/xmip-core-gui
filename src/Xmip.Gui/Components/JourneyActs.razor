@@ -8,17 +8,30 @@
    list the surface reads (IOperatorSurface.FailedJourneys) — from Xmip
    Storage a page at a time where the node runs in this process, the oldest
    hundred its publication carries otherwise — each Journey with its place
-   and why, and how many wait at the Port. A surface that lists none falls
-   back to the one Journey the Port's evidence names
-   (JourneyOperation.FailedIn, the one reader of that clause). An Operator
-   retries or dismisses; an Observer is shown the Journeys and no act. What
-   the last act came to stays beside the list while the publications tick
-   under it. Until 2026-10-05 only the last Journey the evidence named was
-   offered. *@
-@if (Shown.Count > 0)
+   and why, and how many wait at the Port. A page the node read empty with a
+   next place is followed until it finds failed Journeys or the queue's end:
+   the place, not the Journeys, says whether more remain. A surface that
+   answered is taken at its word, an empty answer included; only a surface
+   that cannot list failed Journeys falls back to the one Journey the Port's
+   evidence names (JourneyOperation.FailedIn), and not where the evidence
+   says none wait in the queue now (JourneyOperation.FailingIn). A surface
+   that asked and was not answered — Xmip Storage did not answer — says so
+   in its words and offers nothing. An Operator
+   retries at once, and dismisses only once the view has named the Journey
+   and said it leaves the queue for good; an Observer is shown the Journeys
+   and no act. What the last act came to stays beside the list while the
+   publications tick under it. *@
+@if (Shown.Count > 0 || Next is not null || Answer.Length > 0 || Unanswered.Length > 0)
 {
     <div class="journey-acts">
-        <span class="subs-act-said">@Counted</span>
+        @if (Unanswered.Length > 0)
+        {
+            <span class="subs-said refused journey-unanswered">@Unanswered</span>
+        }
+        @if (Shown.Count > 0)
+        {
+            <span class="subs-act-said">@Counted</span>
+        }
         <ul class="journey-list">
             @foreach (FailedJourneyRecord failed in Shown)
             {
@@ -30,7 +43,7 @@
                             Retry
                         </button>
                         <button class="act" title="@DismissSaid"
-                                @onclick="() => Act(failed.Journey, JourneyAct.Dismiss)">
+                                @onclick="() => Confirming = failed.Journey">
                             Dismiss
                         </button>
                     }
@@ -38,6 +51,20 @@
                     @if (failed.Reason.Length > 0)
                     {
                         <span class="subs-act-said"> — @failed.Reason</span>
+                    }
+                    @if (Confirming == failed.Journey && Role.MayOperate())
+                    {
+                        <span class="journey-confirm" role="alertdialog"
+                              aria-label="Dismiss the Journey @failed.Journey">
+                            <span class="subs-act-said">@Asked(failed.Journey)</span>
+                            <button class="act dismiss-confirm"
+                                    @onclick="() => Act(failed.Journey, JourneyAct.Dismiss)">
+                                Dismiss for good
+                            </button>
+                            <button class="act dismiss-keep" @onclick="() => Confirming = null">
+                                Keep it
+                            </button>
+                        </span>
                     }
                 </li>
             }
@@ -80,6 +107,10 @@
 
     private string Answer { get; set; } = string.Empty;
 
+    // What the surface was told where it asked for the failed Journeys and
+    // Xmip Storage did not answer; empty otherwise.
+    private string Unanswered { get; set; } = string.Empty;
+
     private IReadOnlyList<FailedJourneyRecord> Shown { get; set; } = [];
 
     private ulong Count { get; set; }
@@ -89,37 +120,97 @@
     // Where the page shown starts in the Port's queue.
     private ulong From { get; set; }
 
+    // The scope the paging is of: a Port changed under the view starts again
+    // from the queue's head.
+    private string? Paged { get; set; }
+
+    // The Journey whose Dismiss waits for the Operator to confirm it.
+    private string? Confirming { get; set; }
+
     private string Counted => Count == 1
         ? "1 Journey failed in its Send Port's queue"
         : $"{Count} Journeys failed in its Send Port's queue";
 
+    /// <summary>What the view asks before it dismisses
+    /// <paramref name="journey"/>.</summary>
+    public static string Asked(string journey)
+    {
+        return $"Dismiss the Journey {journey}? It leaves its Send Port's queue for good: "
+            + "written Dismissed, never sent again.";
+    }
+
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
+        if (!string.Equals(Paged, Record.Scope, StringComparison.Ordinal))
+        {
+            Paged = Record.Scope;
+            From = 0;
+            Confirming = null;
+            Answer = string.Empty;
+        }
+
         Read();
     }
 
-    // The page from From of the Journeys that failed at the Port's scope; the
-    // one the evidence names where the surface lists none.
+    // The page from From of the Journeys that failed at the Port's scope,
+    // following each next place past stretches that held none; the one the
+    // evidence names only where the surface cannot list them.
     private void Read()
     {
         FailedJourneyList failed = Surface.FailedJourneys(Record.Scope, From);
-        FailedJourneyRecord[] listed = [.. failed.Journeys];
 
-        if (listed.Length > 0)
+        Unanswered = failed.Failure;
+
+        if (Unanswered.Length > 0)
         {
-            Shown = listed;
-            Count = failed.Ports.Aggregate(0ul, (sum, port) => sum + port.Count);
-            Next = failed.Ports.Select(port => port.Next).FirstOrDefault(next => next is not null);
+            // Asked and not answered: said, and nothing offered — neither the
+            // list, which is unknown, nor the evidence's history.
+            Shown = [];
+            Count = 0;
+            Next = null;
             return;
         }
 
+        if (!failed.Listed)
+        {
+            Fallback();
+            return;
+        }
+
+        ulong at = From;
+        ulong? next = NextOf(failed);
+
+        while (!failed.Journeys.Any() && next is { } further && further > at)
+        {
+            at = further;
+            failed = Surface.FailedJourneys(Record.Scope, at);
+            next = NextOf(failed);
+        }
+
+        // A next place that does not move on is the queue's end, not a page.
+        Shown = [.. failed.Journeys];
+        Count = failed.Ports.Aggregate(0ul, (sum, port) => sum + port.Count);
+        Next = next > at ? next : null;
+    }
+
+    // A surface that cannot list failed Journeys: the one the Port's evidence
+    // names as the last that failed, unless the evidence says none wait now.
+    private void Fallback()
+    {
         string? named = JourneyOperation.FailedIn(Record.Evidence);
-        Shown = named is null
-            ? []
-            : [new FailedJourneyRecord(string.Empty, string.Empty, named, 0, string.Empty)];
+        bool waiting = JourneyOperation.FailingIn(Record.Evidence) is not 0;
+
+        Shown = named is not null && waiting
+            ? [new FailedJourneyRecord(string.Empty, string.Empty, named, 0, string.Empty)]
+            : [];
         Count = (ulong)Shown.Count;
         Next = null;
+    }
+
+    private static ulong? NextOf(FailedJourneyList failed)
+    {
+        return failed.Ports.Select(port => port.Next).FirstOrDefault(next => next is not null);
     }
 
     private void Page(ulong next)
@@ -136,6 +227,7 @@
     private async Task Act(string journey, JourneyAct act)
     {
         string action = $"{JourneyOperation.Noun}.{JourneyOperation.Word(act)}";
+        Confirming = null;
 
         if (!Role.MayOperate())
         {

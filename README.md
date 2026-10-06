@@ -62,7 +62,11 @@ within the open node with its origin (ADR-0052, amendment 2026-09-25). A line
 is selected by a click or from the keyboard: each is a button in the tab
 order, named for its pattern and its ends and taken by Enter or Space, and
 each link's ends in the inspector's Traffic list is a button that selects the
-same line as text. Open at a
+same line as text. A selection is the link's id: each publication is read
+for it again, so the inspector says what passes over the line now, and it is
+cleared only when the link is gone. Every view follows its cluster's change
+feed (`ClusterView`); a feed that ended on its own — a source that was not
+there yet — is begun again on the view's next parameter change. Open at a
 node, the canvas is that node framed with what is beneath it, and nothing
 beside it; traffic leaving it runs to one marker labeled *outside*, and the
 inspector names that end the same way. Where the publisher draws Parties
@@ -194,8 +198,18 @@ at a time from Xmip Storage in the node's process with More for the next,
 or the oldest hundred a snapshot's publication carries — how many wait, and
 for each an Operator is offered Retry — sent again, its tries begun anew —
 and Dismiss — given up, written Dismissed and taken out of the Port's queue
-(`JourneyActs.razor`). A surface that lists none offers the one Journey the
-evidence names (`JourneyOperation.FailedIn`, the one reader of that clause).
+(`JourneyActs.razor`). Retry acts at once; Dismiss first names the Journey
+and says it leaves the queue for good, and acts only on **Dismiss for
+good** (**Keep it** withdraws). A page the node read empty with a next place
+is followed until failed Journeys or the queue's end, and paging starts
+again at the queue's head when the Port in view changes. A surface that
+answered is taken at its word, an empty answer included; only a surface that
+cannot list failed Journeys (`FailedJourneyList.Unlisted`) offers the one
+Journey the evidence names as the last that failed
+(`JourneyOperation.FailedIn`), and not where the evidence says none wait in
+the queue now (`JourneyOperation.FailingIn`). Where the surface asked and
+Xmip Storage did not answer (`FailedJourneyList.Unanswered`), the view says
+the `FAILED:` sentence and offers nothing.
 The act goes through `IOperatorSurface.Act` — applied in the node's process,
 or over a snapshot left where its publication says its publisher takes
 orders — and is recorded in the host's audit as `journey.retry` or
@@ -344,7 +358,12 @@ not written over — the save is refused in words, audited, and offers
 on, by the document's version. A save writes a temporary file of its own
 beside the target (`xmip.toml.<guid>.writing`), flushes it to the device and
 renames it over the file, so a reader never sees half of one and two saves
-never share a temporary file.
+never share a temporary file. The comparison and the rename are one step for
+every Xmip writer: each holds `xmip.toml.lock`, opened exclusively and
+deleted when closed, from before the comparison until after the rename, so
+two saves can never both pass the check; a save that finds the lock held is
+refused in words — *another save of xmip.toml is under way; nothing was
+saved* — and offers **Reload from disk** like any other refusal.
 
 The page holds no configuration rule. Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s

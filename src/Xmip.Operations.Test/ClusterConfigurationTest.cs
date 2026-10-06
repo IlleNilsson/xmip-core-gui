@@ -214,6 +214,69 @@ public sealed class ClusterConfigurationTest : IDisposable
         Assert.Contains("save-1", File.ReadAllText(cluster.Path), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task OfTwoConcurrentSavesExactlyOneLandsAndTheOtherIsRefused()
+    {
+        string path = Estate.Written(_directory).Path;
+
+        for (int round = 0; round < 40; round++)
+        {
+            ClusterConfiguration[] editors =
+                [ClusterConfiguration.Open(path), ClusterConfiguration.Open(path)];
+            for (int editor = 0; editor < editors.Length; editor++)
+            {
+                Assert.True(editors[editor].TryEdit(
+                    new ClusterEdit.Set(["service"], ["name"], $"\"r{round}-e{editor}\""),
+                    out string edit), edit);
+            }
+
+            using Barrier start = new(editors.Length);
+            Task<(bool Saved, string Refusal)>[] saves = [.. editors.Select(cluster =>
+                Task.Factory.StartNew(
+                    () =>
+                    {
+                        start.SignalAndWait();
+                        bool saved = cluster.TryWrite(out string refusal);
+                        return (saved, refusal);
+                    },
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default))];
+            (bool Saved, string Refusal)[] answers = await Task.WhenAll(saves);
+            Assert.Single(answers, answer => answer.Saved);
+            string refused = answers.Single(answer => !answer.Saved).Refusal;
+            Assert.Contains("nothing was saved", refused, StringComparison.Ordinal);
+
+            ClusterConfiguration winner = editors[Array.FindIndex(answers, a => a.Saved)];
+            Assert.Equal(winner.Text, File.ReadAllText(path));
+        }
+
+        Assert.Equal(["xmip.toml"], Directory.GetFiles(_directory).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public void ASaveIsRefusedInWordsWhileAnotherSaveHoldsTheFile()
+    {
+        ClusterConfiguration cluster = Estate.Written(_directory);
+        string before = File.ReadAllText(cluster.Path);
+        Assert.True(cluster.TryEdit(
+            new ClusterEdit.Set(["service"], ["name"], "\"mine\""), out string edit), edit);
+
+        using (new FileStream(
+            $"{cluster.Path}.lock", FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None,
+            bufferSize: 1, FileOptions.DeleteOnClose))
+        {
+            Assert.False(cluster.TryWrite(out string refusal));
+            Assert.Contains("another save of xmip.toml is under way", refusal,
+                StringComparison.Ordinal);
+            Assert.Equal(before, File.ReadAllText(cluster.Path));
+            Assert.True(cluster.Changed);
+        }
+
+        Assert.True(cluster.TryWrite(out string none), none);
+        Assert.Contains("mine", File.ReadAllText(cluster.Path), StringComparison.Ordinal);
+    }
+
     public void Dispose()
     {
         Directory.Delete(_directory, recursive: true);
