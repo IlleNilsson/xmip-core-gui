@@ -149,7 +149,7 @@ Subscription view, for all subscriptions per cluster, with pause and resume,
 but not remove. That is handled with the TOML configuration files*) lists
 every Subscription the cluster's nodes route by, through
 `IOperatorSurface.Subscriptions`: its configured name, the cluster and the
-node, its filter — what it subscribes to — and where it leads, the Xmip
+node, its filter — what it subscribes to — and where it leads, the Work
 Process or Send Port it opens a Journey into; then its state, active or
 paused, what it picked up, what it holds and since. A paused one is the Paused
 mood, painted as the Monitor paints it and said in words. It drills cluster →

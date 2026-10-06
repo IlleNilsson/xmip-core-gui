@@ -46,7 +46,7 @@ public sealed class MonitorDrillTest : BunitContext
         Assert.Equal("6", cards[0].Value);
         Assert.StartsWith("receive location ×2 ", cards[0].Items, StringComparison.Ordinal);
         Assert.Equal("6", cards[1].Value);
-        Assert.StartsWith("xmip process ×1 ", cards[1].Items, StringComparison.Ordinal);
+        Assert.StartsWith("work process ×1 ", cards[1].Items, StringComparison.Ordinal);
         Assert.Equal("5", cards[2].Value);
         Assert.StartsWith("send location ×2 ", cards[2].Items, StringComparison.Ordinal);
     }

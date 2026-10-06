@@ -28,7 +28,7 @@ trusted_required = true
 library_path = "xmip_core_transport_file"
 symbol = "xmip_create_module_v1"
 
-[[xmip_processes]]
+[[work_processes]]
 name = "approval"
 start = true
 required_modules = ["file"]

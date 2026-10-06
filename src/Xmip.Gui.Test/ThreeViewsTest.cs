@@ -13,7 +13,7 @@ namespace Xmip.Gui.Test;
 /// Topology — and from any of them a scope leads to the same scope in the
 /// others (ADR-0052, amendments 2026-09-14 and 2026-09-18). Rendered over the
 /// surface library's own fixture: one node holds a done Receive Location and a
-/// stressed Xmip Process, the other a paused Send Location and a fine one. The
+/// stressed Work Process, the other a paused Send Location and a fine one. The
 /// scopes are read from the fixture, never written here.
 /// </summary>
 public sealed class ThreeViewsTest : BunitContext
