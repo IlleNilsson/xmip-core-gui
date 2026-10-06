@@ -31,7 +31,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     public HiddenClusterTest()
     {
         Directory.CreateDirectory(_directory);
-        Services.AddSingleton(new RoleContext(Role.Observer));
+        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
         File.WriteAllText(
             Path.Combine(_directory, "audit.toml"),

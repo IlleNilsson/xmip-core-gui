@@ -63,9 +63,15 @@ Node = "edge-01"
 # XMIP_AUDIT_DIRECTORY, else the operating system's log.
 # AuditDirectory = ".local-work/audit"
 
-# The role this desktop runs as (ADR-0009): observer, operator or developer.
-# Assigned here or in XMIP_ROLE, never chosen in the UI; stated by neither,
-# the role is the directory's, and with none configured the tester holds
-# every role (ADR-0014 and ADR-0052, amendments 2026-09-14). A word that is
-# no role is observer. The web host takes it by the same rule.
+# The role of the user running this desktop (ADR-0009): observer, operator
+# or developer. Assigned here or in XMIP_ROLE, never chosen in the UI; stated
+# by neither, the role is what the directory named by Directory grants that
+# user, and with no directory it is observer, so an unstated role grants
+# nothing (ADR-0009, amendment 2026-10-06). A word that is no role is
+# observer. The web host and its surface hub take it by the same rule.
 # Role = "operator"
+
+# The directory asked where no role is stated. The one kind built is
+# "tester", the Playground's fake directory: it allows the user this program
+# runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
+# Directory = "tester"

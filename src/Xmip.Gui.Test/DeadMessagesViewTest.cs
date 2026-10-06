@@ -71,7 +71,7 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
 
     private IRenderedComponent<DeadMessages> At(string address, Role role)
     {
-        Services.AddSingleton(new RoleContext(role));
+        Services.AddSingleton(new RoleContext(role, "tester"));
         Services.GetRequiredService<NavigationManager>().NavigateTo(address);
         return Render<DeadMessages>();
     }

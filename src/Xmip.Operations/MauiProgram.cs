@@ -57,9 +57,11 @@ public static class MauiProgram
         builder.Services.AddSingleton(audit);
 
         // The role is assigned, never chosen in the UI (ADR-0009): a person
-        // cannot promote themselves. The one rule both hosts take it by.
+        // cannot promote themselves. The caller is the operating system user
+        // running the desktop, granted a role by the one rule both hosts and
+        // the hub take it by (ADR-0009, amendment 2026-10-06).
         builder.Services.AddSingleton(
-            new RoleContext(RoleContext.Assigned(builder.Configuration)));
+            RoleAssignment.From(builder.Configuration).For(GatedOperator.HostUser));
 
         // The cluster's xmip.toml the Configure page edits — the one file
         // anyone edits (ADR-0031, amendment 2026-10-05) — where each node's

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,13 +19,19 @@ namespace Xmip.Gui.Test;
 /// acts for an Operator, each left for the sending node; the Journeys and no
 /// act for an Observer; nothing where the publication lists none, whatever
 /// Journey the evidence names; nothing at a Port with no failed Journey; and every act in the host's
-/// audit as <c>journey.retry</c> or <c>journey.dismiss</c>.
+/// audit as <c>journey.retry</c> or <c>journey.dismiss</c>, as the caller the
+/// browser proved and never the host's account; a caller nothing proved is
+/// offered no act and the gate takes none.
 /// </summary>
-public sealed class JourneyActsViewTest : BunitContext, IDisposable
+public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
 {
     private const string First = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0b";
     private const string Second = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0c";
     private const string Named = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0d";
+
+    // The identity the browser's connection proved, which every act is taken
+    // and audited as (ADR-0009, amendment 2026-10-06).
+    private const string Proven = "CN=xmip-operator";
 
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Sender = Names.WithRole("sending");
@@ -78,9 +85,9 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
         base.Dispose();
     }
 
-    private IRenderedComponent<Cluster> At(string scope, Role role)
+    private IRenderedComponent<Cluster> At(string scope, Role role, string? who = Proven)
     {
-        Services.AddSingleton(new RoleContext(role));
+        Services.AddSingleton(new RoleContext(role, who));
         Services.GetRequiredService<NavigationManager>().NavigateTo(ScopeLink.Monitor(scope));
         return Render<Cluster>();
     }
@@ -123,7 +130,34 @@ public sealed class JourneyActsViewTest : BunitContext, IDisposable
         Assert.Contains("action = \"journey.dismiss\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{First}\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{Second}\"", audit, StringComparison.Ordinal);
+        Assert.Equal(
+            [Proven],
+            WhoSaid().Matches(audit).Select(said => said.Groups[1].Value).Distinct());
+        Assert.All(
+            Directory.GetFiles(Orders, "*.toml", SearchOption.AllDirectories),
+            order => Assert.Contains(Proven, File.ReadAllText(order), StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void ACallerNothingProvedIsShownNoActAndTheGateRefusesOneThatArrives()
+    {
+        IRenderedComponent<Cluster> page = At(Failing, Role.Observer, who: null);
+
+        Assert.Empty(page.FindAll(".journey-acts button"));
+
+        JourneyOperation refused = new GatedOperator(
+                Services.GetRequiredService<ClusterSurfaces>().First,
+                new RoleContext(Role.Operator, null),
+                Services.GetRequiredService<ProgramAudit>())
+            .Act(Failing, First, JourneyAct.Retry, Proven);
+
+        Assert.False(refused.Applied);
+        Assert.StartsWith("REFUSED. Nothing proved", refused.Result, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Orders));
+    }
+
+    [GeneratedRegex("^\"who\" = \"([^\"]*)\"$", RegexOptions.Multiline)]
+    private static partial Regex WhoSaid();
 
     [Fact]
     public void AnObserverIsShownTheJourneysAndNoAct()

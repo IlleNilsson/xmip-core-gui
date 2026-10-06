@@ -193,21 +193,17 @@
     // An act, by a role that may act: taken through the surface, recorded in
     // this host's audit with what came of it (ADR-0062) under the action
     // observe::Noun::EventSubscription gives it — event.<act> — and said. An
-    // Observer is shown no act; one that reached here anyway is refused.
+    // Observer is shown no act; the one gate refuses an act whose caller's
+    // role may not act, and takes it as the proven caller (ADR-0009,
+    // amendment 2026-10-06).
     private void Act((EventSubscriptionRecord Subscription, EventSubscriptionAct Act) asked)
     {
         (EventSubscriptionRecord subscription, EventSubscriptionAct act) = asked;
         string word = EventSubscriptionOperation.Word(act);
+        string who = Role.Who ?? string.Empty;
 
-        if (!Role.MayOperate())
-        {
-            Answer = ActSaid.Refused(Role.Role, word, "an Event subscription");
-            Audited.Record($"event.{word}", AuditPhase.Failure, AuditSeverity.Warning, Answer);
-            return;
-        }
-
-        string who = ScopeOperation.Who(null);
-        EventSubscriptionOperation done = Surface.Act(subscription, act, who);
+        EventSubscriptionOperation done = new GatedOperator(Surface, Role, Audited)
+            .Act(subscription, act, who);
         Audited.Record(
             $"event.{word}",
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,

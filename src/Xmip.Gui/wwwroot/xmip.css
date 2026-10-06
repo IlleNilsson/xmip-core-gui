@@ -412,6 +412,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
    Observer watches; Operator also configures; Developer also builds. */
 .role { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
 .role-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.role-who { color: #94a3b8; font-size: 0.75rem; }
 .role-pick {
     color: #cbd5e0; background: none; border: 1px solid transparent;
     font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;

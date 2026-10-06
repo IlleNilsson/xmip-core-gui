@@ -300,16 +300,23 @@ that has any.
 **Web** — `dotnet run --project src/Xmip.Gui.Web`, then open http://localhost:5087.
 The web GUI offers what the desktop offers, by role (ADR-0014 and ADR-0052,
 amendments 2026-09-14): an Observer watches, an Operator also pauses, resumes
-and removes. It starts no node. Both hosts take the role by one rule,
-`RoleContext.Assigned` (in `Xmip.Surface`): `Role` in `xmip.gui.toml`, else
-`XMIP_ROLE`, and a word that is no role is Observer; with none stated and no
-directory configured the tester holds every role (ADR-0009, amendment
-2026-09-14). The same role is enforced on what other machines ask: the surface
-hub takes an act — pause, resume, remove — only where the host's role may act,
-and as the subject of the client certificate that reached it, never a name the
-caller gives — on loopback without a certificate, as the operating system
-user the host runs as; it refuses in words an act its role may not take or
-one from elsewhere without a certificate, and audits every one (ADR-0009, amendment 2026-10-03).
+and removes. It starts no node. The role is the caller's, not the host's
+(ADR-0009, amendment 2026-10-06): each browser is the caller its connection
+proved — the subject of a client certificate the host checked, else, over this
+machine's loopback, the operating system user the host runs as — and one
+nothing proved watches and acts on nothing. Both hosts and the surface hub
+grant a caller a role by one rule, `RoleAssignment` (in `Xmip.Surface`):
+`Role` in `xmip.gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
+word that is no role is Observer; stated by neither, the directory named by
+`Directory` answers, and with none the role is Observer. The one directory
+built is `tester`, the Playground's fake directory, which allows the user the
+host runs as every role; `Start-XmipOperationWeb` names it for a host over a
+Playground roll. Every act — pause, resume, remove, replay, retry, dismiss —
+from a browser, the desktop or another machine over the surface hub passes
+one gate, `GatedOperator`, as its caller: taken only where the caller's role
+may act, never under a name the caller gives, refused in words otherwise, and
+audited as that caller either way (ADR-0009, amendments 2026-10-03 and
+2026-10-06).
 
 It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an

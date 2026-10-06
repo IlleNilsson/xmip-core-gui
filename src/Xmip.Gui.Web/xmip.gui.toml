@@ -14,14 +14,23 @@
 # host serves its own surface at /surface for the same following.
 Surface = "native"
 
-# The role this host runs as (ADR-0009): observer watches, operator also
-# pauses, resumes and removes, developer also opens configuration. Else
-# XMIP_ROLE; stated by neither, the role is the directory's, and with none
-# configured the tester holds every role (ADR-0014 and ADR-0052, amendments
-# 2026-09-14). A word that is no role is observer. The surface hub at /surface
-# refuses by it every act another machine asks for (ADR-0009, amendment
-# 2026-10-03).
+# The role every proven caller holds (ADR-0009): observer watches, operator
+# also pauses, resumes and removes, developer also opens configuration. Else
+# XMIP_ROLE; stated by neither, the role is what the directory named by
+# Directory grants the caller, and with no directory it is observer, so an
+# unstated role grants nothing (ADR-0009, amendment 2026-10-06). A word that
+# is no role is observer. A caller is proven by the client certificate its
+# browser or remote surface presented, else by this machine's loopback as
+# the user this host runs as; one nothing proved watches and acts on
+# nothing. Every act, from a browser or over the surface hub at /surface,
+# is decided and audited as its caller.
 # Role = "observer"
+
+# The directory asked where no role is stated. The one kind built is
+# "tester", the Playground's fake directory: it allows the user this host
+# runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
+# Start-XmipOperationWeb names it for a host that follows a Playground roll.
+# Directory = "tester"
 
 # The runtime's native library, exporting xmip_operate_v1. Found by one rule
 # for every surface: this key, else XMIP_RUNTIME_LIBRARY, else the library

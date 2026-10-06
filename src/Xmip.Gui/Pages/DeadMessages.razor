@@ -128,25 +128,19 @@
     private static string Figures(IEnumerable<DeadMessageRecord> node) =>
         $"{English.Figure((ulong)node.Sum(m => m.Declines.Count))} decline(s)";
 
-    // A Replay, by a role that may act: taken through the surface, recorded
-    // in this host's audit with what came of it (ADR-0062) under the action
-    // observe::Noun::DeadMessage gives it — dead-message.replay — and said.
-    // An Observer is shown no act; one that reached here anyway is refused.
+    // A Replay, through the one gate as the proven caller (ADR-0009,
+    // amendment 2026-10-06), which refuses one whose role may not act;
+    // recorded in this host's audit with what came of it (ADR-0062) under the
+    // action observe::Noun::DeadMessage gives it — dead-message.replay — and
+    // said. An Observer is shown no act.
     private void Act((DeadMessageRecord Message, DeadMessageAct Act) asked)
     {
         (DeadMessageRecord message, DeadMessageAct act) = asked;
         string action = $"{DeadMessageOperation.Noun}.{DeadMessageOperation.Word(act)}";
+        string who = Role.Who ?? string.Empty;
 
-        if (!Role.MayOperate())
-        {
-            Answer = ActSaid.Refused(
-                Role.Role, DeadMessageOperation.Word(act), "a Message in a Dead Message Queue");
-            Audited.Record(action, AuditPhase.Failure, AuditSeverity.Warning, Answer);
-            return;
-        }
-
-        string who = ScopeOperation.Who(null);
-        DeadMessageOperation done = Surface.Act(message, act, who);
+        DeadMessageOperation done = new GatedOperator(Surface, Role, Audited)
+            .Act(message, act, who);
         Audited.Record(
             action,
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,

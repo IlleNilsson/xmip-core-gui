@@ -76,9 +76,12 @@ try
 
     // The web offers what the desktop offers, by role (ADR-0014 and ADR-0052,
     // amendments of 2026-09-14): an Observer watches, an Operator also acts.
-    // The role is the run's to state and the directory's to grant, by the one
-    // rule both hosts take it by.
-    builder.Services.AddSingleton(new RoleContext(RoleContext.Assigned(builder.Configuration)));
+    // The role is each browser's own (ADR-0009, amendment 2026-10-06): the
+    // caller its connection proved, granted a role by the one rule both hosts
+    // and the hub take it by — the run's statement, else the directory this
+    // configuration names, else Observer. A browser nothing proved watches.
+    builder.Services.AddSingleton(RoleAssignment.From(builder.Configuration));
+    builder.Services.AddXmipProvenCaller();
 
     // The surfaces every screen reads, chosen in xmip.gui.toml and never guessed
     // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
@@ -106,9 +109,10 @@ try
     // This host's surface, served: the CLI, the PowerShell module and a GUI on
     // another machine follow it over SignalR and are told when it changes, never
     // asking (ADR-0052, amendment 2026-09-15). The same surface the pages read.
-    // An act asked over it is taken only where this host's role, above, may
-    // act, and as the client certificate's subject; refused in words and
-    // audited otherwise (ADR-0009, amendment 2026-10-03).
+    // An act asked over it is taken only where the role the assignment above
+    // grants its caller may act, and as the client certificate's subject;
+    // refused in words and audited otherwise (ADR-0009, amendments 2026-10-03
+    // and 2026-10-06).
     builder.Services.AddXmipSurfaceRelay();
 
     // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host
@@ -145,6 +149,12 @@ try
 
     app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
     app.UseHttpsRedirection();
+
+    // Every request's user is the caller its connection proved — a client
+    // certificate, else this machine's loopback, else no one — before a page
+    // renders or a circuit opens, so each browser acts as itself and never as
+    // this host's account (ADR-0009, amendment 2026-10-06).
+    app.UseXmipProvenCaller();
 
     app.MapStaticAssets();
     // The pages are in Xmip.Gui, the shared library. Both the endpoint mapping
