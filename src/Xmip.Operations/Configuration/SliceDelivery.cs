@@ -16,7 +16,7 @@ namespace Xmip.Operations.Configuration;
 /// starts reads its slice here, so writing it is shipping it. Xmip has no
 /// path yet that puts a file on another node: desired state slices the
 /// cluster's file on each node as it deploys it (the Ansible role
-/// <c>xmip_node</c>, <c>deploy/dsc/msdsc/xmip-node.dsc.yaml</c>), and the node's
+/// <c>xmip_node</c>), and the node's
 /// operate listener (ADR-0067) takes no configuration. Another node's slice
 /// is written here and said to be not shipped, never sent by a transport
 /// invented for it.
