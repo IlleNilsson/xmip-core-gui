@@ -400,7 +400,7 @@ starts, whose slice is written where it starts from and takes effect when it
 starts again; *sliced, not shipped* for every other node, since Xmip has no
 path yet that puts a file on another node — desired state slices the
 cluster's file on the node as it deploys it (the Ansible role `xmip_node`,
-`deploy/dsc/xmip-node.dsc.yaml`), and a node's operate listener (ADR-0067)
+`deploy/dsc/msdsc/xmip-node.dsc.yaml`), and a node's operate listener (ADR-0067)
 takes no configuration; or *refused*, with the runtime's sentence, for a
 node that does not slice, which stops no other node. **Plan** slices the saved
 file for the node configured here and hands its slice to `xmip_start_v1`,
