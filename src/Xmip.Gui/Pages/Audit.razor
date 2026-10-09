@@ -264,9 +264,9 @@
         };
 
     private static string Worst(AuditGroup group) =>
-        group.Errors > 0 ? "severity-error"
-        : group.Warnings > 0 ? "severity-warning"
-        : "severity-information";
+        group.Errors > 0 ? "severity-Error"
+        : group.Warnings > 0 ? "severity-Warning"
+        : "severity-Information";
 
     /// <summary>A written time as a row shows it: the date and the time to
     /// the millisecond, UTC.</summary>

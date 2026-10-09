@@ -623,9 +623,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
    a color, never the color alone: every row prints its severity beside its
    dot. Severity is not a mood, and these are not the mood's paint: an error
    in red, a warning in yellow, information in the muted ink. */
-.severity-error { --mood: var(--red); }
-.severity-warning { --mood: var(--yellow); }
-.severity-information { --mood: var(--muted); }
+.severity-Error { --mood: var(--red); }
+.severity-Warning { --mood: var(--yellow); }
+.severity-Information { --mood: var(--muted); }
 
 .audit-filters {
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem;
@@ -680,7 +680,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .audit-row .audit-node, .audit-row .audit-phase { color: var(--muted); }
 .audit-row .audit-action { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audit-row .audit-severity { color: var(--mood); }
-.audit-row.severity-information .audit-severity { color: var(--muted); }
+.audit-row.severity-Information .audit-severity { color: var(--muted); }
 .audit-row .audit-summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audit-pages {
     display: flex; gap: 1rem; align-items: center; justify-content: flex-end;
@@ -696,7 +696,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .audit-detail h2 { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; font-size: 1.1rem; }
 .audit-detail h2 small { color: var(--mood); font-weight: 600; }
-.audit-detail.severity-information h2 small { color: var(--muted); }
+.audit-detail.severity-Information h2 small { color: var(--muted); }
 .audit-detail h3 { margin: 1rem 0 0.4rem; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .audit-message { margin: 0 0 0.75rem; white-space: pre-wrap; }
 .audit-fields { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0; }

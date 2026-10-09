@@ -74,7 +74,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
             + "process = \"42\"\n"
             + $"location = \"{location}\"\n"
             + (hidden ? "hidden = \"true\"\n" : string.Empty)
-            + "action = \"start\"\nphase = \"begin\"\nseverity = \"information\"\n\n";
+            + "action = \"start\"\nphase = \"Begin\"\nseverity = \"Information\"\n\n";
     }
 
     private void Holding(bool hidden)
