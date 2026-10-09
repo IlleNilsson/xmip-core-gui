@@ -42,16 +42,16 @@ public sealed class AuditViewTest : BunitContext, IDisposable
         File.WriteAllText(
             Path.Combine(_directory, "audit.toml"),
             Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
-                Names.Scope, "start", "begin", "information", null)
+                Names.Scope, "start", "Begin", "Information", null)
             + Record("02", "2026-09-29T10:00:02.000000000Z", NodeProgram,
-                Node, "start", "begin", "information", null)
+                Node, "start", "Begin", "Information", null)
             + Record("03", "2026-09-29T10:00:03.000000000Z", NodeProgram,
-                Node, "publish", "failure", "error", "could not write")
+                Node, "publish", "Failure", "Error", "could not write")
             + Record("04", "2026-09-29T10:00:04.000000000Z",
                 $"xmip-playground-{Second}-node-{sender}",
-                $"{ScopeTree.Root}{Second}/node/{sender}", "start", "begin", "information", null)
+                $"{ScopeTree.Root}{Second}/node/{sender}", "start", "Begin", "Information", null)
             + Record("05", "2026-09-29T10:00:05.000000000Z", "Xmip", null,
-                "Start-XmipTest", "begin", "warning", null));
+                "Start-XmipTest", "Begin", "Warning", null));
 
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
@@ -143,7 +143,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     {
         IRenderedComponent<Audit> page = At("/audit?sort=severity&order=descending");
 
-        Assert.Equal("error", Column(page, "severity")[0]);
+        Assert.Equal("Error", Column(page, "severity")[0]);
         IElement head = page.Find("a.audit-sort.sorted");
         Assert.Equal("descending", head.GetAttribute("aria-sort"));
         Assert.Equal(

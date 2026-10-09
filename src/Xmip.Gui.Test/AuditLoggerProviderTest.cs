@@ -37,7 +37,7 @@ public sealed class AuditLoggerProviderTest
         string text = File.ReadAllText(Path.Combine(directory, "audit.toml"));
         Assert.Contains("program = \"xmip-gui-web\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"error logged\"", text, StringComparison.Ordinal);
-        Assert.Contains("phase = \"failure\"", text, StringComparison.Ordinal);
+        Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Assert.Contains("message = \"the snapshot is gone\"", text, StringComparison.Ordinal);
         Assert.Contains($"\"category\" = \"{Circuit}\"", text, StringComparison.Ordinal);
         Assert.Contains("\"event\" = \"CircuitUnhandledException\"", text, StringComparison.Ordinal);
