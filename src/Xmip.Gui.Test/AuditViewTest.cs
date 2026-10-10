@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Xmip.Abi.Operate;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Surface;
@@ -95,6 +96,25 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     private static string[] Groups(IRenderedComponent<Audit> page)
     {
         return [.. page.FindAll("a.audit-group .label").Select(label => label.TextContent.Trim())];
+    }
+
+    [Fact]
+    public void VerifyWalksEachWritersChainAndSaysItInWords()
+    {
+        // ADR-0070 clause 5: a record this program makes is chained, the
+        // fixture's hand-written ones carry no chain and stand in none.
+        Services.GetRequiredService<ProgramAudit>()
+            .Record("start", AuditPhase.Begin, AuditSeverity.Information);
+
+        IRenderedComponent<Audit> plain = At("/audit");
+        Assert.Empty(plain.FindAll(".audit-chain"));
+        Assert.Contains("verify=yes", plain.Find("a.audit-verify").GetAttribute("href"),
+            StringComparison.Ordinal);
+
+        IRenderedComponent<Audit> verified = At("/audit?verify=yes");
+        string said = verified.Find(".audit-chain.whole").TextContent;
+        Assert.StartsWith("OK: the audit chain of Xmip.Gui.Test is whole: 1 records", said,
+            StringComparison.Ordinal);
     }
 
     [Fact]

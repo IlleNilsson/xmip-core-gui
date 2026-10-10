@@ -23,7 +23,10 @@
    step, every filter, the sort and the page are a link that reproduces the
    view. What a run that declared itself hidden recorded is left out with its
    cluster until "show test clusters" is ticked, and then marked test
-   (ADR-0052, amendment 2026-09-30). *@
+   (ADR-0052, amendment 2026-09-30). "verify chains" walks the audit chain
+   of each writer of the records matched and says, in words, where it
+   breaks or that it is whole (ADR-0070 clause 5): it reads no payload, so
+   an Observer may (ADR-0009, amendment 2026-09-06). *@
 <section class="drill audit">
     <nav class="crumbs" aria-label="Audit drill-down">
         @foreach ((string label, string href) in Trail)
@@ -49,7 +52,18 @@
         <p class="audit-count">
             @Count(found)
             · <span class="audit-file">@found.File</span>
+            · <a class="audit-verify" href="@Link(Asking with { Verify = true })">verify chains</a>
         </p>
+
+        @if (found.Chains.Count > 0)
+        {
+            <ul class="audit-chains">
+                @foreach (AuditChain chain in found.Chains)
+                {
+                    <li class="audit-chain @(chain.Whole ? "whole" : "broken")">@chain.Said</li>
+                }
+            </ul>
+        }
 
         @if (Detail is { } entry)
         {
@@ -96,6 +110,7 @@
     [SupplyParameterFromQuery(Name = "sort")] public string? AskedSort { get; set; }
     [SupplyParameterFromQuery(Name = "order")] public string? AskedOrder { get; set; }
     [SupplyParameterFromQuery(Name = "offset")] public int AskedOffset { get; set; }
+    [SupplyParameterFromQuery(Name = "verify")] public string? AskedVerify { get; set; }
 
     private AuditQuery Asking { get; set; } = new();
 
@@ -138,6 +153,7 @@
             Action = AskedAction, From = AskedFrom, To = AskedTo, Sort = AskedSort,
             Order = AskedOrder, Offset = Math.Max(AskedOffset, 0),
             IncludeHidden = IncludeHidden,
+            Verify = string.Equals(AskedVerify, "yes", StringComparison.Ordinal),
         };
 
         try

@@ -143,6 +143,12 @@ it. The view reads the audit of the machine its host runs on — the directory
 words where there is none, where the runtime's library cannot be loaded, and
 over a remote surface, whose cluster's audit stays on its own machine. The
 Monitor's drill links each scope to its audit beside its configuration.
+*verify chains* beside the count (`verify=yes` in the address) walks the
+audit chain of each writer of the records matched — a node's location, or a
+program's name — whole, and lists one sentence for each: OK and how many
+records, or FAILED and the first place it breaks, a record deleted, changed
+or out of order (ADR-0070 clause 5). It reads no payload, so an Observer is
+offered it (ADR-0009, amendment 2026-09-06).
 
 **The Subscriptions view** (`/subscriptions`; the owner, 2026-09-30: *a
 Subscription view, for all subscriptions per cluster, with pause and resume,
