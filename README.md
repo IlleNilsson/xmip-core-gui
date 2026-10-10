@@ -348,7 +348,8 @@ names — validated and its plan published; nothing runs it here.
 (ADR-0031, amendment 2026-10-05: *node TOML files shall not be edited, only
 cluster TOML files, the files are sliced / node and distributed*). It opens
 on an overview of the cluster — its shared sections (`[service]`,
-`[tuning]`, `[storage]`, `[store]`) and its nodes — and drills down to a
+`[tuning]`, `[runtime]`, `[administration]`, `[audit]`, `[storage]`,
+`[store]`) and its nodes — and drills down to a
 node, with its own values and its artifacts, and to the artifacts by kind:
 Receive Port, Receive Location, Send Port, Send Location, Send Port Group,
 Prepare, Promote, Demote, Route (an Xmip Application, its routes listed as
