@@ -1,3 +1,4 @@
+using System.Text;
 using Xmip.Surface;
 
 namespace Xmip.Operations.Configuration;
@@ -47,10 +48,23 @@ public sealed class SliceDelivery(string clusterPath, string directory, string? 
 
     /// <summary>Slice <paramref name="cluster"/> for every node it declares
     /// and put each slice where it can go, node by node: one node's refusal
-    /// stops no other's.</summary>
+    /// stops no other's. Nothing is delivered when the file on disk no longer
+    /// holds exactly the cluster's text — a newer save replaced it, and its
+    /// slices are the ones that stand; each node then says so. A save calls
+    /// this while it holds the file (<see cref="ClusterConfiguration.TryWrite"/>),
+    /// so no other Xmip save delivers in between.</summary>
     public IReadOnlyList<NodeDelivery> Deliver(ClusterConfiguration cluster)
     {
         ArgumentNullException.ThrowIfNull(cluster);
+
+        if (!cluster.OnDisk())
+        {
+            string file = Path.GetFileName(cluster.Path);
+            return (NodeDelivery[])[.. cluster.Nodes.Select(name => new NodeDelivery(
+                name, NodeDelivery.Standing.Refused, string.Empty,
+                $"REFUSED: {file} on disk is no longer the text this save wrote; a newer save "
+                + "replaced it, and its slice stands. Nothing was delivered."))];
+        }
 
         return (NodeDelivery[])[.. cluster.Nodes.Select(name => Deliver(cluster.Text, name))];
     }
@@ -70,15 +84,13 @@ public sealed class SliceDelivery(string clusterPath, string directory, string? 
         try
         {
             System.IO.Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            string temp = path + ".writing";
-            File.WriteAllText(temp, slices[0].Text);
-            File.Move(temp, path, overwrite: true);
+            WholeFile.Replace(path, new UTF8Encoding(false).GetBytes(slices[0].Text));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             return new NodeDelivery(
                 name, NodeDelivery.Standing.Refused, string.Empty,
-                $"sliced, and not written to {path}: {exception.Message}");
+                $"REFUSED: sliced, and not written to {path}: {exception.Message}");
         }
 
         return name == node

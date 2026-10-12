@@ -41,8 +41,10 @@ public sealed class RuntimeCommands(
     /// Save the cluster's file and slice it for every node it declares,
     /// shipping each slice where it can go. A node's own document is never
     /// saved here, nor a file another editor changed since this one read it;
-    /// a save writes the file whole, the runtime then judges what is on disk,
-    /// and every node's slice is audited, then its ship.
+    /// a save writes the file whole and delivers its slices while it holds
+    /// the file, so an older save never delivers over a newer one; the
+    /// runtime then judges what is on disk, and every node's slice is
+    /// audited, then its ship.
     /// </summary>
     public ClusterSave Save(ClusterConfiguration cluster)
     {
@@ -55,20 +57,22 @@ public sealed class RuntimeCommands(
             return Failed(cluster.Path, refusal);
         }
 
+        // Written and delivered under the one save lock, so an older save
+        // never delivers its slices over a newer one's.
+        IReadOnlyList<NodeDelivery> deliveries = [];
         try
         {
-            if (!cluster.TryWrite(out string stale))
+            if (!cluster.TryWrite(out string stale, () => deliveries = delivery.Deliver(cluster)))
             {
                 return Failed(cluster.Path, stale) with { Stale = true };
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            return Failed(cluster.Path, exception.Message);
+            return Failed(cluster.Path, $"FAILED: {exception.Message}");
         }
 
         ConfigurationVerdict verdict = Validate(cluster.Path, cluster.Text);
-        IReadOnlyList<NodeDelivery> deliveries = delivery.Deliver(cluster);
 
         foreach (NodeDelivery node in deliveries)
         {
@@ -130,7 +134,22 @@ public sealed class RuntimeCommands(
             return Audited("plan node", ConfigurationVerdict.NoFile(delivery.ClusterPath));
         }
 
-        NodeDelivery sliced = delivery.Deliver(File.ReadAllText(delivery.ClusterPath), node);
+        // Read and delivered under the save lock, so a save in between never
+        // has its newer slice overwritten by this older one.
+        NodeDelivery sliced;
+        using (FileStream? held = ClusterConfiguration.Hold(delivery.ClusterPath))
+        {
+            if (held is null)
+            {
+                return Audited("plan node", new ConfigurationVerdict(
+                    delivery.ClusterPath, XmipStatus.Again, [],
+                    $"REFUSED: a save of {Path.GetFileName(delivery.ClusterPath)} is under way; "
+                    + "nothing was planned. Plan again when it is done."));
+            }
+
+            sliced = delivery.Deliver(File.ReadAllText(delivery.ClusterPath), node);
+        }
+
         Delivered(delivery.ClusterPath, sliced);
 
         return sliced.Outcome == NodeDelivery.Standing.Refused

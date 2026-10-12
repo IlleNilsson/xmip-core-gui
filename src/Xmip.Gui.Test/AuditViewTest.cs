@@ -115,6 +115,28 @@ public sealed class AuditViewTest : BunitContext, IDisposable
         string said = verified.Find(".audit-chain.whole").TextContent;
         Assert.StartsWith("OK: the audit chain of Xmip.Gui.Test is whole: 1 records", said,
             StringComparison.Ordinal);
+        Assert.Empty(verified.FindAll(".audit-fragment"));
+    }
+
+    [Fact]
+    public void VerifySaysAWriteLeftUnfinishedApartFromTheChainsAndSealedOnceAppended()
+    {
+        // ADR-0070 clause 5, built 2026-10-12: the next append seals an
+        // interrupted record, which is in no chain.
+        File.AppendAllText(Path.Combine(_directory, "audit.toml"), "[[record]]\naudit_id = \"0");
+
+        IRenderedComponent<Audit> open = At("/audit?verify=yes");
+        Assert.StartsWith("UNFINISHED: ",
+            open.Find(".audit-fragment.unfinished").TextContent.Trim(), StringComparison.Ordinal);
+
+        Services.GetRequiredService<ProgramAudit>()
+            .Record("start", AuditPhase.Begin, AuditSeverity.Information);
+        IRenderedComponent<Audit> sealedPage = At("/audit?verify=yes");
+        Assert.StartsWith("FAILED: ",
+            sealedPage.Find(".audit-fragment.sealed").TextContent.Trim(),
+            StringComparison.Ordinal);
+        Assert.StartsWith("OK: ", sealedPage.Find(".audit-chain.whole").TextContent,
+            StringComparison.Ordinal);
     }
 
     [Fact]

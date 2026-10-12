@@ -25,8 +25,10 @@
    cluster until "show test clusters" is ticked, and then marked test
    (ADR-0052, amendment 2026-09-30). "verify chains" walks the audit chain
    of each writer of the records matched and says, in words, where it
-   breaks or that it is whole (ADR-0070 clause 5): it reads no payload, so
-   an Observer may (ADR-0009, amendment 2026-09-06). *@
+   breaks or that it is whole (ADR-0070 clause 5), then each part of the
+   file no write finished: a sealed record, its write interrupted and in no
+   chain, FAILED; the file's unfinished end, UNFINISHED. It reads no
+   payload, so an Observer may (ADR-0009, amendment 2026-09-06). *@
 <section class="drill audit">
     <nav class="crumbs" aria-label="Audit drill-down">
         @foreach ((string label, string href) in Trail)
@@ -55,12 +57,18 @@
             · <a class="audit-verify" href="@Link(Asking with { Verify = true })">verify chains</a>
         </p>
 
-        @if (found.Chains.Count > 0)
+        @if (found.Chains.Count + found.Fragments.Count > 0)
         {
             <ul class="audit-chains">
                 @foreach (AuditChain chain in found.Chains)
                 {
                     <li class="audit-chain @(chain.Whole ? "whole" : "broken")">@chain.Said</li>
+                }
+                @foreach (AuditFragment fragment in found.Fragments)
+                {
+                    <li class="audit-fragment @(fragment.Sealed ? "sealed" : "unfinished")">
+                        @fragment.Said
+                    </li>
                 }
             </ul>
         }
