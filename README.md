@@ -147,8 +147,11 @@ Monitor's drill links each scope to its audit beside its configuration.
 audit chain of each writer of the records matched — a node's location, or a
 program's name — whole, and lists one sentence for each: OK and how many
 records, or FAILED and the first place it breaks, a record deleted, changed
-or out of order (ADR-0070 clause 5). It reads no payload, so an Observer is
-offered it (ADR-0009, amendment 2026-09-06).
+or out of order (ADR-0070 clause 5) — and after them one for each part of
+the file that is not a whole record: FAILED for a record whose write was
+interrupted, which the next append kept as written and sealed, in no chain;
+UNFINISHED for the file's end, a write still going on or not yet sealed. It
+reads no payload, so an Observer is offered it (ADR-0009, amendment 2026-09-06).
 
 **The Subscriptions view** (`/subscriptions`; the owner, 2026-09-30: *a
 Subscription view, for all subscriptions per cluster, with pause and resume,
@@ -375,12 +378,14 @@ not written over — the save is refused in words, audited, and offers
 on, by the document's version. A save writes a temporary file of its own
 beside the target (`xmip.toml.<guid>.writing`), flushes it to the device and
 renames it over the file, so a reader never sees half of one and two saves
-never share a temporary file. The comparison and the rename are one step for
-every Xmip writer: each holds `xmip.toml.lock`, opened exclusively and
-deleted when closed, from before the comparison until after the rename, so
-two saves can never both pass the check; a save that finds the lock held is
-refused in words — *another save of xmip.toml is under way; nothing was
-saved* — and offers **Reload from disk** like any other refusal.
+never share a temporary file. The comparison, the rename and the delivery of
+every node's slice are one step for every Xmip writer: each holds
+`xmip.toml.lock`, opened exclusively and deleted when closed, from before the
+comparison until the last slice is written, so two saves can never both pass
+the check and an older save never delivers its slices over a newer one's; a
+save that finds the lock held is refused in words — *REFUSED: another save
+of xmip.toml is under way; nothing was saved* — and offers **Reload from
+disk** like any other refusal.
 
 The page holds no configuration rule. Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
@@ -402,15 +407,20 @@ save*). Save writes the cluster's file whole, has the runtime judge what is
 on disk, then slices it for each node it declares through the one slicing,
 `xmip_cluster_slices_v1` (`configure::slice`), and writes each slice as
 `<SliceDirectory>/<node>/xmip-node.toml`, the name desired state writes it
-by. The page shows each node's outcome: *shipped* for the node this desktop
-starts, whose slice is written where it starts from and takes effect when it
+by — whole, through a temporary file of its own beside it, like the
+cluster's file. Before it delivers, a save confirms the file on disk still
+holds exactly the text it wrote; where a writer outside Xmip's lock replaced
+it meanwhile, nothing is delivered and every node says so: *REFUSED: … a
+newer save replaced it, and its slice stands*. The page shows each node's
+outcome: *shipped* for the node this desktop starts, whose slice is written where it starts from and takes effect when it
 starts again; *sliced, not shipped* for every other node, since Xmip has no
 path yet that puts a file on another node — desired state slices the
 cluster's file on the node as it deploys it (the Ansible role `xmip_node`),
 and a node's operate listener (ADR-0067)
 takes no configuration; or *refused*, with the runtime's sentence, for a
 node that does not slice, which stops no other node. **Plan** slices the saved
-file for the node configured here and hands its slice to `xmip_start_v1`,
+file for the node configured here, under the same lock — refused in words
+while a save holds it — and hands its slice to `xmip_start_v1`,
 only when an operator presses it, never at launch: the runtime reads,
 validates and publishes the node's plan, which the board then shows, and
 runs nothing — a node runs in the program that links its technologies
@@ -427,7 +437,10 @@ empty file becomes one when it declares a node; each node is sliced, the
 desktop's shipped and another not, and a node that does not slice is refused
 without stopping the others; a save over a file another editor changed, or
 one that appeared since an empty open, is refused and writes nothing, and a
-save leaves no temporary file; and every save, slice, ship, refused edit and
+save leaves no temporary file; concurrent deliveries of one node never trip
+over each other's temporary file and leave its slice whole; a delivery whose
+cluster text was replaced since delivers nothing; a plan while a save holds
+the file is refused and delivers nothing; and every save, slice, ship, refused edit and
 plan lands in the audit. `ConfigurePageTest` renders the page with bUnit,
 compiling its Razor components where they live as it compiles the
 Configuration folder: leaving with edits is held and Stay keeps them, Discard

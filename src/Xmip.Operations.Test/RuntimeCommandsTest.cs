@@ -132,6 +132,25 @@ public sealed class RuntimeCommandsTest : IDisposable
         Assert.Contains("save cluster configuration", Audited(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void APlanWhileASaveHoldsTheFileDeliversNothingAndIsRefused()
+    {
+        string here = Estate.Cluster.Nodes[0];
+        ClusterConfiguration cluster = Estate.Written(_directory);
+        RuntimeCommands commands = Commands(cluster.Path, here);
+
+        using (new FileStream(
+            $"{cluster.Path}.lock", FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None,
+            bufferSize: 1, FileOptions.DeleteOnClose))
+        {
+            ConfigurationVerdict refused = commands.PlanNode();
+
+            Assert.False(refused.Ok);
+            Assert.StartsWith("REFUSED:", refused.Said, StringComparison.Ordinal);
+            Assert.False(File.Exists(commands.Delivery.PathOf(here)));
+        }
+    }
+
     public void Dispose()
     {
         _runtime.Dispose();

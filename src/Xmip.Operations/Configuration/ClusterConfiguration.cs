@@ -111,15 +111,17 @@ public sealed class ClusterConfiguration
 
     /// <summary>
     /// Save the text, replacing the file whole so a reader never sees half
-    /// of it: written to a temporary file of its own beside it, flushed to the
-    /// device, then renamed over it. False, with why, when the file changed
-    /// on disk since this editor read it — another editor saved meanwhile —
-    /// or another save holds the file now, and nothing is written;
-    /// <see cref="Open"/> it again to see that change.
+    /// of it. False, with why, when the file changed on disk since this
+    /// editor read it — another editor saved meanwhile — or another save
+    /// holds the file now, and nothing is written; <see cref="Open"/> it
+    /// again to see that change. <paramref name="whileHeld"/>, when given,
+    /// runs after the file is written and before the save lets go of it, so
+    /// what a save does with what it wrote — slicing it for each node — is
+    /// one step with the write for every Xmip writer.
     /// </summary>
     /// <exception cref="IOException">The file cannot be read or written.</exception>
     /// <exception cref="UnauthorizedAccessException">The file may not be written.</exception>
-    public bool TryWrite(out string refusal)
+    public bool TryWrite(out string refusal, Action? whileHeld = null)
     {
         string? directory = System.IO.Path.GetDirectoryName(Path);
         if (!string.IsNullOrEmpty(directory))
@@ -127,71 +129,76 @@ public sealed class ClusterConfiguration
             Directory.CreateDirectory(directory);
         }
 
-        // The check and the rename are one step for every Xmip writer: each
-        // holds <file>.lock, opened exclusively, from before the comparison
-        // until after the rename, so two saves never both pass the check. A
-        // save that finds the lock held is refused, not queued: the other
-        // save changes the file, and this editor has to see that change.
-        using FileStream? held = Hold();
+        // The check, the rename and what follows it are one step for every
+        // Xmip writer: each holds <file>.lock from before the comparison
+        // until it is done, so two saves never both pass the check, and an
+        // older save never delivers after a newer one. A save that finds the
+        // lock held is refused, not queued: the other save changes the file,
+        // and this editor has to see that change.
+        using FileStream? held = Hold(Path);
         if (held is null)
         {
-            refusal = $"another save of {System.IO.Path.GetFileName(Path)} is under way; "
-                + "nothing was saved. Reload it to see the other change, then edit again.";
+            refusal = $"REFUSED: another save of {System.IO.Path.GetFileName(Path)} is under "
+                + "way; nothing was saved. Reload it to see the other change, then edit again.";
             return false;
         }
 
-        string now = File.Exists(Path) ? Fingerprint(File.ReadAllBytes(Path)) : string.Empty;
-        if (!string.Equals(now, _read, StringComparison.Ordinal))
+        if (!Unchanged())
         {
-            refusal = $"{System.IO.Path.GetFileName(Path)} changed on disk since it was opened "
-                + "here; nothing was saved. Reload it to see the other change, then edit again.";
+            refusal = $"REFUSED: {System.IO.Path.GetFileName(Path)} changed on disk since it was "
+                + "opened here; nothing was saved. Reload it to see the other change, then edit "
+                + "again.";
             return false;
         }
 
         byte[] bytes = new UTF8Encoding(false).GetBytes(Text);
-        string temp = $"{Path}.{Guid.NewGuid():n}.writing";
-
-        try
-        {
-            using (FileStream file = new(temp, FileMode.CreateNew, FileAccess.Write))
-            {
-                file.Write(bytes);
-                file.Flush(flushToDisk: true);
-            }
-
-            File.Move(temp, Path, overwrite: true);
-        }
-        finally
-        {
-            File.Delete(temp);
-        }
+        WholeFile.Replace(Path, bytes);
 
         _read = Fingerprint(bytes);
         Exists = true;
         Changed = false;
+        whileHeld?.Invoke();
         refusal = string.Empty;
         return true;
     }
 
-    // The save lock: <file>.lock, shared with nobody and deleted when it is
-    // closed. Null when another save holds it; any other failure to open it
-    // is the caller's, as for the file itself.
-    private FileStream? Hold()
+    /// <summary>Whether the file on disk holds exactly <see cref="Text"/>:
+    /// nothing edited here since it was read or written, and nothing written
+    /// there since by anyone else.</summary>
+    /// <exception cref="IOException">The file cannot be read.</exception>
+    public bool OnDisk()
+    {
+        return Exists && !Changed && Unchanged();
+    }
+
+    /// <summary>The save lock of the cluster's file at
+    /// <paramref name="path"/>: <c>&lt;file&gt;.lock</c>, shared with nobody
+    /// and deleted when it is closed. Null when another save holds it; any
+    /// other failure to open it is the caller's, as for the file
+    /// itself.</summary>
+    internal static FileStream? Hold(string path)
     {
         try
         {
             return new FileStream(
-                $"{Path}.lock",
+                $"{path}.lock",
                 FileMode.OpenOrCreate,
                 FileAccess.ReadWrite,
                 FileShare.None,
                 bufferSize: 1,
                 FileOptions.DeleteOnClose);
         }
-        catch (IOException) when (File.Exists($"{Path}.lock"))
+        catch (IOException) when (File.Exists($"{path}.lock"))
         {
             return null;
         }
+    }
+
+    // Whether the disk holds the bytes this editor last read or wrote.
+    private bool Unchanged()
+    {
+        string now = File.Exists(Path) ? Fingerprint(File.ReadAllBytes(Path)) : string.Empty;
+        return string.Equals(now, _read, StringComparison.Ordinal);
     }
 
     private static string Fingerprint(byte[] bytes)
