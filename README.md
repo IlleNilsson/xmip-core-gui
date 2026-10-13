@@ -313,16 +313,17 @@ and removes. It starts no node. The role is the caller's, not the host's
 (ADR-0009, amendment 2026-10-06): each browser is the caller its connection
 proved — the subject of a client certificate the host checked, else, over this
 machine's loopback, the operating system user the host runs as — and one
-nothing proved watches and acts on nothing. Both hosts and the surface hub
-grant a caller a role by one rule, `RoleAssignment` (in `Xmip.Surface`):
+nothing proved watches and acts on nothing. Both hosts grant a caller a role
+by one rule, `RoleAssignment` (in `Xmip.Surface`):
 `Role` in `xmip.gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
 word that is no role is Observer; stated by neither, the directory named by
 `Directory` answers, and with none the role is Observer. The one directory
 built is `tester`, the Playground's fake directory, which allows the user the
 host runs as every role; `Start-XmipOperationWeb` names it for a host over a
 Playground roll. Every act — pause, resume, remove, replay, retry, dismiss —
-from a browser, the desktop or another machine over the surface hub passes
-one gate, `GatedOperator`, as its caller: taken only where the caller's role
+from a browser or the desktop passes one gate, `GatedOperator` over the
+runtime's `xmip_act_admitted_v1` — the gate a node's operate listener asks of
+an act from another machine too — as its caller: taken only where the caller's role
 may act, never under a name the caller gives, refused in words otherwise, and
 audited as that caller either way (ADR-0009, amendments 2026-10-03 and
 2026-10-06).
@@ -333,9 +334,7 @@ audit record where it binds it — and any other address in
 `[Kestrel.Endpoints]` is `https://`, presenting the PEM certificate and key
 `xmip.gui.toml` names as `Certificate` and `PrivateKey`. It asks a caller for
 a certificate and checks one presented against `TrustAnchor` (else the
-operating system's trust store); a browser may decline and reads the pages,
-and the surface hub at `/surface` takes no remote surface over TLS without
-one. Plain http beyond loopback, or https with no certificate, is refused
+operating system's trust store); a browser may decline and reads the pages. Plain http beyond loopback, or https with no certificate, is refused
 before the host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the
 one rule in `Xmip.Surface`'s `SurfaceTls`). The TLS is the platform's, through
 Kestrel, not `xmip-core-library-tls`.
@@ -453,15 +452,16 @@ Configuration is each host's `xmip.gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
-the page — `Url = <web host>` when the surface is remote, `Role`, and, on the
+the page — `Address = <host:port>`, a node's operate address, when the surface
+is remote, `Role`, and, on the
 desktop only, `ClusterConfiguration` (the cluster's `xmip.toml`, else
 `xmip/xmip.toml` under the app's data), `Node` (the node of it configured
 here, planned only by Plan; none when unset) and `SliceDirectory` (where each node's slice is
-written, else `xmip/slices` under the app's data). The web host serves its own surface at
-`/surface`: a SignalR hub every remote surface follows and is told through
-when this host's surface changes, so the CLI, the PowerShell module and a GUI
-on another machine follow it without polling (ADR-0052, amendment
-2026-09-15). TOML,
+written, else `xmip/slices` under the app's data). A remote surface follows a
+node over gRPC to its operate listener, told when its publication advances
+and never polling (ADR-0014, amendment 2026-10-12); the web host serves no
+surface of its own to other machines, and its SignalR is only Blazor's
+circuit to the browser. TOML,
 because Xmip configures nothing in JSON anywhere — the web host's default
 `appsettings.json` sources are removed in `Program.cs` and the TOML reader in
 `Xmip.Surface` takes their place.

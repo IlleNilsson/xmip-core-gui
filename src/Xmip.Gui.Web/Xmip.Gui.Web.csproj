@@ -32,9 +32,9 @@
          gone and xmip.gui.toml is read through Xmip.Surface instead. -->
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
 
-    <!-- The surface served: a hub every RemoteOperator on another machine
-         follows, told when this host's surface changes (ADR-0052, amendment
-         2026-09-15). Only a web host references it. -->
+    <!-- Where this host binds and how, and who each browser's request
+         proved (ADR-0063; ADR-0009, amendment 2026-10-06). Only a web host
+         references it. -->
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Relay\Xmip.Surface.Relay.csproj" />
   </ItemGroup>
 
