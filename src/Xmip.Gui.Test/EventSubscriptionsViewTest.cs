@@ -13,8 +13,9 @@ namespace Xmip.Gui.Test;
 /// the same date). Rendered over a publication of the test cluster whose
 /// receiving and sending nodes hold three Event subscriptions and whose
 /// publisher takes orders: the list, the drill, the order, the acts an
-/// Operator takes and the list an Observer is shown without them — and every act in the host's audit as
-/// <c>event.&lt;act&gt;</c>, the action <c>observe::Noun::EventSubscription</c> gives it.
+/// Operator takes and the list an Observer is shown without them — and every
+/// act in the host's audit as <c>event.&lt;act&gt;</c>, the action
+/// <c>observe::Noun::EventSubscription</c> gives it.
 /// </summary>
 public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
 {

@@ -18,10 +18,11 @@ namespace Xmip.Gui.Test;
 /// and whose publisher takes orders. Each Journey listed with why and both
 /// acts for an Operator, each left for the sending node; the Journeys and no
 /// act for an Observer; nothing where the publication lists none, whatever
-/// Journey the evidence names; nothing at a Port with no failed Journey; and every act in the host's
-/// audit as <c>journey.retry</c> or <c>journey.dismiss</c>, as the caller the
-/// browser proved and never the host's account; a caller nothing proved is
-/// offered no act and the gate takes none.
+/// Journey the evidence names; nothing at a Port with no failed Journey; and
+/// every act in the host's audit as <c>journey.retry</c> or
+/// <c>journey.dismiss</c>, as the caller the browser proved and never the
+/// host's account; a caller nothing proved is offered no act and the gate
+/// takes none.
 /// </summary>
 public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
 {
@@ -94,7 +95,10 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
 
     private static IReadOnlyList<string> Listed(IRenderedComponent<Cluster> page)
     {
-        return [.. page.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!)];
+        return
+        [
+            .. page.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!),
+        ];
     }
 
     [Fact]

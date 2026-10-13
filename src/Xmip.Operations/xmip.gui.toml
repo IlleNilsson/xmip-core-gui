@@ -5,18 +5,23 @@
 # MauiProgram.cs); a packaged app resolves them against its own directory.
 
 [Xmip]
-# Which surface the board reads (ADR-0052 clause 3): "native", the runtime's
-# library loaded in this process, "snapshot", a file a node or the Playground
-# publishes, or "remote", a node followed over gRPC at its operate Address.
-# Chosen here and never guessed from a file in a temp directory. The same
-# keys as the web host's xmip.gui.toml.
-Surface = "native"
+# Which surface the board reads (ADR-0052 clause 3): "local", a node on this
+# machine followed over gRPC at its local endpoint, "snapshot", a file a node
+# or the Playground publishes, or "remote", a node on another machine followed
+# over gRPC at its operate Address (ADR-0014, amendment 2026-10-13). Chosen
+# here and never guessed from a file in a temp directory. The same keys as the
+# web host's xmip.gui.toml. Local left out, the board says no node is named.
+Surface = "local"
+# Local = "xmip-node1"
 
-# The runtime's native library, exporting xmip_operate_v1, xmip_start_v1,
-# xmip_validate_v1 and the cluster's views, edit and slices (xmip_operate.h
-# section 10). Found by one rule for every surface: this key, else
-# XMIP_RUNTIME_LIBRARY, else the library beside the executable.
-RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
+# The runtime's native library, for the work with no node behind it: the
+# cluster's views, edit, slices, validate and plan (xmip_operate.h section
+# 10). Found by one rule for every surface: this key, else
+# XMIP_RUNTIME_LIBRARY, else the library beside the executable. Left unset
+# here, so a library built into the shared build directory and named by
+# XMIP_RUNTIME_LIBRARY is the one loaded, never a stale one in a module's
+# own target directory.
+# RuntimeLibrary = "<path to xmip_core_runtime.dll>"
 
 # The cluster's xmip.toml the Configure page edits: the one configuration
 # anyone edits, a node's own file never (ADR-0031, amendment 2026-10-05).

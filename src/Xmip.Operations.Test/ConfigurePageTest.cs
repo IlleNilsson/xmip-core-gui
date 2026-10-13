@@ -2,9 +2,7 @@ using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using Xmip.Operations.Configuration;
 using Xmip.Operations.Test.Components.Pages;
-using Xmip.Surface;
 
 namespace Xmip.Operations.Test;
 
@@ -23,16 +21,13 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
     private readonly string _directory =
         Directory.CreateTempSubdirectory("xmip-configure-page-").FullName;
 
-    private readonly NativeOperator _runtime = new(Estate.Library());
-
     private readonly string _path;
 
     public ConfigurePageTest()
     {
         _path = Estate.Written(_directory).Path;
         Services.AddSingleton(new RuntimeCommands(
-            _runtime,
-            _runtime.Path,
+            Estate.Library(),
             new ProgramAudit("xmip-operations", Path.Combine(_directory, "audit")),
             new SliceDelivery(
                 _path, Path.Combine(_directory, "slices"), Estate.Cluster.Nodes[0])));
@@ -121,7 +116,8 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
 
         page.Find(".path button.primary").Click();
 
-        Assert.Contains("changed on disk", page.Find(".status").TextContent, StringComparison.Ordinal);
+        Assert.Contains(
+            "changed on disk", page.Find(".status").TextContent, StringComparison.Ordinal);
         Assert.Contains("another editor", File.ReadAllText(_path), StringComparison.Ordinal);
         Assert.DoesNotContain("edited-here", File.ReadAllText(_path), StringComparison.Ordinal);
 
@@ -144,7 +140,8 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
 
         page.Find(".path button.plan").Click();
 
-        Assert.DoesNotContain("started", page.Find(".status").TextContent, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "started", page.Find(".status").TextContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -163,7 +160,9 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
         IReadOnlyList<IElement> removes = page.FindAll("button.del");
         Assert.NotEmpty(removes);
         Assert.All(removes, remove => Assert.StartsWith(
-            "Remove ", remove.GetAttribute("aria-label") ?? string.Empty, StringComparison.Ordinal));
+            "Remove ",
+            remove.GetAttribute("aria-label") ?? string.Empty,
+            StringComparison.Ordinal));
     }
 
     // The page with the cluster's name edited and not saved.
@@ -183,7 +182,6 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
     void IDisposable.Dispose()
     {
         base.Dispose();
-        _runtime.Dispose();
         Directory.Delete(_directory, recursive: true);
     }
 }

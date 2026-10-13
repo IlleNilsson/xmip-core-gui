@@ -40,7 +40,8 @@ public sealed class AuditLoggerProviderTest
         Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Assert.Contains("message = \"the snapshot is gone\"", text, StringComparison.Ordinal);
         Assert.Contains($"\"category\" = \"{Circuit}\"", text, StringComparison.Ordinal);
-        Assert.Contains("\"event\" = \"CircuitUnhandledException\"", text, StringComparison.Ordinal);
+        Assert.Contains(
+            "\"event\" = \"CircuitUnhandledException\"", text, StringComparison.Ordinal);
         Assert.Contains(
             "\"exception\" = \"System.InvalidOperationException\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);

@@ -23,10 +23,11 @@ read, the scope tree and its rollup, the worst leaf beneath a scope, runtime
 discovery and the English live in `Xmip.Surface` beside the binding in
 xmip-core-abi (`dotnet/Xmip.Surface`), shared with the cli and the PowerShell
 module; `Xmip.Gui` keeps the Razor and the role. There is no sample surface: a
-host reads the runtime's own table (`NativeOperator` over `Xmip.Abi`), a
-snapshot a node published (`SnapshotOperator`) or another web host's surface
-hub (`RemoteOperator`), and which one is stated in its `xmip.gui.toml`, never
-guessed. What each answers — topology, the failed Journeys, and whether an
+host reads a node over gRPC at its operate listener — on this machine at its
+local endpoint (`LocalOperator`), on another at its operate address
+(`RemoteOperator`; ADR-0014, amendments 2026-10-12 and 2026-10-13) — or a
+snapshot a node published (`SnapshotOperator`), and which one is stated in
+its `xmip.gui.toml`, never guessed. What each answers — topology, the failed Journeys, and whether an
 act applies at once or is submitted as an order — is xmip-core-abi's README,
 *What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
@@ -340,9 +341,12 @@ one rule in `Xmip.Surface`'s `SurfaceTls`). The TLS is the platform's, through
 Kestrel, not `xmip-core-library-tls`.
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
-A native window; needs the maui-windows workload; Windows is the only
-platform it carries. Same screen, same operator boundary, so the two cannot
-disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
+A native window; needs the maui-windows workload. Windows is the only
+platform it builds for today; .NET MAUI supports macOS too, and Linux only
+through Microsoft's experimental GTK4 backend, maui-labs
+(https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4),
+which Microsoft does not support (ADR-0014, amendment 2026-10-13). Same
+screen, same operator boundary, so the two cannot disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
 slices it for each node on save, and plans the node of it its configuration
 names — validated and its plan published; nothing runs it here.
 
@@ -386,7 +390,13 @@ save that finds the lock held is refused in words — *REFUSED: another save
 of xmip.toml is under way; nothing was saved* — and offers **Reload from
 disk** like any other refusal.
 
-The page holds no configuration rule. Every view, edit and slice is the
+The page holds no configuration rule and no file handling: the cluster's
+file, its lock and its comparison (`ClusterConfiguration`), each node's
+slice and where it goes (`SliceDelivery`, `NodeDelivery`), the whole-file
+write and the audited Validate, Save and Plan (`RuntimeCommands`) are
+`Xmip.Surface`'s, and so is the rule that reads `ClusterConfiguration`,
+`Node` and `SliceDirectory` from `xmip.gui.toml` (`SliceDelivery.From`).
+Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
 `RuntimeDesign` (`RuntimeRules.Design`) and read in `Xmip.Surface` as
 `ConfigurationViews` (`ArtifactView`, `ArtifactEntry`, `ArtifactField`,
@@ -427,9 +437,9 @@ runs nothing — a node runs in the program that links its technologies
 node's badge says *configured here*, and nothing on it says started until
 there is lifecycle control that starts one.
 
-`src/Xmip.Operations.Test` proves it against the runtime's own build: the
-sample cluster, `samples/xmip.toml`, opens and validates; a value edited in
-place keeps every comment; an entry missing what it must hold is refused
+`Xmip.Surface.Test` (`ClusterConfigurationTest`, `SliceDeliveryTest`,
+`RuntimeCommandsTest`) proves it against the runtime's own build: a value
+edited in place keeps every comment; an entry missing what it must hold is refused
 naming it, and added with it; a node is added; a refused edit leaves the text
 as it was; a node's own document is not editable; a cluster begun in an
 empty file becomes one when it declares a node; each node is sliced, the
@@ -440,17 +450,20 @@ save leaves no temporary file; concurrent deliveries of one node never trip
 over each other's temporary file and leave its slice whole; a delivery whose
 cluster text was replaced since delivers nothing; a plan while a save holds
 the file is refused and delivers nothing; and every save, slice, ship, refused edit and
-plan lands in the audit. `ConfigurePageTest` renders the page with bUnit,
-compiling its Razor components where they live as it compiles the
-Configuration folder: leaving with edits is held and Stay keeps them, Discard
-and leave drops them, Save and leave writes them, leaving with nothing
+plan lands in the audit. `src/Xmip.Operations.Test` holds what is the
+desktop's own: the sample cluster, `samples/xmip.toml`, opens and validates
+(`SampleClusterTest`), and `ConfigurePageTest` renders the page with bUnit,
+compiling its Razor components where they live: leaving with edits is held
+and Stay keeps them, Discard and leave drops them, Save and leave writes them, leaving with nothing
 changed is not held, Discard changes is offered only while there are edits,
 a stale save offers a reload, the node is planned and never said to start,
 and every control has its accessible name.
 
 Configuration is each host's `xmip.gui.toml`, with the same keys under
-`[Xmip]`: `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`
-(else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Snapshot = <path>`
+`[Xmip]`: `Surface = "local" | "snapshot" | "remote"`, `RuntimeLibrary`
+(else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Local = <endpoint>`,
+a node's local endpoint on this machine, when the surface is local — left
+out, the page says no node is named — `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
 the page — `Address = <host:port>`, a node's operate address, when the surface
 is remote, `Role`, and, on the

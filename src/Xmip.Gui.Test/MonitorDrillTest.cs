@@ -90,7 +90,8 @@ public sealed class MonitorDrillTest : BunitContext
         Address(ScopeLink.Monitor(Leaf));
         IRenderedComponent<Cluster> bottom = Render<Cluster>();
         AngleSharp.Dom.IElement record = bottom.Find("section.drill .drill-leaf");
-        Assert.Contains("2/3 rounds passed, 1 failed", record.TextContent, StringComparison.Ordinal);
+        Assert.Contains(
+            "2/3 rounds passed, 1 failed", record.TextContent, StringComparison.Ordinal);
         Assert.Contains("severity 40", record.TextContent, StringComparison.Ordinal);
         Assert.Equal([Names.Name, "node", Sender, "send", "tcp", "json"], Crumbs(bottom));
     }

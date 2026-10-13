@@ -1,20 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <!--
-    The desktop configuration editor's tests (ADR-0052 clause 6). The cluster's
-    xmip.toml the editor edits is proved here against the runtime that views,
-    edits, slices and judges it (xmip_operate.h section 10, xmip_validate_v1),
-    and what the runtime says is what is asserted: an edit made or refused, a
-    node's own document never edited, each node's slice shipped or not, and
-    every save, slice, ship and refused edit audited. The Configure page and
-    its editing components are rendered with bUnit: edits not saved held on
-    leaving, discarded on request, a stale file never overwritten, and every
-    control named for what it edits.
+    The desktop configuration editor's tests (ADR-0052 clause 6). The
+    Configure page and its editing components are rendered with bUnit over
+    the runtime this estate built: edits not saved held on leaving, discarded
+    on request, a stale file never overwritten, and every control named for
+    what it edits; and the sample cluster this repository ships validates.
+    What the page calls — the cluster's file, its save, slices and plan — is
+    Xmip.Surface's (ClusterConfiguration, SliceDelivery, RuntimeCommands) and
+    proved in Xmip.Surface.Test.
 
     Xmip.Operations is a MAUI executable for Windows, which a test host cannot
-    reference; its Configuration folder and its Razor components depend on
-    nothing of MAUI, so the test compiles those files where they live. They
-    are linked, not copied.
+    reference; its Razor components depend on nothing of MAUI, so the test
+    compiles those files where they live. They are linked, not copied.
 
     Target framework and the rest come from Directory.Build.props.
   -->
@@ -40,8 +38,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
-    <Compile Include="..\Xmip.Operations\Configuration\*.cs"
-             Link="Configuration\%(Filename)%(Extension)" />
     <Content Include="..\Xmip.Operations\Components\Editing\*.razor"
              Link="Components\Editing\%(Filename)%(Extension)" />
     <Content Include="..\Xmip.Operations\Components\Pages\Configure.razor"
@@ -50,6 +46,11 @@
          shares (ADR-0056, amendment 2026-10-03). -->
     <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"
              Link="TestCluster.cs" />
+    <!-- The runtime and a written cluster, shared with the configuration's
+         own tests in Xmip.Surface.Test. -->
+    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Estate.cs"
+             Link="Estate.cs" />
+    <Using Include="Xmip.Surface" />
     <Using Include="Xmip.Surface.Test" />
     <Using Include="Xunit" />
   </ItemGroup>
