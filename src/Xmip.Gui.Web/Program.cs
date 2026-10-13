@@ -78,8 +78,8 @@ try
     // amendments of 2026-09-14): an Observer watches, an Operator also acts.
     // The role is each browser's own (ADR-0009, amendment 2026-10-06): the
     // caller its connection proved, granted a role by the one rule both hosts
-    // and the hub take it by — the run's statement, else the directory this
-    // configuration names, else Observer. A browser nothing proved watches.
+    // take it by — the run's statement, else the directory this configuration
+    // names, else Observer. A browser nothing proved watches.
     builder.Services.AddSingleton(RoleAssignment.From(builder.Configuration));
     builder.Services.AddXmipProvenCaller();
 
@@ -98,22 +98,6 @@ try
 
         return held;
     });
-
-    // The relay serves one host's surface (ADR-0052, amendment 2026-09-15), and a
-    // surface is one cluster's publication. Where this host holds several, what it
-    // serves over the hub is the first — a remote surface reads one tree, and a
-    // tree of two clusters is a scope that is in neither.
-    builder.Services.AddSingleton(
-        services => services.GetRequiredService<ClusterSurfaces>().First);
-
-    // This host's surface, served: the CLI, the PowerShell module and a GUI on
-    // another machine follow it over SignalR and are told when it changes, never
-    // asking (ADR-0052, amendment 2026-09-15). The same surface the pages read.
-    // An act asked over it is taken only where the role the assignment above
-    // grants its caller may act, and as the client certificate's subject;
-    // refused in words and audited otherwise (ADR-0009, amendments 2026-10-03
-    // and 2026-10-06).
-    builder.Services.AddXmipSurfaceRelay();
 
     // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host
     // binds beyond this machine is HTTPS with the certificate xmip.gui.toml
@@ -135,7 +119,7 @@ try
     ProcessDeclaration.Declare(
         Name,
         Located(SurfaceChoice.Snapshots(app.Configuration))
-            ?? app.Configuration[SurfaceChoice.UrlKey]
+            ?? app.Configuration[SurfaceChoice.AddressKey]
             ?? app.Configuration[SurfaceChoice.SurfaceKey]
             ?? ScopeTree.Root,
         ProcessDeclaration.PurposeOf(app.Configuration),
@@ -164,8 +148,6 @@ try
     app.MapRazorComponents<App>()
         .AddAdditionalAssemblies(typeof(Xmip.Gui.Pages.Cluster).Assembly)
         .AddInteractiveServerRenderMode();
-    app.MapXmipSurfaceHub(why => audit.Record(
-        "tls", AuditPhase.Failure, AuditSeverity.Warning, why));
 
 #if DEBUG
     // A Debug build's own unhandled error, so the path from a failure to its

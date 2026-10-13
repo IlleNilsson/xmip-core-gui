@@ -9,8 +9,8 @@
 [Xmip]
 # Which surface the page reads (ADR-0052 clause 3): "native", the runtime's
 # library loaded in this process, "snapshot", a file a node or the Playground
-# publishes, or "remote", another web host followed over its surface hub at
-# Url. Chosen here and never guessed from a file in a temp directory. This
+# publishes, or "remote", a node followed over gRPC at its operate
+# Address. Chosen here and never guessed from a file in a temp directory. This
 # host serves its own surface at /surface for the same following.
 Surface = "native"
 
@@ -20,10 +20,9 @@ Surface = "native"
 # Directory grants the caller, and with no directory it is observer, so an
 # unstated role grants nothing (ADR-0009, amendment 2026-10-06). A word that
 # is no role is observer. A caller is proven by the client certificate its
-# browser or remote surface presented, else by this machine's loopback as
-# the user this host runs as; one nothing proved watches and acts on
-# nothing. Every act, from a browser or over the surface hub at /surface,
-# is decided and audited as its caller.
+# browser presented, else by this machine's loopback as the user this host
+# runs as; one nothing proved watches and acts on nothing. Every act from a
+# browser is decided and audited as its caller.
 # Role = "observer"
 
 # The directory asked where no role is stated. The one kind built is
@@ -51,11 +50,11 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 #   "D:/Repos/Xmip/.local-work/playground/C2-snapshot.toml",
 # ]
 
-# The web host to follow when Surface = "remote". A host that does not answer
-# is said so on the page. HTTPS, presenting Certificate below and checking the
-# host's against TrustAnchor; plain http only to this machine (ADR-0063
-# clause 1).
-# Url = "https://another-host:5443"
+# The node to follow when Surface = "remote", at its operate address,
+# host:port (ADR-0067). A node that does not answer is said so on the page.
+# gRPC inside Xmip's mutual TLS: presenting Certificate below and taking the
+# node only where its certificate reaches TrustAnchor (ADR-0063).
+# Address = "node1:7401"
 
 # Xmip's own traffic is TLS (ADR-0063 clause 1). This host binds plain http on
 # loopback only, and says so in its log and its audit; any other address is

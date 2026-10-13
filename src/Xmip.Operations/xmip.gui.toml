@@ -7,7 +7,7 @@
 [Xmip]
 # Which surface the board reads (ADR-0052 clause 3): "native", the runtime's
 # library loaded in this process, "snapshot", a file a node or the Playground
-# publishes, or "remote", a web host followed over its surface hub at Url.
+# publishes, or "remote", a node followed over gRPC at its operate Address.
 # Chosen here and never guessed from a file in a temp directory. The same
 # keys as the web host's xmip.gui.toml.
 Surface = "native"
@@ -46,12 +46,12 @@ Node = "edge-01"
 # page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
 
-# The web host to follow when Surface = "remote".
-# HTTPS, presenting Certificate and checking the host's certificate against
-# TrustAnchor (PEM files; unset, nothing presented and the operating system's
-# trust store), each else XMIP_CERTIFICATE, XMIP_PRIVATE_KEY and
-# XMIP_TRUST_ANCHOR. Plain http only to this machine (ADR-0063 clause 1).
-# Url = "https://another-host:5443"
+# The node to follow when Surface = "remote", at its operate address,
+# host:port (ADR-0067). gRPC inside Xmip's mutual TLS, always: presenting
+# Certificate with PrivateKey and taking the node only where its certificate
+# reaches TrustAnchor (PEM files), each else XMIP_CERTIFICATE,
+# XMIP_PRIVATE_KEY and XMIP_TRUST_ANCHOR (ADR-0063).
+# Address = "node1:7401"
 # Certificate = "surface.pem"
 # PrivateKey = "surface.key"
 # TrustAnchor = "anchor.pem"
@@ -68,7 +68,7 @@ Node = "edge-01"
 # by neither, the role is what the directory named by Directory grants that
 # user, and with no directory it is observer, so an unstated role grants
 # nothing (ADR-0009, amendment 2026-10-06). A word that is no role is
-# observer. The web host and its surface hub take it by the same rule.
+# observer. The web host takes it by the same rule.
 # Role = "operator"
 
 # The directory asked where no role is stated. The one kind built is
