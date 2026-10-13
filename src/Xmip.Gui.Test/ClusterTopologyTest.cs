@@ -15,11 +15,10 @@ namespace Xmip.Gui.Test;
 /// opens on the cluster's nodes and the handoffs between them; every node is
 /// a link, and the drill is in the address, cluster to node to stage to
 /// endpoint; every link says what passes over it, a path configured and never
-/// used as plainly as a used one; every level drills to the same scope in the
-/// other two views; and the Configuration tree has one cluster row, heading
-/// it. The owner, 2026-09-25: *Configuration looks weird, two headers for the
-/// cluster*; *Topology does not work, one can't drill down to nodes*; *even
-/// when testing, the topology does not show configured traffic or its usage*.
+/// used as plainly as a used one. The owner, 2026-09-25: *Topology does not
+/// work, one can't drill down to nodes*; *even when testing, the topology
+/// does not show configured traffic or its usage*. How the same cluster reads
+/// in the other two views is <see cref="ClusterViewsTest"/>.
 /// </summary>
 public sealed class ClusterTopologyTest : BunitContext
 {
@@ -33,60 +32,12 @@ public sealed class ClusterTopologyTest : BunitContext
     private static readonly string[] Listed =
         [.. new[] { Receiver, Processor, Sender }.Order(StringComparer.Ordinal)];
 
-    private static readonly string RunLine =
-        $"RoundTrip · {Names.Name} · nodes {Receiver}=receiving "
-        + $"{Processor}=processing+sending {Sender}=sending · online {Receiver} · realistic";
-
     public ClusterTopologyTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
-    }
-
-    [Fact]
-    public void EveryViewSaysWhatTheRunWasStartedWith()
-    {
-        Assert.Equal(RunLine, Render<Cluster>().Find("p.run-line .run-said").TextContent.Trim());
-        Assert.Equal(RunLine, Render<Configuration>().Find("p.run-line .run-said").TextContent.Trim());
-        Assert.Equal(RunLine, Render<Topology>().Find("p.run-line .run-said").TextContent.Trim());
-    }
-
-    [Fact]
-    public void TheConfigurationHasOneClusterRowAndItHeadsTheTree()
-    {
-        IRenderedComponent<Configuration> tree = Render<Configuration>();
-
-        IElement cluster = Assert.Single(
-            tree.FindAll(".tree-row"),
-            row => row.QuerySelector(".kind")?.TextContent == "cluster");
-        Assert.Equal(ScopeLink.Anchor(Names.Scope), cluster.Id);
-        Assert.Empty(tree.FindAll(".tree > .tree-row"));
-
-        // What the row above the tree carried is on the cluster's own row:
-        // the way to the worst leaf, and to the topology.
-        Assert.Equal(
-            ScopeLink.Configuration($"{Nodes}/{Sender}/send/tcp/json"),
-            cluster.QuerySelector("a.tree-link.problem")?.GetAttribute("href"));
-        Assert.Contains(
-            cluster.QuerySelectorAll("a.tree-link"),
-            link => link.GetAttribute("href") == ScopeLink.TopologyAt("cluster"));
-    }
-
-    [Fact]
-    public void AConfigurationRowSaysWhatThePublisherSaysItIs()
-    {
-        // The depth alone read a Playground cluster one level off: the
-        // nodes' rollup branch said node, a node said scope, a stage said
-        // receive location. The publisher's topology says what each is.
-        IRenderedComponent<Configuration> tree = Render<Configuration>();
-
-        Assert.Equal("scope", KindOf(tree, Nodes));
-        Assert.Equal("node", KindOf(tree, $"{Nodes}/{Receiver}"));
-        Assert.Equal("stage", KindOf(tree, $"{Nodes}/{Receiver}/receive"));
-        Assert.Equal("endpoint", KindOf(tree, $"{Nodes}/{Receiver}/receive/tcp"));
-        Assert.Equal("technology", KindOf(tree, $"{Nodes}/{Receiver}/receive/tcp/json"));
     }
 
     [Fact]
@@ -163,20 +114,20 @@ public sealed class ClusterTopologyTest : BunitContext
     public void ConfiguredAndObservedTrafficAreBothDrawnAndSaidOnTheLine()
     {
         IRenderedComponent<Topology> cluster = Render<Topology>();
+        const string Used = "6 · 1.5/s";
+        const string Idle = "configured · no traffic observed";
+        const string Both = "configured and observed";
 
         // What passes over a used link is on the line: its volume and rate;
         // the processing node's send stage has reported on no transport, and
         // says so.
         Assert.Equal(
-            ["6 · 1.5/s", "6 · 1.5/s", "6 · 1.5/s", "configured · no traffic observed", "6 · 1.5/s"],
+            [Used, Used, Used, Idle, Used],
             cluster.FindAll("g.topology-link .link-figure").Select(figure => figure.TextContent));
 
         // Within the cluster, every path and what it carried — the processing
         // node's own process to its send stage is configured and has carried
         // nothing.
-        const string Used = "6 · 1.5/s";
-        const string Idle = "configured · no traffic observed";
-        const string Both = "configured and observed";
         List<(string Ends, string Figure, string Origin)> traffic =
         [
             .. cluster.FindAll(".topology-traffic li").Select(item => (
@@ -206,7 +157,7 @@ public sealed class ClusterTopologyTest : BunitContext
             (link.ClassName ?? string.Empty).Split(' ').Contains("configured"))];
         Assert.Equal(2, idle.Count);
         Assert.All(idle, link => Assert.Equal(
-            "configured · no traffic observed",
+            Idle,
             link.QuerySelector(".link-figure")?.TextContent));
     }
 
@@ -289,88 +240,6 @@ public sealed class ClusterTopologyTest : BunitContext
     }
 
     /// <summary>
-    /// The Monitor counts the cluster's nodes as its publisher draws them:
-    /// three here. It said "1 node(s)" until 2026-09-25, counting the scopes
-    /// beneath the root, which over a cluster is the cluster itself.
-    /// </summary>
-    [Fact]
-    public void TheMonitorCountsAndListsTheClustersNodes()
-    {
-        IRenderedComponent<Cluster> page = Render<Cluster>();
-
-        Assert.StartsWith(
-            "3 node(s)", page.Find("section.cluster .detail").TextContent, StringComparison.Ordinal);
-        Assert.Equal(
-            Listed,
-            page.FindAll("section.nodes .row .scope").Select(scope => scope.TextContent));
-    }
-
-    /// <summary>
-    /// What a node declares — its roles — reaches the operator where the operator
-    /// looks at that node (ADR-0056; ADR-0014, amendment 2026-09-19): in the
-    /// run line at the top of every view, on the node in the topology's
-    /// inspector, and as a row of its own in the configuration tree, where the
-    /// publisher's whole sentence is — including the two kinds this rig does
-    /// not model.
-    /// </summary>
-    [Fact]
-    public void ANodesDeclaredCapabilityIsVisibleWhereAnOperatorLooksAtThatNode()
-    {
-        Address(ScopeLink.TopologyAt($"node/{Processor}"));
-        IElement declared = Render<Topology>().Find(".topology-inspector dd.capability");
-        Assert.Equal("processing+sending", declared.TextContent.Split('·')[0].Trim());
-        Assert.Contains("published by the node", declared.TextContent, StringComparison.Ordinal);
-        Assert.Contains(
-            "authentication and runtime capability are not modelled",
-            declared.GetAttribute("title") ?? string.Empty,
-            StringComparison.Ordinal);
-
-        Address(ScopeLink.TopologyAt($"node/{Receiver}"));
-        Assert.Contains(
-            "receiving · online",
-            Render<Topology>().Find(".topology-inspector dd.capability").TextContent,
-            StringComparison.Ordinal);
-
-        // A stage is not something that declares, so nothing is said of one.
-        Address(ScopeLink.TopologyAt($"node/{Receiver}/receive"));
-        Assert.Empty(Render<Topology>().FindAll(".topology-inspector dd.capability"));
-
-        // The configuration tree carries the node's own words, whole, at a row
-        // of its own beneath the node.
-        IRenderedComponent<Configuration> tree = Render<Configuration>();
-        IElement row = tree.Find($"#{ScopeLink.Anchor($"{Nodes}/{Sender}/capability")}");
-        Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
-        Assert.Equal(
-            "declares sending; offline; authentication and runtime capability are "
-                + "not modelled",
-            row.QuerySelector(".evidence")?.TextContent);
-    }
-
-    [Fact]
-    public void EveryLevelDrillsToTheSameScopeInTheOtherTwoViews()
-    {
-        AssertDrill(Render<Topology>(), Names.Scope);
-
-        Address(ScopeLink.TopologyAt($"node/{Sender}"));
-        AssertDrill(Render<Topology>(), $"{Nodes}/{Sender}");
-
-        Address(ScopeLink.TopologyAt($"node/{Sender}/send"));
-        IRenderedComponent<Topology> send = Render<Topology>();
-        AssertDrill(send, $"{Nodes}/{Sender}/send");
-
-        IElement tcp = send.FindAll(".topology-beneath li").Single(item =>
-            item.QuerySelector(".beneath-open")?.TextContent == "tcp");
-        Assert.Contains(
-            tcp.QuerySelectorAll("a"),
-            link => link.GetAttribute("href")
-                == ScopeLink.Monitor($"{Nodes}/{Sender}/send/tcp"));
-
-        // The scopes the topology drills to are rows of the configuration.
-        IRenderedComponent<Configuration> tree = Render<Configuration>();
-        Assert.NotNull(tree.Find($"#{ScopeLink.Anchor($"{Nodes}/{Sender}/send/tcp")}"));
-    }
-
-    /// <summary>
     /// A relationship is not the mouse's alone: every line on the canvas is a
     /// button in the tab order, named for its ends and taken by Enter, and
     /// the inspector's Traffic list selects the same lines as text.
@@ -391,30 +260,27 @@ public sealed class ClusterTopologyTest : BunitContext
             Assert.Contains(" from ", named, StringComparison.Ordinal);
             Assert.Contains(" to ", named, StringComparison.Ordinal);
         });
-        Assert.DoesNotContain(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+        Assert.DoesNotContain(Terms(page), term => term == "Protocol");
 
         lines[0].KeyDown(new KeyboardEventArgs { Key = "Tab" });
-        Assert.DoesNotContain(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+        Assert.DoesNotContain(Terms(page), term => term == "Protocol");
 
-        page.FindAll("g.topology-link path.link-hit")[0].KeyDown(new KeyboardEventArgs { Key = "Enter" });
-        Assert.Contains(page.FindAll(".topology-inspector dt"), dt => dt.TextContent == "Protocol");
+        page.FindAll("g.topology-link path.link-hit")[0]
+            .KeyDown(new KeyboardEventArgs { Key = "Enter" });
+        Assert.Contains(Terms(page), term => term == "Protocol");
 
         page.FindAll(".topology-traffic li button.ends")[1].Click();
         IElement pressed = Assert.Single(
             page.FindAll(".topology-traffic button.ends"),
             ends => ends.GetAttribute("aria-pressed") == "true");
-        Assert.Equal(page.FindAll(".topology-traffic li button.ends")[1].TextContent, pressed.TextContent);
+        Assert.Equal(
+            page.FindAll(".topology-traffic li button.ends")[1].TextContent,
+            pressed.TextContent);
     }
 
     private void Address(string uri)
     {
         Services.GetRequiredService<NavigationManager>().NavigateTo(uri);
-    }
-
-    private static string KindOf(IRenderedComponent<Configuration> tree, string scope)
-    {
-        return tree.Find($"#{ScopeLink.Anchor(scope)}").QuerySelector(".kind")?.TextContent
-            ?? string.Empty;
     }
 
     private static List<string> Labels(IRenderedComponent<Topology> page)
@@ -425,6 +291,12 @@ public sealed class ClusterTopologyTest : BunitContext
     private static List<string?> Hrefs(IRenderedComponent<Topology> page)
     {
         return [.. page.FindAll("a.topology-node-link").Select(link => link.GetAttribute("href"))];
+    }
+
+    /// <summary>The terms the inspector's lists define, as rendered now.</summary>
+    private static List<string> Terms(IRenderedComponent<Topology> page)
+    {
+        return [.. page.FindAll(".topology-inspector dt").Select(term => term.TextContent)];
     }
 
     private static double Across(string? transform)
@@ -438,13 +310,5 @@ public sealed class ClusterTopologyTest : BunitContext
     private static List<string> Trail(IRenderedComponent<Topology> page)
     {
         return [.. page.FindAll(".topology-trail a").Select(link => link.TextContent)];
-    }
-
-    private static void AssertDrill(IRenderedComponent<Topology> page, string scope)
-    {
-        List<string?> links =
-            [.. page.FindAll(".inspect-links a").Select(link => link.GetAttribute("href"))];
-
-        Assert.Equal([ScopeLink.Configuration(scope), ScopeLink.Monitor(scope)], links);
     }
 }

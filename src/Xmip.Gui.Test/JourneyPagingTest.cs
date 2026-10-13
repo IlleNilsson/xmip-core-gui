@@ -158,7 +158,10 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
 
     private static List<string> Listed(IRenderedComponent<JourneyActs> acts)
     {
-        return [.. acts.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!)];
+        return
+        [
+            .. acts.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!),
+        ];
     }
 
     // Each place's page: the Journeys found there and the next place.

@@ -2,7 +2,6 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
-using Xmip.Operations.Configuration;
 using Xmip.Surface;
 
 namespace Xmip.Operations;
@@ -67,18 +66,10 @@ public static class MauiProgram
         // anyone edits (ADR-0031, amendment 2026-10-05) — where each node's
         // slice is written on save, and the node of it configured here:
         // all three as xmip.gui.toml declares them, never read from a name.
-        string? cluster = builder.Configuration["Xmip:ClusterConfiguration"];
-        string? slices = builder.Configuration["Xmip:SliceDirectory"];
-        string? node = builder.Configuration["Xmip:Node"];
-        string data = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "xmip");
-        SliceDelivery delivery = new(
-            string.IsNullOrWhiteSpace(cluster)
-                ? Path.Combine(data, "xmip.toml")
-                : TomlDocument.Resolve(cluster, basePath),
-            string.IsNullOrWhiteSpace(slices)
-                ? Path.Combine(data, "slices")
-                : TomlDocument.Resolve(slices, basePath),
-            string.IsNullOrWhiteSpace(node) ? null : node);
+        SliceDelivery delivery = SliceDelivery.From(
+            builder.Configuration,
+            basePath,
+            Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "xmip"));
         string library = RuntimeLibrary.Find(builder.Configuration, basePath);
 
         // The surfaces every screen reads, chosen in xmip.gui.toml and never
@@ -95,12 +86,10 @@ public static class MauiProgram
         builder.Services.AddSingleton(services =>
             services.GetRequiredService<ClusterSurfaces>().First);
 
-        // Validate, Save and Plan on the Configure page go through the
-        // runtime the board reads when that is the native one; over a
-        // snapshot, the runtime is found by the one rule and loaded for the
-        // commands alone.
-        builder.Services.AddSingleton(services => new RuntimeCommands(
-            services.GetRequiredService<IOperatorSurface>(), library, audit, delivery));
+        // Validate, Save and Plan on the Configure page have no node behind
+        // them: the runtime found by the one rule is loaded for them alone
+        // (ADR-0014, amendment 2026-10-13).
+        builder.Services.AddSingleton(new RuntimeCommands(library, audit, delivery));
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
