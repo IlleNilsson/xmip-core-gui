@@ -344,7 +344,9 @@ Kestrel, not `xmip-core-library-tls`.
 A native window; needs the maui-windows workload. The same host is the
 phone app (ADR-0014, amendment 2026-10-14): `-f net11.0-android` builds it
 for Android (the maui-android workload, the Android SDK and a JDK), and
-`net11.0-ios` is a target only on macOS — written, not built. On a phone it
+`net11.0-ios` is a target only on macOS — built by the estate's CI on macOS
+for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
+xcframework first), not signed, not run. On a phone it
 reads `Resources/Raw/xmip.gui.toml`, shipped inside the app, follows one
 node remotely (`Surface = "remote"`, nothing else) with its certificate
 files under the app's data, and is an Observer: no acts, and no Configure
