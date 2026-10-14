@@ -341,8 +341,16 @@ one rule in `Xmip.Surface`'s `SurfaceTls`). The TLS is the platform's, through
 Kestrel, not `xmip-core-library-tls`.
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
-A native window; needs the maui-windows workload. Windows is the only
-platform it builds for today; .NET MAUI supports macOS too, and Linux only
+A native window; needs the maui-windows workload. The same host is the
+phone app (ADR-0014, amendment 2026-10-14): `-f net11.0-android` builds it
+for Android (the maui-android workload, the Android SDK and a JDK), and
+`net11.0-ios` is a target only on macOS — written, not built. On a phone it
+reads `Resources/Raw/xmip.gui.toml`, shipped inside the app, follows one
+node remotely (`Surface = "remote"`, nothing else) with its certificate
+files under the app's data, and is an Observer: no acts, and no Configure
+page, which with its editing components and `MauiProgram.Desktop.cs` is
+compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
+supports macOS too, and Linux only
 through Microsoft's experimental GTK4 backend, maui-labs
 (https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4),
 which Microsoft does not support (ADR-0014, amendment 2026-10-13). Same

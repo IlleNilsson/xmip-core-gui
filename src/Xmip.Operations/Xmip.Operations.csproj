@@ -1,19 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <!--
-    The desktop operator surface. ADR-0014: one component library, two hosts —
-    this MAUI Blazor Hybrid host and the Blazor Web host — rendering the same
-    Xmip.Gui screens over the same operator boundary, so the desktop and the
-    web cannot disagree.
+    The desktop operator surface, and the same host on the phone. ADR-0014:
+    one component library, two hosts — this MAUI Blazor Hybrid host and the
+    Blazor Web host — rendering the same Xmip.Gui screens over the same
+    operator boundary, so the desktop and the web cannot disagree.
 
-    Windows only for now: a Windows operator workstation is what
-    deployment-model.md targets first. The template's Android, iOS and
-    MacCatalyst folders are gone (ADR-0052 clause 6); another platform is a
-    target framework and a Platforms folder away when it is wanted.
+    Windows, Android and iOS (ADR-0014, amendment 2026-10-14: the phone is
+    this host on more targets, not a fifth surface). Each target is built
+    where its platform can be: Android everywhere, Windows on Windows, iOS
+    only on macOS, since Apple's tools run nowhere else — on Windows the iOS
+    target is written and never attempted. On a phone the host follows nodes
+    remotely over their operate listener and only observes: what configures
+    a cluster (the Configure page, its editing components and
+    MauiProgram.Desktop.cs) is compiled for Windows alone, and
+    MauiProgram.Phone.cs for the two phones. macOS and Linux are not targets
+    of this file today (ADR-0014, amendment 2026-10-13).
   -->
 
   <PropertyGroup>
-    <TargetFramework>net11.0-windows10.0.19041.0</TargetFramework>
+    <!-- Directory.Build.props names one framework for the repository; this
+         project names its own, per platform, so the one is cleared. -->
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net11.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
+
     <OutputType>Exe</OutputType>
     <RootNamespace>Xmip.Operations</RootNamespace>
     <!-- The System Process is xmip-operations (ADR-0053). -->
@@ -24,8 +36,8 @@
     <Nullable>enable</Nullable>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
 
-    <!-- Reaches the C ABI through Xmip.Surface's NativeOperator, an adapter
-         over Xmip.Abi in xmip-core-abi. Nothing here is unsafe. -->
+    <!-- Reaches the runtime through Xmip.Surface, an adapter over Xmip.Abi in
+         xmip-core-abi. Nothing here is unsafe. -->
 
     <!-- Razor-generated code carries no XML documentation. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -35,9 +47,24 @@
     <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
     <WindowsPackageType>None</WindowsPackageType>
+  </PropertyGroup>
 
+  <!-- Which platform this build is for, said once and read below. -->
+  <PropertyGroup>
+    <XmipPlatform>$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)'))</XmipPlatform>
+    <XmipPhone Condition="'$(XmipPlatform)' == 'android' Or '$(XmipPlatform)' == 'ios'">true</XmipPhone>
+  </PropertyGroup>
+
+  <!-- The oldest each platform runs: the MAUI template's floors for .NET 11. -->
+  <PropertyGroup Condition="'$(XmipPlatform)' == 'windows'">
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(XmipPlatform)' == 'android'">
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(XmipPlatform)' == 'ios'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -65,8 +92,27 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.7.*" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- What each build leaves out, by the SDK's own default globs. The phone
+       observes and nothing else: no Configure page, no editing components,
+       no desktop start-up and no desktop document; its own is shipped inside
+       the app (Resources/Raw/xmip.gui.toml). The desktop leaves out the
+       phone's start-up and document. -->
+  <PropertyGroup Condition="'$(XmipPhone)' == 'true'">
+    <DefaultItemExcludes>$(DefaultItemExcludes);MauiProgram.Desktop.cs;Components\Pages\Configure.razor;Components\Editing\**;xmip.gui.toml</DefaultItemExcludes>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(XmipPhone)' != 'true'">
+    <DefaultItemExcludes>$(DefaultItemExcludes);MauiProgram.Phone.cs;Resources\Raw\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(XmipPhone)' != 'true'">
     <None Update="xmip.gui.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup Condition="'$(XmipPhone)' == 'true'">
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- The runtime's native library for each platform, from xmip-core-abi,
+       where it is said once. -->
+  <Import Project="..\..\..\..\..\foundation\abi\dotnet\build\Xmip.Abi.Native.props" />
 
 </Project>

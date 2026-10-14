@@ -1,0 +1,26 @@
+# The phone's configuration: the same host as the desktop, on Android and
+# iOS, and the same keys as the desktop's and the web host's xmip.gui.toml
+# (ADR-0014, amendment 2026-10-14). Shipped inside the app. Relative paths
+# resolve against the app's own data directory.
+
+[Xmip]
+# A phone follows a node remotely, over gRPC at its operate Address, and
+# reads nothing else: "remote" is the one surface it takes (ADR-0052
+# clause 3; ADR-0014, amendment 2026-10-12).
+Surface = "remote"
+
+# The node to follow, host:port (ADR-0067). gRPC inside Xmip's mutual TLS,
+# always: presenting Certificate with PrivateKey and taking the node only
+# where its certificate reaches TrustAnchor (PEM files in the app's data),
+# each else XMIP_CERTIFICATE, XMIP_PRIVATE_KEY and XMIP_TRUST_ANCHOR
+# (ADR-0063).
+# Address = "node1:7401"
+# Certificate = "surface.pem"
+# PrivateKey = "surface.key"
+# TrustAnchor = "anchor.pem"
+
+# Where this app's audit records go (ADR-0062), as <AuditDirectory>/audit.toml.
+# Unset, audit/ under the app's data.
+# AuditDirectory = "audit"
+
+# No Role: the phone is an Observer, and that is not configurable.

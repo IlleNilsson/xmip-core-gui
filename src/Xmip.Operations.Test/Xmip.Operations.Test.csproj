@@ -10,9 +10,10 @@
     Xmip.Surface's (ClusterConfiguration, SliceDelivery, RuntimeCommands) and
     proved in Xmip.Surface.Test.
 
-    Xmip.Operations is a MAUI executable for Windows, which a test host cannot
-    reference; its Razor components depend on nothing of MAUI, so the test
-    compiles those files where they live. They are linked, not copied.
+    Xmip.Operations is a MAUI executable for Windows and the phones, which a
+    test host cannot reference; its Razor components depend on nothing of
+    MAUI, so the test compiles those files where they live. They are linked,
+    not copied, and keep the namespace their own @namespace gives them.
 
     Target framework and the rest come from Directory.Build.props.
   -->
