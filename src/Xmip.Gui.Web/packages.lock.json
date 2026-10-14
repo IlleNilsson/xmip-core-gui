@@ -4,28 +4,9 @@
     "net11.0": {
       "Microsoft.AspNetCore.App.Internal.Assets": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26425.128, )",
-        "resolved": "11.0.0-rc.1.26425.128",
-        "contentHash": "MhS+kMUhEWOq7GAS2WJBCU++IYXl9L4yXV8AbpHSyo9T0WKDNNiMZsskcQbpjoPIAzvQ/SEM0TCAPNKZzYDB4A=="
-      },
-      "Microsoft.AspNetCore.Http.Connections.Client": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "HEO648tD8OyX6aUNQwJSl1eKQk5eQChuHTqpybv2ep7/518/M27yeDDFxAh2M/LW+22tbbooao6raNEHm7lBhA=="
-      },
-      "Microsoft.AspNetCore.SignalR.Client": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "p5EFZrp20HlS1MbYkreyhHy4nXeq/LrXVLWbQLBuAz2eFCdSnKfoNVlxZYbFoEjzJxa68CYdEFe9ObCaYTUP8Q==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Http.Connections.Client": "10.0.12",
-          "Microsoft.AspNetCore.SignalR.Client.Core": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.SignalR.Client.Core": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "+kCyWCOvZteBkqfbpmoi+ejIR1XVJOY4ydDNYrYt1WdXv/ruJS4WjDfCizGZ5lvn/OmRdMuVdh8opopbNveQcw=="
+        "requested": "[11.0.0-rc.2.26504.105, )",
+        "resolved": "11.0.0-rc.2.26504.105",
+        "contentHash": "8jhYltmAmcMGPcyQO7eQrjVGtHgPgGCFl4IlykellniNYLNiI0Q5aiJ8mG4s78dc1IDs5wWQ/qmJzy08WJLjoA=="
       },
       "Tomlyn": {
         "type": "Transitive",
@@ -52,7 +33,6 @@
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Client": "[10.0.12, )",
           "Tomlyn.Extensions.Configuration": "[2.0.0, )",
           "Xmip.Abi": "[1.0.0, )"
         }

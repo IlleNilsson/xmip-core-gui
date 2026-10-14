@@ -4,13 +4,13 @@
     "net11.0-windows10.0.19041": {
       "Microsoft.AspNetCore.Components.WebView.Maui": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26451.6, )",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "6QxmnN/iwM4+NdRywErS/IZnIWl7rLqk8PYPvo83IDAAmZXivjssnBX+QxUWRc/5ROnwoX2NrhrMp4Nrg+WwDw==",
+        "requested": "[11.0.0-rc.2.26505.5, )",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "AfdUCXCvDda5zEjlCy5Noq6n5Boi27K/nZRX1AYOG6W/6NbPOCa1QUXz6sqkZESermE1yxFQc6K5wueLl7+KFg==",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "11.0.0-preview.7.26381.103",
-          "Microsoft.AspNetCore.Components.WebView": "11.0.0-preview.7.26381.103",
-          "Microsoft.JSInterop": "11.0.0-preview.7.26381.103"
+          "Microsoft.AspNetCore.Authorization": "11.0.0-rc.1.26425.128",
+          "Microsoft.AspNetCore.Components.WebView": "11.0.0-rc.1.26425.128",
+          "Microsoft.JSInterop": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.Logging.Debug": {
@@ -24,237 +24,172 @@
       },
       "Microsoft.Maui.Controls": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.1.26451.6, )",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "XVWJV6xd4GOzskMtxHA9Gf8NlxSQ+u7VlDWlaMzEfxLIQxNkaKNKlQvSbXdIp+WED6Z80C3eoA2vegp+Qf7a+Q==",
+        "requested": "[11.0.0-rc.2.26505.5, )",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "NK5KzLh4rsSicgg0akKuMRCj4tkUKJEpQO/Eev4AE/Nx2yrPC4rpJ5ssS+ozUMDLp6uxVhTcozl8xSkx9tOfkA==",
         "dependencies": {
-          "Microsoft.Maui.Controls.Build.Tasks": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Controls.Core": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Controls.Xaml": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Resizetizer": "11.0.0-rc.1.26451.6"
+          "Microsoft.Maui.Controls.Build.Tasks": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Controls.Core": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Controls.Xaml": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Resizetizer": "11.0.0-rc.2.26505.5"
         }
       },
       "Microsoft.AspNetCore.Authorization": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "GmmeZ3YRnhVXgLg14VAQn+CxIImgIJbLt05V9Uy8Mb2PnTINa4qUTvRnbR5oP0+U2b+QsQBOjKK7U7l6nvw/aw==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "Q/moRems7ElghORW4/ZxFSIQSrQ0cXcXQQgc0pvHRj3i865c1UsCmdDD0MQ499pShEKaWGrVSBOOjec22HEsQg==",
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Diagnostics": "11.0.0-preview.7.26381.103"
+          "Microsoft.AspNetCore.Metadata": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Diagnostics": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.AspNetCore.Components": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "nWQ5uDUzjO3H/rmUu2Uwx6sKibXz1dD/XUS/kHJfKfEUevsq37kTS0QvuxguYMwRA040NdLCNThAbcKX1C/vww==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "eFZG6WwG7rHfJdp39uC9SerBFCiND3+y9+n8Nm7qAKFIpwm/WmNorkvxXbSjt2IYaJCPKrKaol/NNUUUZCXwlA==",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "11.0.0-preview.7.26381.103",
-          "Microsoft.AspNetCore.Components.Analyzers": "11.0.0-preview.7.26381.103"
+          "Microsoft.AspNetCore.Authorization": "11.0.0-rc.1.26425.128",
+          "Microsoft.AspNetCore.Components.Analyzers": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.AspNetCore.Components.Analyzers": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "C9YSj2vDDS47vOXXNHrLI4D5qgAE1dVOYCkE8y/Fmy/JzJuhnOArNSWDqXGhwDudNGEAkXnAnVVKGX1eL+ZSpw=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "ub8f8MMfoWhOoPlo6H9PNbp4yZ9fm1fe95sMjDMJ8KpxLRpCNXxYTCiQm9riqlxbYVbSDQ3DMXBmoqFzXQB7sg=="
       },
       "Microsoft.AspNetCore.Components.Forms": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "4nSli8kD8yMojAcevhG0pXSPInmFFvGKaY3+tKgUffJz0FbjJZkfgcDoaOMxIjjeAoqwTdVLxvGaKv4mx7HXIg==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "b9PfvQhi+EM/QjknU8GRfBd+Sd+7PM6XbSMqLxFnpRKFyTaCn923diCudbZnW1IYpM27AXvwEi+4t2v98e8wdg==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Validation": "11.0.0-preview.7.26381.103"
+          "Microsoft.AspNetCore.Components": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Validation": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.AspNetCore.Components.Web": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "oXpJiQf4FZq9WMv0dvGMHaSsG9Yvh8HtgUMhcNjjy4SyD9JxGthsKFuoLvBXuqWyg7yvpCdPSqknEQl7UoYbLQ==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "DPU74ckRAjS0W2KKj70EhYh2l/As5QbvAd+sXB1PVodaPPyl9G7pE4S+EXIpB3+UNLoq7jvaoV8RK+DeEc38jA==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "11.0.0-preview.7.26381.103",
-          "Microsoft.AspNetCore.Components.Forms": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.DependencyInjection": "11.0.0-preview.7.26381.103",
-          "Microsoft.JSInterop": "11.0.0-preview.7.26381.103"
+          "Microsoft.AspNetCore.Components": "11.0.0-rc.1.26425.128",
+          "Microsoft.AspNetCore.Components.Forms": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.DependencyInjection": "11.0.0-rc.1.26425.128",
+          "Microsoft.JSInterop": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.AspNetCore.Components.WebView": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "tw/SegaDV0o6q/70eSml/2DCNdXEkfEjcYL2DlHbwAuU6KNwaNIQ9XUxe/2Mf1unSjhViWcYR35o7v+5JxiF4A==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "b37sPyCckY92cSBb00CZBiApQ8gNIdi2LaDo9DzRrSVEF1Wkcdmp1SUznfvS25UBGTUspadI0Ny4TVPuDcSPFA==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Web": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Configuration.Binder": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Configuration.Json": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.FileProviders.Composite": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.FileProviders.Embedded": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Logging": "11.0.0-preview.7.26381.103"
-        }
-      },
-      "Microsoft.AspNetCore.Connections.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "pP5CXSG//gboXUGrgRrrfWxEWJQ1DJLbTo5BulmPp+GaiWf/KbjCCujWlkh7rPTBSWAP+5s4KXti3JAF5akdxA==",
-        "dependencies": {
-          "Microsoft.Extensions.Features": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.Http.Connections.Client": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "HEO648tD8OyX6aUNQwJSl1eKQk5eQChuHTqpybv2ep7/518/M27yeDDFxAh2M/LW+22tbbooao6raNEHm7lBhA==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Http.Connections.Common": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.Http.Connections.Common": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "EyxNhHve9DXcRgbVGFdx14738QULLUREvDLHS/q9m28bwrBMMeZRnwNQcszowCuHt2cgKnYDwJwUaAJgByiigQ==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Connections.Abstractions": "10.0.12"
+          "Microsoft.AspNetCore.Components.Web": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Configuration.Binder": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Configuration.Json": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.FileProviders.Composite": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.FileProviders.Embedded": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Logging": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.AspNetCore.Metadata": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "XPIBX7PQVR/F1lYnuPwL1NLTibGONUWaJGG45TW0mZNdtP9CkZ5g+VoUGj7DH+UW4YCaPRfLk7lFL4h+iAeeLg=="
-      },
-      "Microsoft.AspNetCore.SignalR.Client": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "p5EFZrp20HlS1MbYkreyhHy4nXeq/LrXVLWbQLBuAz2eFCdSnKfoNVlxZYbFoEjzJxa68CYdEFe9ObCaYTUP8Q==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Http.Connections.Client": "10.0.12",
-          "Microsoft.AspNetCore.SignalR.Client.Core": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.SignalR.Client.Core": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "+kCyWCOvZteBkqfbpmoi+ejIR1XVJOY4ydDNYrYt1WdXv/ruJS4WjDfCizGZ5lvn/OmRdMuVdh8opopbNveQcw==",
-        "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Common": "10.0.12",
-          "Microsoft.AspNetCore.SignalR.Protocols.Json": "10.0.12",
-          "Microsoft.Extensions.DependencyInjection": "10.0.12",
-          "Microsoft.Extensions.Logging": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.SignalR.Common": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "7DDVLxtjLtBBfle9RxZhiYc0PTSD4rc0SV4FZiT3Tdz6NxlrcnPqcGWME9Mc0PtbQ+X5GSgyPeyjGfA/tSfG8A==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Connections.Abstractions": "10.0.12"
-        }
-      },
-      "Microsoft.AspNetCore.SignalR.Protocols.Json": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "NVG8jfnuS850Cu4axdURINdArwKn/N+OyaA6A8/ERyWdflMMLFF25ZSEzAMnMD81rwNaPTVngTq0fE2xbuRwLQ==",
-        "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Common": "10.0.12"
-        }
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "WaXd7xvRDuXxrGQZRQFNkWNPcfBvd5O5v7PxDDNii1JgLmlrvhBJBl0JLWcP8fPQ9pyv4cVXYDpC1+7HFnelSw=="
       },
       "Microsoft.Extensions.Configuration": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "6YIdcM583agiVU/fJ/rANk7p55VDYnPfP46fB48VDJn9LrQ3J7Bib5kAQtCCsrW1IJv9fh7TkoiYYdcVps9F3A=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "67EIKOU5pzuMcTHoezn/hmv1hyMcxpiSIlVL9oT6Uc3bcErYhkTBuZCuVqHuNjJBm0nqmpJb1v644M/NV7Q0Vw=="
       },
       "Microsoft.Extensions.Configuration.Binder": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "oYFXD1QM7E+sHeFp5e2WiVHU0yrJ72ZA8Z3BONQsNNIhTjCYs1X6NrHGvCUSFre2NRt09cjUQNObwH8fyze4vA==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "1AI7GybRhwcPmOgi275FOlxDP3PL/pspE1R4itBxLgQ771sRy0LhYi4usSYNvixnocxcPp0aZqJ27CyYdM9Aaw==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.Configuration.FileExtensions": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "qNHpEkxKMcpEdDPCuey/0jKhJUmPbLHsHitf+aoxrAqz9ApvYIf11w8z3xIsydo7qacIrxACuIngVVEqidd3GA==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "TL/JWfhVSpWQ20MU0qyc8b+msicxWQ1mCgksMEozZm6+lB3XvojKPsXF25QIHzTA5qwL+m6gEOcl6c6UG1NW0Q==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.FileProviders.Physical": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.FileProviders.Physical": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.Configuration.Json": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "5VmT0leA8OPv1mPAuNVVdrpb9Vgn+77sq2Ra5VAc9o9dnEGZdfPicltaE5WYm5ygeXuAmofod5bQye1P4P6tNA==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "miSqJU+LJExUlMWIaz6aoJ7T44yctRxk7+/GCgEWyUEzwXr2nY7ouh6tJeu+gnhPPqQgMyF/+KWO973+oHe2/g==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Configuration.FileExtensions": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Configuration.FileExtensions": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "IgS1YfEd2i0p/zY8ytcW1zaFR3ivC0M4Ce3JnpZoKpzK9MogNkHb9BZPqYtq0mDuCe2ouirh6058glgPxhwD8g=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "r9VvtUpwM0MZ21DaTQWDqmsm6ABmuuXA/4aqa9LJVZET0HGlIG0Z5eN2esarFAQW2xtgGFyIYcnWs5uxUUizgg=="
       },
       "Microsoft.Extensions.Diagnostics": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "JA9JjYASjlzaDsC248Hkc8HBYfQNwJTAqkAZCqKfqwqRZAiNm2NtFbBwiyxA5Vt0/tGHHXJCw3/aqc/Av8mkTw==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "4O8+S1awKr1nwX0KboSyMszc1TGlxI1rSZsuFfvoByNnvlOj2C0Zg0/DUTFaBTpKAMCGvBZomDbY3uOtUvhvTw==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Options.ConfigurationExtensions": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Options.ConfigurationExtensions": "11.0.0-rc.1.26425.128"
         }
-      },
-      "Microsoft.Extensions.Features": {
-        "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "GaHsj8gISJ4BtRI4iK4meCil+LAYmv3NWuPKg6d29sw9cNsEN+1N8UMQXA/JhUXdrGTy16+B+YtjY3bco/8jMA=="
       },
       "Microsoft.Extensions.FileProviders.Composite": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "YuY95raHhsDMOnlenYAm1LtfEIcV7QhQcQgF/w94yDPVUXEV7Ssxeu3CV9FxTINsSYbpucatWdU8+p2i7n9Tag=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "RGI/H5WPpgMWDiua1kMR/WvRahPSMGaYoM87/1H2AoXbMz5SYsjzqqysQcF4/W/vInbb1uZv77CbUVgghH2uyA=="
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "Nzmzo/dv/IHer7A4Swnn9wPOWBiZsJfe4WDP1E2IdGgfvN64EIfo+VR9Uzzxcfz+gZj4Y4LkTajgcusUAgM+lA=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "KR+SCFBVh02vcApdsa4h34TdPKcYuNy/Z8LXecrJ0sXHgLgyMIP1A4oN7nmkiKIhV93TUvop9f9w8tz45Z39XQ=="
       },
       "Microsoft.Extensions.FileProviders.Physical": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "amteaBUpxnZCT1DD6+YneHdSFDt5jGmNe60hDJZC7PbRykBLzZs30//HY9xKkn+Am6r7rxtxboaLSqc7P9hcaA==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "Pd0sz0cuM5sS4bMiD31G6Uv+PStLZOYEahGLq9pFMg7s4Spg/oPQQTV5nr4BqweXOsQtHF8hEhlnZqPZOBAvtw==",
         "dependencies": {
-          "Microsoft.Extensions.FileSystemGlobbing": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.FileSystemGlobbing": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.FileSystemGlobbing": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "8I3TVOl+hhYRNHT5V4NlZqVK0JjJENbKurLpTBTkfGwWH8kTXFDPvlDuFw2JQvxs4MZSNa0By59LYlPXNKdF8w=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "uW8Q1sSMS2vnS8mhPdVTkbz5b0S5OEFMV8T7nS0bgz1ubQ/Bl7P2l/fmM8ZScqxNKqjZdNvRQaNgac6YA0HnUw=="
       },
       "Microsoft.Extensions.Localization.Abstractions": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "a2H2NhKJvxKuD7nsghW28tuwWkwRzcrYL/aq01Ek8oTMpa31PLzhuMV2My6lrhMO2EF9wS8g5yuUCLiqYWMIUQ=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "HqlwIvc+4nduvwp1Zfecta0DYAbDGaMX5g+rUbD8yBGsWQBgfM3pJZUz03BUNb0jsbVn9m61yPPxnDdDuzN2AA=="
       },
       "Microsoft.Extensions.Logging": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "VoYsG/1Gt7kpSeno7eUrnLKfusYZf9L8qSnYtMNh1ClwXKIfKU6+g+Lq23VeanJP2ieQyPBH0xtSzay8J7r9lQ==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "SxnI3xH/jZ11sRY5l1DqaqH4z7tyEqAa0ehQ6xsBGenst1mFy91iGWGZfUA0MnyPxQCdjmAlvPmuCvLsrv/ufw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.DependencyInjection": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.Options.ConfigurationExtensions": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "nkheyD5iwoPvfUFOQMrGhNA5GAjP39OsMGRyUyiSxQ6hx4Rod8FDcGo7wgU5HAONzJOqXIr+cNZgrPRRF0ChAA==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "z3K4AJwVQeNAHUfU4DSvs3Yvnzak7vbbD/rtcU4eKMxCKmmw3PA3sTefMTUUcIrePEhpIEODGtiOGJ00b/dNzg==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Binder": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Configuration.Binder": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Extensions.Validation": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "buB1rtL9/kh5B2fwA9XjOa9FOzCO6K/30F+0abANEwVrodjr5JMlt+2HyDQDQhdSCnDGxpj9q+r3kXTsT2jUFQ==",
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "oHMCZz6vD3a6SfRnKEo1ftQfWJ7OFn0PdT7gLZ10+d/XQ1RgE8hrpfdfL2F7BxCoO5MzbH08LdCHnFHBSFbMnA==",
         "dependencies": {
-          "Microsoft.Extensions.Localization.Abstractions": "11.0.0-preview.7.26381.103"
+          "Microsoft.Extensions.Localization.Abstractions": "11.0.0-rc.1.26425.128"
         }
       },
       "Microsoft.Graphics.Win2D": {
@@ -272,51 +207,51 @@
       },
       "Microsoft.JSInterop": {
         "type": "Transitive",
-        "resolved": "11.0.0-preview.7.26381.103",
-        "contentHash": "Bzm+DP6zeOl4eJ6T8bbsKFkRaYSRBn/r9GzEgKPCVYlSEiU6wOLq/eFxOFGYxIOGn5zak4rQq7Df4U/mm18LRw=="
+        "resolved": "11.0.0-rc.1.26425.128",
+        "contentHash": "W9eq1a1pEEaSx5msYyU+7z650Lhe4AuKGkvNYl9OOXn9nzlksULlF9FfAbhES7HgVLh9nVm1m7fq4I28DTQ7iw=="
       },
       "Microsoft.Maui.Controls.Build.Tasks": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "uoP2Tii9NzYS5r93qfk19nGpNL33A2lESRAEIhnKS9giTp7bC8r+a3uGJmAWOa0vvUqIl9waCT//kt7vF/oXVQ==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "65qhEioqGW0cKo/V3nwRKkzUr5i0FPY4ZB6RvzjklMx6kR+F9UszqQxt+1+pSwdpkqFU/uDSYtYHh3QLQ9072A==",
         "dependencies": {
-          "Microsoft.Maui.Controls.Core": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Controls.Xaml": "11.0.0-rc.1.26451.6"
+          "Microsoft.Maui.Controls.Core": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Controls.Xaml": "11.0.0-rc.2.26505.5"
         }
       },
       "Microsoft.Maui.Controls.Core": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "cdOtoK5jzD1Bwn1Y+Hifix7FP5PFxNIWXWXGFXRVUWT6WjgsUItbDH9mR5/g5YJPUZ05vpXowuum6tPyo6KmIQ==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "3wwpQFy6y6Oj0PgIQUl85B2FSZVT0h9rkQvzwtf/e/rLF0W4pNBp04+EdMZ0Xd7cb3ulQW2zESeNcf0YqcjJTA==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.DependencyInjection": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Logging": "11.0.0-preview.7.26381.103",
-          "Microsoft.Maui.Core": "11.0.0-rc.1.26451.6"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.DependencyInjection": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Logging": "11.0.0-rc.1.26425.128",
+          "Microsoft.Maui.Core": "11.0.0-rc.2.26505.5"
         }
       },
       "Microsoft.Maui.Controls.Xaml": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "HF/Csh924beGIgW+C9dC/U8d+xX4zp1m/B36wmm60brHOUTXc5gYivUVl+qZgnoE2rFhGH9cJSxmsJapSmteHg==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "uFd4ceAfshZwsBIiSYNRVd9VrpUSWZ24CmzC39YgwgUEiytbzcTsOsapvB63rM45524nNLwdW9ylTh2Tr9z85g==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Maui.Controls.Core": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Core": "11.0.0-rc.1.26451.6"
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Maui.Controls.Core": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Core": "11.0.0-rc.2.26505.5"
         }
       },
       "Microsoft.Maui.Core": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "HqMZZpgTvEMyMsIKhM7IJ20H3r37/BMDaLN5tDBNcCMjdPZbtD/YsZs94JRJFB67NdMkM4m6kkAAbk4uyNLYfg==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "qwvrAbSnIrrrQfMWSnNd3OebiEnaWRLKTUrYwyX7fIdEB5Z63h8S6YbkkSJy6fRP46QLhme4elKFPA96c0NR9g==",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.DependencyInjection": "11.0.0-preview.7.26381.103",
-          "Microsoft.Extensions.Logging": "11.0.0-preview.7.26381.103",
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.DependencyInjection": "11.0.0-rc.1.26425.128",
+          "Microsoft.Extensions.Logging": "11.0.0-rc.1.26425.128",
           "Microsoft.Graphics.Win2D": "1.4.0",
-          "Microsoft.Maui.Essentials": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Graphics": "11.0.0-rc.1.26451.6",
-          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "11.0.0-rc.1.26451.6",
+          "Microsoft.Maui.Essentials": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Graphics": "11.0.0-rc.2.26505.5",
+          "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": "11.0.0-rc.2.26505.5",
           "Microsoft.Web.WebView2": "1.0.4078.44",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2526",
           "Microsoft.Windows.SDK.BuildTools.WinApp": "0.5.0",
@@ -325,18 +260,18 @@
       },
       "Microsoft.Maui.Essentials": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "eVO2VVnYxPtkyBTauZFn6/uLqht9ETVrmgfKzEnEq0ojmjNLmi60S4cyoXL1Hv/r3KkRrg74uNbYb14hFPEZpw==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "FHpOCTpZF3/n2DtnMMXAgu2Ox2RHD27oseplWZoYZi/SVoO/ZJGkXYonNZ1H14Kv21uL1A9AsLnsk9vOQ/oX2w==",
         "dependencies": {
-          "Microsoft.Maui.Graphics": "11.0.0-rc.1.26451.6",
+          "Microsoft.Maui.Graphics": "11.0.0-rc.2.26505.5",
           "Microsoft.Web.WebView2": "1.0.4078.44",
           "Microsoft.WindowsAppSDK": "2.3.1"
         }
       },
       "Microsoft.Maui.Graphics": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "Ykn6Ctfrff4XCfe2p7cbavuRuTKSPWrJICblrk2qBxm3jWOWy/+knqGY3q+Pm0YAxrdpeqDzwMYr9/TtLZc8Hg==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "UQPfqGW7U7++FpHbeqD4i2ebs/+4a1KNC0+ACUUEZ6aoRifsQbqrwBsxYjnTSYRXp+KWDvx9R7uUsgrFLz3vrw==",
         "dependencies": {
           "Microsoft.Graphics.Win2D": "1.4.0",
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
@@ -345,18 +280,18 @@
       },
       "Microsoft.Maui.Graphics.Win2D.WinUI.Desktop": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "7YPKmwXVKxxXbGTuSMHXmuIJZCMwrAvkxWKn0FFucUYLx6hDEyVXv3yObpzSVMqh3q17ILIq9amQwya68INyOg==",
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "o6wpoVuDK348ldUPEGrD/orVzMq1+iNGFjhCOGSl7lgYA3WJGpyBkhBGePs8KWxjQWqCMOFcGqxrgjFtf2NB0w==",
         "dependencies": {
           "Microsoft.Graphics.Win2D": "1.4.0",
-          "Microsoft.Maui.Graphics": "11.0.0-rc.1.26451.6",
+          "Microsoft.Maui.Graphics": "11.0.0-rc.2.26505.5",
           "Microsoft.WindowsAppSDK": "2.3.1"
         }
       },
       "Microsoft.Maui.Resizetizer": {
         "type": "Transitive",
-        "resolved": "11.0.0-rc.1.26451.6",
-        "contentHash": "dnolRmnUd4e+K5xCgGvys1gWXjLymraLIOEF392hbbahC+OErorK+grvgSiOASQrfWBh5y0K8g+duo+x1UKh4Q=="
+        "resolved": "11.0.0-rc.2.26505.5",
+        "contentHash": "yxGdlahDnoIANbaolUQ7eKwn9Lf0Ktfo+JZMuVHvrry9PyYLjIji8MFqPcwF+RH9TSD8s4SV6PBMmqUPTzProQ=="
       },
       "Microsoft.Web.WebView2": {
         "type": "Transitive",
@@ -519,7 +454,6 @@
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Client": "[10.0.12, )",
           "Microsoft.Extensions.Configuration": "[10.0.6, )",
           "System.Diagnostics.EventLog": "[10.0.0, )",
           "Tomlyn.Extensions.Configuration": "[2.0.0, )",
