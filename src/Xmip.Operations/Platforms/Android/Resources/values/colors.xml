@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The estate's tokens (Xmip.Gui's xmip.css): the bars in ink, as the
+     navigation is; the accent the brand's lime, never a mood. -->
+<resources>
+    <color name="colorPrimary">#1a202c</color>
+    <color name="colorPrimaryDark">#1a202c</color>
+    <color name="colorAccent">#75c93b</color>
+</resources>

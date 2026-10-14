@@ -812,3 +812,66 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
         1rem 5.5rem minmax(12rem, 1fr) 4rem 4rem minmax(8rem, 14rem) 5.5rem 6rem;
 }
 .dead-detail .dead-none { margin: 0 0 1rem; }
+
+/* The phone (ADR-0014, amendment 2026-10-14): the same pages on a narrow
+   screen, in one column. Every row puts its name first and its evidence
+   wrapped beneath it, whole, rather than clipped beside it; everything an
+   operator taps is at least 44px tall; the page keeps clear of the notch
+   and the home indicator; nothing is offered only on hover, and the hover
+   tints, which a tap leaves stuck, are let go. The topology's drawing
+   collapses: its inspector lists what it draws, each a link to its drill.
+   Last in the sheet, so it wins over every grid above. */
+@media (max-width: 600px) {
+    body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+            env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .topnav { flex-wrap: nowrap; overflow-x: auto; padding: 0 0.5rem; }
+    .topnav-link, .role { flex: none; }
+    .topnav-link { display: inline-flex; align-items: center; min-height: 44px; }
+
+    .run-line, .scope-filter { padding-left: 1rem; padding-right: 1rem; }
+    .run-line .source { margin-left: 0; overflow-wrap: anywhere; }
+    .scope-filter { flex-wrap: wrap; }
+    .scope-filter-input { flex: 1 1 100%; min-height: 44px; }
+    .cluster-pick, .crumbs .crumb-btn, .crumb-link {
+        display: inline-flex; align-items: center; min-height: 44px;
+    }
+
+    .cluster { flex-wrap: wrap; margin: 0.75rem 1rem 0; }
+    .cluster .why { flex: 1 1 100%; }
+    .cluster .detail { margin-left: 0; }
+
+    .stages { grid-template-columns: 1fr; gap: 0.5rem; padding: 0.75rem 1rem 0; }
+    .stage { min-height: 44px; }
+
+    .drill, .list, .nodes { padding-left: 1rem; padding-right: 1rem; }
+    .list { max-height: none; overflow-y: visible; }
+
+    /* A row: its dot, then its name, and beneath the name what it says. */
+    .row, .nodes .row, .branch, .drill-leaf {
+        grid-template-columns: 1rem minmax(0, 1fr);
+        gap: 0.2rem 0.75rem;
+        min-height: 44px;
+    }
+    .row > :not(.dot), .branch > :not(.dot), .drill-leaf > :not(.dot) { grid-column: 2; }
+    .row .age { text-align: left; }
+    .row a.scope { display: flex; align-items: center; min-height: 44px; }
+    .row .evidence, .branch .evidence, .why .evidence {
+        white-space: normal; overflow-wrap: anywhere;
+    }
+    .why { display: flex; }
+    .act { min-height: 44px; justify-self: start; }
+
+    .topology-tools .motion-toggle, .topology-canvas, .topology-legend { display: none; }
+    .topology-tools, .topology-trail { margin: 0.75rem 1rem 0; flex-wrap: wrap; }
+    .topology-layout { grid-template-columns: 1fr; padding: 0.75rem 1rem 1rem; }
+    .topology-beneath a, .topology-trail a { display: inline-flex; align-items: center; min-height: 44px; }
+
+    .cluster-pick:hover:not(.current), .crumbs .crumb-btn:hover {
+        background: none; color: var(--muted);
+    }
+    .topnav-link:hover:not(.active) { background: none; color: #cbd5e0; }
+    .stage:hover:not(.selected), .branch:hover { border-color: var(--line); }
+}
