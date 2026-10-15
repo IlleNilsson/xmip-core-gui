@@ -35,10 +35,23 @@ public static partial class MauiProgram
         // phone proved who holds it.
         builder.Services.AddSingleton(new RoleContext(Role.Observer, null));
 
+        // The operator's key, kept by the phone's own keeper and never read
+        // here: the request is signed there and so is every handshake
+        // (ADR-0034, amendment 2026-10-15). The document names the chain the
+        // cluster's authority signs and no private key.
+#if ANDROID
+        IOperatorKeeper keeper = new AndroidKeeper();
+#else
+        IOperatorKeeper keeper = new EnclaveKeeper();
+#endif
+        builder.Services.AddSingleton(keeper);
+        builder.Services.AddSingleton(services => SurfaceTls.From(
+            services.GetRequiredService<IConfiguration>(), data, keeper));
+
         // The surfaces every screen reads: a node on another machine, at the
         // operate Address the document names (ADR-0052 clause 3).
         builder.Services.AddSingleton(services =>
-            Remote(services.GetRequiredService<IConfiguration>(), data));
+            Remote(services.GetRequiredService<IConfiguration>(), data, keeper));
 
         return audit;
     }
@@ -60,12 +73,13 @@ public static partial class MauiProgram
 
     // Remote, and only remote: a phone has no node of its own to reach at a
     // local endpoint and no snapshot file to read.
-    private static ClusterSurfaces Remote(IConfiguration configuration, string basePath)
+    private static ClusterSurfaces Remote(
+        IConfiguration configuration, string basePath, IOperatorKeeper keeper)
     {
         string chosen = configuration[SurfaceChoice.SurfaceKey]?.Trim() ?? string.Empty;
 
         return string.Equals(chosen, SurfaceChoice.Remote, StringComparison.OrdinalIgnoreCase)
-            ? SurfaceChoice.OpenAll(configuration, basePath)
+            ? SurfaceChoice.OpenAll(configuration, basePath, keeper)
             : throw new InvalidOperationException(
                 $"{SurfaceChoice.SurfaceKey} is \"{chosen}\"; on a phone it is " +
                 $"\"{SurfaceChoice.Remote}\", a node followed at its operate " +

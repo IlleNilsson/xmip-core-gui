@@ -349,9 +349,18 @@ for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
 xcframework first), not signed, not run. On a phone it
 reads `Resources/Raw/xmip.gui.toml`, shipped inside the app, follows one
 node remotely (`Surface = "remote"`, nothing else) with its certificate
-files under the app's data, and is an Observer: no acts, and no Configure
-page, which with its editing components and `MauiProgram.Desktop.cs` is
-compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
+files under the app's data, and is an Observer: it acts on nothing. Its
+key is made in the phone's keeper and never leaves it — the
+Android Keystore (StrongBox where the phone has it) or the iOS keychain's
+Secure Enclave — and the desktop's in Windows CNG, the TPM where the machine
+has one (ADR-0034, amendment 2026-10-15): the Certificate page, on both,
+makes the request over the kept key, shares it, and keeps the chain the
+cluster's authority signs and the authority itself in the files the
+document names as `Certificate` and `TrustAnchor` — it names no
+`PrivateKey` — presented from the next start, every handshake signed by the
+keeper. The Android keeper is built and not yet run on a phone; the iOS one
+is written and not built. The phone has no Configure page: it, its editing
+components and `MauiProgram.Desktop.cs` are compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
 supports macOS too, and Linux only
 through Microsoft's experimental GTK4 backend, maui-labs
 (https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4),

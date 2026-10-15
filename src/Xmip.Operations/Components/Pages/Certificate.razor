@@ -1,0 +1,136 @@
+@page "/certificate"
+@using Microsoft.Maui.ApplicationModel.DataTransfer
+@using Xmip.Abi.Operate
+@inject SurfaceTls Tls
+@inject ProgramAudit Audit
+
+<PageTitle>Xmip — Certificate</PageTitle>
+
+@* A person's certificate whose key never leaves this device's keeper
+   (ADR-0034, amendment 2026-10-15): the request made over the key the
+   keeper holds and shared with whoever signs for the cluster's authority,
+   then the chain they send back kept, and the authority trusted. What a
+   request names and signs is the runtime's; keeping and checking is
+   Xmip.Surface's (OperatorCertificate); this page draws and asks. *@
+<section class="certificate">
+    @if (Tls.Keeper is not { } keeper)
+    {
+        <p>This host's key is a file its document names as PrivateKey; no keeper holds it.</p>
+    }
+    else
+    {
+        <h2>Request</h2>
+        <p>The key is kept by @keeper.Name and never leaves it.</p>
+        <label>
+            Your name, as your directory knows it
+            <input @bind="_person" placeholder="alice@example.org" />
+        </label>
+        <button class="primary" disabled="@_busy" @onclick="Request">Make the request</button>
+        @if (_request.Length > 0)
+        {
+            <textarea readonly rows="8">@_request</textarea>
+            <button @onclick="ShareRequest">Share the request</button>
+        }
+
+        <h2>Signed</h2>
+        <label>
+            The chain the cluster's authority signed, PEM
+            <textarea rows="8" @bind="_chain"></textarea>
+        </label>
+        <button class="primary" disabled="@_busy" @onclick="KeepChain">Keep the chain</button>
+
+        <label>
+            The cluster's authority, PEM
+            <textarea rows="6" @bind="_anchors"></textarea>
+        </label>
+        <button class="primary" disabled="@_busy" @onclick="KeepAuthority">Keep the authority</button>
+
+        <p class="dir">@Tls.Paths.Certificate · @Tls.Paths.TrustAnchor</p>
+    }
+
+    @if (_said.Length > 0)
+    {
+        <p class="said">@_said</p>
+    }
+</section>
+
+@code {
+    private string _person = string.Empty;
+    private string _request = string.Empty;
+    private string _chain = string.Empty;
+    private string _anchors = string.Empty;
+    private string _said = string.Empty;
+    private bool _busy;
+
+    // A keeper's calls may take time (the Android Keystore asks to be kept
+    // off the main thread), so each runs on the pool.
+    private async Task Request()
+    {
+        await Busy(() =>
+        {
+            OperatorKept made = OperatorCertificate.RequestKept(
+                RuntimeLibrary.Rules.Certificates, Tls.Keeper!, _person.Trim());
+            _request = made.Request;
+            Audited("certificate.request", made.Refused, made.Person);
+            return made.Ok
+                ? $"OK. Share the request with whoever signs for the cluster's authority"
+                    + (made.Made ? "; a new key was made." : "; the kept key is asked again.")
+                : made.Refused;
+        });
+    }
+
+    private async Task ShareRequest()
+    {
+        await Share.Default.RequestAsync(new ShareTextRequest
+        {
+            Title = "Xmip operator certificate request",
+            Text = _request,
+        });
+    }
+
+    private async Task KeepChain()
+    {
+        await Busy(() =>
+        {
+            string refused = OperatorCertificate.Keep(
+                Tls.Keeper!, _chain, Tls.Paths.Certificate!);
+            Audited("certificate.keep", refused, Tls.Paths.Certificate!);
+            return refused.Length == 0
+                ? "OK. The chain is kept; it is presented from the next start."
+                : refused;
+        });
+    }
+
+    private async Task KeepAuthority()
+    {
+        await Busy(() =>
+        {
+            if (Tls.Paths.TrustAnchor is not { } path)
+            {
+                return $"REFUSED: the document names no {SurfaceTls.TrustAnchorKey}.";
+            }
+
+            string refused = OperatorCertificate.KeepAnchors(_anchors, path);
+            Audited("certificate.anchors", refused, path);
+            return refused.Length == 0
+                ? "OK. The authority is trusted from the next start."
+                : refused;
+        });
+    }
+
+    private async Task Busy(Func<string> act)
+    {
+        _busy = true;
+        _said = await Task.Run(act);
+        _busy = false;
+    }
+
+    private void Audited(string action, string refused, string subject)
+    {
+        Audit.Record(
+            action,
+            refused.Length == 0 ? AuditPhase.Finished : AuditPhase.Failure,
+            refused.Length == 0 ? AuditSeverity.Information : AuditSeverity.Warning,
+            refused.Length == 0 ? subject : refused);
+    }
+}
