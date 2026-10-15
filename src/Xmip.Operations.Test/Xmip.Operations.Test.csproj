@@ -43,6 +43,11 @@
              Link="Components\Editing\%(Filename)%(Extension)" />
     <Content Include="..\Xmip.Operations\Components\Pages\Configure.razor"
              Link="Components\Pages\Configure.razor" />
+    <!-- The desktop's keeper of an operator's key, Windows CNG: it depends on
+         nothing of MAUI, so it is proved here on this machine. The phones'
+         keepers are proved on their phones. -->
+    <Compile Include="..\Xmip.Operations\Platforms\Windows\CngKeeper.cs"
+             Link="Platforms\Windows\CngKeeper.cs" />
     <!-- The test cluster's names, read by the one helper every .NET test
          shares (ADR-0056, amendment 2026-10-03). -->
     <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"

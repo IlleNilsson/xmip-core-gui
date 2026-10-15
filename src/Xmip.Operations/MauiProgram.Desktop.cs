@@ -57,7 +57,15 @@ public static partial class MauiProgram
         // that the desktop version opens multiple clusters too"). Nothing is
         // planned at launch: nothing starts itself, and a node is planned only
         // when an operator presses Plan on the Configure page.
-        builder.Services.AddSingleton(_ => SurfaceChoice.OpenAll(builder.Configuration, basePath));
+        // A remote node is reached presenting a key Windows CNG keeps — the
+        // TPM where there is one — where the document names a certificate
+        // and no private key (ADR-0034, amendment 2026-10-15).
+        IOperatorKeeper keeper = new CngKeeper();
+        builder.Services.AddSingleton(keeper);
+        builder.Services.AddSingleton(_ =>
+            SurfaceTls.From(builder.Configuration, basePath, keeper));
+        builder.Services.AddSingleton(_ =>
+            SurfaceChoice.OpenAll(builder.Configuration, basePath, keeper));
 
         // Configure's commands answer one surface: the first cluster's
         // (SurfaceChoice.OpenFirst's rule), the one a node is planned on.
