@@ -93,7 +93,7 @@
         await Busy(() =>
         {
             string refused = OperatorCertificate.Keep(
-                Tls.Keeper!, _chain, Tls.Paths.Certificate!);
+                RuntimeLibrary.Rules.Certificates, Tls.Keeper!, _chain, Tls.Paths.Certificate!);
             Audited("certificate.keep", refused, Tls.Paths.Certificate!);
             return refused.Length == 0
                 ? "OK. The chain is kept; it is presented from the next start."
@@ -110,7 +110,8 @@
                 return $"REFUSED: the document names no {SurfaceTls.TrustAnchorKey}.";
             }
 
-            string refused = OperatorCertificate.KeepAnchors(_anchors, path);
+            string refused = OperatorCertificate.KeepAnchors(
+                RuntimeLibrary.Rules.Certificates, _anchors, path);
             Audited("certificate.anchors", refused, path);
             return refused.Length == 0
                 ? "OK. The authority is trusted from the next start."
