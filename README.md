@@ -361,10 +361,9 @@ document names as `Certificate` and `TrustAnchor` — it names no
 keeper. The Android keeper is built and not yet run on a phone; the iOS one
 is written and not built. The phone has no Configure page: it, its editing
 components and `MauiProgram.Desktop.cs` are compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
-supports macOS too, and Linux only
-through Microsoft's experimental GTK4 backend, maui-labs
-(https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/platform-backends/linux-gtk4),
-which Microsoft does not support (ADR-0014, amendment 2026-10-13). Same
+is cross-platform: macOS too, and Linux through Avalonia's backend for
+.NET MAUI, a preview (<https://avaloniaui.net/blog/maui-avalonia-preview-1>;
+ADR-0014, amendment 2026-10-19). Same
 screen, same operator boundary, so the two cannot disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
 slices it for each node on save, and plans the node of it its configuration
 names — validated and its plan published; nothing runs it here.
