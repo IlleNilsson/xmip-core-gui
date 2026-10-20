@@ -122,7 +122,7 @@ public sealed class ClusterViewsTest : BunitContext
         Assert.Equal("processing+sending", declared.TextContent.Split('·')[0].Trim());
         Assert.Contains("published by the node", declared.TextContent, StringComparison.Ordinal);
         Assert.Contains(
-            "authentication and runtime capability are not modelled",
+            "authentication and runtime capability are not modeled",
             declared.GetAttribute("title") ?? string.Empty,
             StringComparison.Ordinal);
 
@@ -143,7 +143,7 @@ public sealed class ClusterViewsTest : BunitContext
         Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
         Assert.Equal(
             "declares sending; offline; authentication and runtime capability are "
-                + "not modelled",
+                + "not modeled",
             row.QuerySelector(".evidence")?.TextContent);
     }
 
