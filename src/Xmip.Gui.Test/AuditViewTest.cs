@@ -211,7 +211,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     [Fact]
     public void AQueryTheCapabilityRefusesIsSaidInItsWords()
     {
-        IRenderedComponent<Audit> page = At("/audit?sort=colour");
+        IRenderedComponent<Audit> page = At("/audit?sort=color");
 
         IElement said = page.Find(".audit-said.refused");
         Assert.StartsWith("REFUSED", said.TextContent.Trim(), StringComparison.Ordinal);
