@@ -37,6 +37,13 @@ Surface = "local"
 # tester acts only once a certificate proves them; the desktop host's caller
 # is the user running it.
 # Directory = "tester"
+#
+# The subject of the tester's operator certificate, CN=<person> as
+# New-XmipCertificate -Operator names it, which the tester directory allows
+# beside the user this host runs as (ADR-0009, amendment 2026-10-21): a
+# browser presenting it acts as the tester. Start-XmipOperationWeb -Tester
+# names it for a host that follows a Playground roll.
+# Tester = "CN=alice@example.org"
 
 # The runtime's native library, exporting xmip_operate_v1: what every surface
 # calls the runtime through, the gRPC client a local or remote surface follows
@@ -66,10 +73,12 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # Xmip's own traffic is TLS (ADR-0063 clause 1). This host binds plain http on
 # loopback only, and says so in its log and its audit; any other address is
-# https:// and presents this certificate — a PEM chain, leaf first, and its
-# PEM private key — and checks the certificate a remote surface presents
-# against TrustAnchor, a PEM file of anchors (unset: the operating system's
-# trust store). The same keys are what this host presents and trusts when it
+# https:// in Xmip's own TLS, the runtime's (xmip_operate.h section 21), and
+# presents this certificate — a PEM chain, leaf first, and its PEM private
+# key — and verifies the certificate a browser presents against TrustAnchor,
+# a PEM file of anchors, which https needs: Xmip trusts no operating system's
+# trust store (ADR-0063). A browser presenting none only watches. The same
+# keys are what this host presents and trusts when it
 # follows another. Each else XMIP_CERTIFICATE, XMIP_PRIVATE_KEY and
 # XMIP_TRUST_ANCHOR. Where the files come from is provisioning's (ADR-0034).
 # Certificate = "D:/Repos/Xmip/.local-work/tls/node.pem"

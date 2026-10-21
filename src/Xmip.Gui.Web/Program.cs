@@ -100,14 +100,16 @@ try
     });
 
     // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host
-    // binds beyond this machine is HTTPS with the certificate xmip.gui.toml
-    // names, asking a caller for one and checking it; plain HTTP beyond
-    // loopback is refused here, before anything listens. Loopback is the one
-    // exception, and it is said below where it is bound.
-    SurfaceTls tls = SurfaceTls.From(builder.Configuration, basePath);
+    // binds beyond this machine is HTTPS in Xmip's own TLS, the runtime's
+    // (xmip_operate.h section 21; ADR-0009, amendment 2026-10-21), presenting
+    // the certificate xmip.gui.toml names and asking a caller for one, verified
+    // against its TrustAnchor; plain HTTP beyond loopback is refused here,
+    // before anything listens. Loopback is the one exception, and it is said
+    // below where it is bound. Kestrel's own HTTPS is never used.
+    SecureSurface tls = SecureSurface.From(builder.Configuration, basePath);
     IReadOnlyList<string> plain = SurfaceBinding.Check(
         SurfaceBinding.Addresses(builder.Configuration), tls);
-    builder.WebHost.UseXmipTls(tls, why => audit.Record(
+    builder.WebHost.UseSurface(Protection.Tls, tls, why => audit.Record(
         "tls", AuditPhase.Failure, AuditSeverity.Warning, why));
 
     WebApplication app = builder.Build();
@@ -161,7 +163,8 @@ try
         "start", AuditPhase.Begin, AuditSeverity.Information, "listening",
         new Dictionary<string, string>
         {
-            ["urls"] = string.Join(", ", app.Urls),
+            ["urls"] = string.Join(", ", app.Services.GetRequiredService<SecureTransport>()
+                .Shown(app.Urls)),
             ["surface"] = Located(SurfaceChoice.Snapshots(app.Configuration))
                 ?? app.Configuration[SurfaceChoice.SurfaceKey] ?? ScopeTree.Root,
             ["purpose"] = ProcessDeclaration.PurposeOf(app.Configuration),

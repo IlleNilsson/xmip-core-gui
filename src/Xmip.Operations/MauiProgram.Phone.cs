@@ -45,7 +45,7 @@ public static partial class MauiProgram
         IOperatorKeeper keeper = new EnclaveKeeper();
 #endif
         builder.Services.AddSingleton(keeper);
-        builder.Services.AddSingleton(services => SurfaceTls.From(
+        builder.Services.AddSingleton(services => SecureSurface.From(
             services.GetRequiredService<IConfiguration>(), data, keeper));
 
         // The surfaces every screen reads: a node on another machine, at the
