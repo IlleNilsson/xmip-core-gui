@@ -23,15 +23,19 @@ Surface = "local"
 # Directory grants the caller, and with no directory it is observer, so an
 # unstated role grants nothing (ADR-0009, amendment 2026-10-06). A word that
 # is no role is observer. A caller is proven by the client certificate its
-# browser presented, else by this machine's loopback as the user this host
-# runs as; one nothing proved watches and acts on nothing. Every act from a
-# browser is decided and audited as its caller.
+# browser presented and by nothing else: a browser on this machine's loopback
+# presents one like a browser anywhere (ADR-0009, amendment 2026-10-21). One
+# nothing proved watches and acts on nothing. Every act from a browser is
+# decided and audited as its caller.
 # Role = "observer"
 
 # The directory asked where no role is stated. The one kind built is
 # "tester", the Playground's fake directory: it allows the user this host
 # runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
 # Start-XmipOperationWeb names it for a host that follows a Playground roll.
+# A browser is never that user for reaching loopback, so on a web host the
+# tester acts only once a certificate proves them; the desktop host's caller
+# is the user running it.
 # Directory = "tester"
 
 # The runtime's native library, exporting xmip_operate_v1: what every surface

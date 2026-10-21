@@ -312,9 +312,10 @@ The web GUI offers what the desktop offers, by role (ADR-0014 and ADR-0052,
 amendments 2026-09-14): an Observer watches, an Operator also pauses, resumes
 and removes. It starts no node. The role is the caller's, not the host's
 (ADR-0009, amendment 2026-10-06): each browser is the caller its connection
-proved — the subject of a client certificate the host checked, else, over this
-machine's loopback, the operating system user the host runs as — and one
-nothing proved watches and acts on nothing. Both hosts grant a caller a role
+proved — the subject of a client certificate the host checked, over this
+machine's loopback as from anywhere (ADR-0009, amendment 2026-10-21) — and
+one nothing proved watches and acts on nothing; the desktop's caller is the
+user running it. Both hosts grant a caller a role
 by one rule, `RoleAssignment` (in `Xmip.Surface`):
 `Role` in `xmip.gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
 word that is no role is Observer; stated by neither, the directory named by
