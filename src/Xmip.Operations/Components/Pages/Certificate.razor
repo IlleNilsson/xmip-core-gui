@@ -1,7 +1,7 @@
 @page "/certificate"
 @using Microsoft.Maui.ApplicationModel.DataTransfer
 @using Xmip.Abi.Operate
-@inject SurfaceTls Tls
+@inject SecureSurface Tls
 @inject ProgramAudit Audit
 
 <PageTitle>Xmip — Certificate</PageTitle>
@@ -107,7 +107,7 @@
         {
             if (Tls.Paths.TrustAnchor is not { } path)
             {
-                return $"REFUSED: the document names no {SurfaceTls.TrustAnchorKey}.";
+                return $"REFUSED: the document names no {SecureSurface.TrustAnchorKey}.";
             }
 
             string refused = OperatorCertificate.KeepAnchors(

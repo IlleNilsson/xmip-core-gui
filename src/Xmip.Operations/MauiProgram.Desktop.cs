@@ -63,7 +63,7 @@ public static partial class MauiProgram
         IOperatorKeeper keeper = new CngKeeper();
         builder.Services.AddSingleton(keeper);
         builder.Services.AddSingleton(_ =>
-            SurfaceTls.From(builder.Configuration, basePath, keeper));
+            SecureSurface.From(builder.Configuration, basePath, keeper));
         builder.Services.AddSingleton(_ =>
             SurfaceChoice.OpenAll(builder.Configuration, basePath, keeper));
 

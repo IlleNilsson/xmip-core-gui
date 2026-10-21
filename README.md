@@ -335,11 +335,17 @@ loopback only — the one exception, which the host says in its log and as an
 audit record where it binds it — and any other address in
 `[Kestrel.Endpoints]` is `https://`, presenting the PEM certificate and key
 `xmip.gui.toml` names as `Certificate` and `PrivateKey`. It asks a caller for
-a certificate and checks one presented against `TrustAnchor` (else the
-operating system's trust store); a browser may decline and reads the pages. Plain http beyond loopback, or https with no certificate, is refused
-before the host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the
-one rule in `Xmip.Surface`'s `SurfaceTls`). The TLS is the platform's, through
-Kestrel, not `xmip-core-library-tls`.
+a certificate and verifies one presented against `TrustAnchor`, which https
+needs; a browser may decline and reads the pages. Plain http beyond
+loopback, or https with no certificate or no anchors, is refused before the
+host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the one rule in
+`Xmip.Surface`'s `SecureSurface`). The TLS is Xmip's own since 2026-10-21:
+`UseSurface(Protection.Tls, …)` binds every https address on the runtime's
+listener (`xmip_operate.h` section 21, `xmip-core-library-tls`), and Kestrel
+serves HTTP/1.1 over what it hands over, never its own HTTPS. Over a
+Playground roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
+under the Playground's authority and `-Tester <person>` names the tester's
+operator certificate (`Xmip:Tester`).
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
 A native window; needs the maui-windows workload. The same host is the
