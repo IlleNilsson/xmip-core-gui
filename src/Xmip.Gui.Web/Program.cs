@@ -135,9 +135,9 @@ try
     app.UseHttpsRedirection();
 
     // Every request's user is the caller its connection proved — a client
-    // certificate, else this machine's loopback, else no one — before a page
+    // certificate, else no one, over loopback as from anywhere — before a page
     // renders or a circuit opens, so each browser acts as itself and never as
-    // this host's account (ADR-0009, amendment 2026-10-06).
+    // this host's account (ADR-0009, amendments 2026-10-06 and 2026-10-21).
     app.UseXmipProvenCaller();
 
     app.MapStaticAssets();
