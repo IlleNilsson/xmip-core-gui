@@ -1,0 +1,201 @@
+@page "/authority"
+@using Xmip.Abi.Operate
+@inject ProgramAudit Audit
+@inject RoleContext Role
+
+<PageTitle>Xmip — Authority</PageTitle>
+
+@* The cluster's own authority kept in a folder on this machine, the
+   premises' own ACME service (ADR-0034, amendment 2026-10-22): set up,
+   inspected, revoked from, exported, backed up, and a node's request carried
+   across an air gap signed. Every act and its checks are the runtime's
+   (AuthorityCertificate, xmip_operate.h section 23); this page draws, asks
+   and audits. The desktop's alone: the phone keeps no authority. *@
+<section class="authority">
+    @if (!Role.MayConfigure())
+    {
+        <p>Acting on the cluster's authority is configuring; this role watches.</p>
+    }
+    else
+    {
+        <label>
+            The folder the authority is kept in
+            <input @bind="_folder" placeholder="D:\Xmip\authority" />
+        </label>
+        <button class="primary" disabled="@_busy" @onclick="Inspect">Inspect</button>
+
+        <h2>Set up</h2>
+        <label>Cluster <input @bind="_cluster" placeholder="its name, as its xmip.toml says" /></label>
+        <label>
+            Published at, plain HTTP
+            <input @bind="_publish" placeholder="http://ca.xmip.test:8080" />
+        </label>
+        <button disabled="@_busy" @onclick="SetUp">Set up</button>
+
+        @if (_state is { Ok: true } state)
+        {
+            <h2>@state.Subject</h2>
+            <p>
+                Valid until @Day(state.NotAfter). SHA-256 @state.Fingerprint.
+                @(state.Published.Length > 0
+                    ? $"Publishes its list and certificate at {state.Published}."
+                    : "Publishes at no address.")
+                List @state.ListNumber, next by @Day(state.ListNextUpdate), naming
+                @state.Revoked.
+            </p>
+            <table>
+                <thead>
+                    <tr><th>Serial</th><th>Subject</th><th>Purpose</th><th>Until</th>
+                        <th>Standing</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (AuthorityRecord record in state.Issued)
+                    {
+                        <tr>
+                            <td>@record.Serial</td>
+                            <td>@record.Subject</td>
+                            <td>@record.Purpose</td>
+                            <td>@Day(record.NotAfter)</td>
+                            <td>@record.Standing</td>
+                            <td>
+                                @if (record.RevokedAt is null)
+                                {
+                                    <button disabled="@_busy"
+                                            @onclick="() => Revoke(record.Serial)">Revoke</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <label>
+                Revoked for
+                <select @bind="_reason">
+                    @foreach (string reason in Reasons)
+                    {
+                        <option value="@reason">@reason</option>
+                    }
+                </select>
+            </label>
+
+            <h2>Hand out and keep</h2>
+            <label>Write to <input @bind="_export" placeholder="D:\Xmip\authority.cer" /></label>
+            <select @bind="_format">
+                <option value="der">DER, .cer for Windows</option>
+                <option value="pem">PEM, .crt for Linux</option>
+                <option value="crl">The revocation list</option>
+            </select>
+            <button disabled="@_busy" @onclick="Export">Export</button>
+            <label>Back up into <input @bind="_backup" placeholder="E:\backup\authority" /></label>
+            <button disabled="@_busy" @onclick="BackUp">Back up</button>
+
+            <h2>A request carried across an air gap</h2>
+            <label>The request <input @bind="_request" placeholder="E:\R1\node.csr" /></label>
+            <label>Its names <input @bind="_names" placeholder="R1, R1.xmip.test" /></label>
+            <label>The chain to <input @bind="_chain" placeholder="E:\R1\node.pem" /></label>
+            <button class="primary" disabled="@_busy" @onclick="Sign">Sign</button>
+        }
+    }
+
+    @if (_said.Length > 0)
+    {
+        <p class="said">@_said</p>
+    }
+</section>
+
+@code {
+    private static readonly string[] Reasons =
+    [
+        "unspecified", "keyCompromise", "affiliationChanged", "superseded",
+        "cessationOfOperation", "privilegeWithdrawn",
+    ];
+
+    private string _folder = string.Empty;
+    private string _cluster = string.Empty;
+    private string _publish = string.Empty;
+    private string _reason = "unspecified";
+    private string _export = string.Empty;
+    private string _format = "der";
+    private string _backup = string.Empty;
+    private string _request = string.Empty;
+    private string _names = string.Empty;
+    private string _chain = string.Empty;
+    private string _said = string.Empty;
+    private AuthorityState? _state;
+    private bool _busy;
+
+    private static RuntimeCertificates Certificates => RuntimeLibrary.Rules.Certificates;
+
+    private Task Inspect() => Busy(() =>
+    {
+        _state = AuthorityCertificate.Inspect(Certificates, _folder.Trim());
+        return _state.Ok ? $"OK. {_state.Issued.Count} certificate(s) signed." : _state.Refused;
+    });
+
+    private Task SetUp() => Busy(() =>
+    {
+        _state = AuthorityCertificate.SetUp(
+            Certificates, _folder.Trim(), _cluster.Trim(), _publish.Trim());
+        Audited("authority.set-up", _state.Refused, _folder);
+        return _state.Ok ? $"OK. The authority is set up: SHA-256 {_state.Fingerprint}." : _state.Refused;
+    });
+
+    private Task Revoke(string serial) => Busy(() =>
+    {
+        AuthorityRecord revoked = AuthorityCertificate.Revoke(
+            Certificates, _folder.Trim(), serial, _reason);
+        Audited("authority.revoke", revoked.Refused, serial);
+        _state = AuthorityCertificate.Inspect(Certificates, _folder.Trim());
+        return revoked.Ok ? $"OK. {serial} is revoked for {revoked.Reason} and listed." : revoked.Refused;
+    });
+
+    private Task Export() => Busy(() =>
+    {
+        AuthorityExport written = AuthorityCertificate.Export(
+            Certificates, _folder.Trim(), _export.Trim(), _format);
+        Audited("authority.export", written.Refused, _export);
+        return written.Ok ? $"OK. Wrote {written.Written}." : written.Refused;
+    });
+
+    private Task BackUp() => Busy(() =>
+    {
+        AuthorityExport copied = AuthorityCertificate.BackUp(
+            Certificates, _folder.Trim(), _backup.Trim());
+        Audited("authority.back-up", copied.Refused, _backup);
+        return copied.Ok
+            ? $"OK. {copied.Copied.Count} file(s), the key among them, in {copied.Written}."
+            : copied.Refused;
+    });
+
+    private Task Sign() => Busy(() =>
+    {
+        string[] names = _names.Split(
+            ',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        CarriedSigned signed = AuthorityCertificate.Sign(
+            Certificates, _folder.Trim(), _request.Trim(), names,
+            _chain.Trim().Length > 0 ? _chain.Trim() : null);
+        Audited("authority.sign", signed.Refused, _request);
+        _state = AuthorityCertificate.Inspect(Certificates, _folder.Trim());
+        return signed.Ok
+            ? $"OK. Signed {signed.Serial} for {string.Join(", ", signed.Names)}; carry {signed.Written} back."
+            : signed.Refused;
+    });
+
+    private async Task Busy(Func<string> act)
+    {
+        _busy = true;
+        _said = await Task.Run(act);
+        _busy = false;
+    }
+
+    private void Audited(string action, string refused, string subject)
+    {
+        Audit.Record(
+            action,
+            refused.Length == 0 ? AuditPhase.Finished : AuditPhase.Failure,
+            refused.Length == 0 ? AuditSeverity.Information : AuditSeverity.Warning,
+            refused.Length == 0 ? subject : refused);
+    }
+
+    private static string Day(DateTimeOffset at) => at.UtcDateTime.ToString("yyyy-MM-dd HH:mm 'UTC'");
+}
