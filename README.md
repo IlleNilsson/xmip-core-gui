@@ -386,17 +386,20 @@ names — validated and its plan published; nothing runs it here.
 cluster TOML files, the files are sliced / node and distributed*). It opens
 on an overview of the cluster — its shared sections (`[service]`,
 `[tuning]`, `[runtime]`, `[administration]`, `[audit]`, `[storage]`,
-`[store]`) and its nodes — and drills down to a
+`[store]`, `[operate]`, `[provision]`) and its nodes — and drills down to a
 node, with its own values and its artifacts, and to the artifacts by kind:
-Receive Port, Receive Location, Send Port, Send Location, Send Port Group,
-Prepare, Promote, Demote, Route (an Xmip Application, its routes listed as
-entries; the route canvas is the VS Code designer's), Transformation and
-Process — whatever the runtime's views answer. A kind the configuration
-does not define yet shows the runtime's note and nothing to edit. An entry
-opens with its values edited in place as TOML (`"text"`, `4`, `true`),
-values added and removed, entries added — with the values they must hold,
-which the runtime names where one is missing — and removed, nodes added
-and removed. Every value, key and entry control carries an accessible name
+Party, Module, Receive Port, Receive Location, Send Port, Send Location,
+Send Port Group, Prepare, Promote, Demote, Route (an Xmip Application, its
+routes listed as entries; the route canvas is the VS Code designer's),
+Transformation and Work Process — whatever the runtime's views answer;
+Prepare, Promote, Demote and Transformation are calls to compiled units a
+Module declares (ADR-0066, amendment 2026-10-22). An entry opens with its
+values edited in place as TOML (`"text"`, `4`, `true`), values added — the
+keys its table may hold offered with their kinds, and the words or names a
+value may take, as the runtime offers them — and removed, a Party's
+identities added one element at a time, entries added — with the values
+they must hold, which the runtime names where one is missing — and
+removed, nodes added and removed (ADR-0064, amendment 2026-10-22). Every value, key and entry control carries an accessible name
 for what it edits (`name value`, `Remove start`, `Open drop, cluster`), and a
 removal, like every edit, is undone until saved by **Discard changes**.
 
