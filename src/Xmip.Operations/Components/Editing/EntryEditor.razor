@@ -6,7 +6,11 @@
    Nothing here knows what a value means; the runtime refuses what would
    not read. Every control is named for the value it edits, for a reader of
    the screen as for the eye; a removal is an edit like any other, undone
-   until saved by Discard changes. *@
+   until saved by Discard changes. What may be set is the runtime's offer:
+   each key the entry's table may hold and does not write, and the words or
+   names its value may take; an array of unnamed tables, a Party's
+   identities, takes one element at a time (ADR-0064, amendment
+   2026-10-22). *@
 
 <div class="group">
     <div class="group-head">
@@ -59,22 +63,87 @@
             <tr>
                 <td>
                     <input placeholder="key, a.b for a sub-table's" aria-label="New key"
-                           @bind="_key" />
+                           list="@KeysId" @bind="_key" @bind:event="oninput" />
+                    <datalist id="@KeysId">
+                        @foreach (OfferedKey offered in Entry.Offered)
+                        {
+                            <option value="@offered.Key">@Said(offered)</option>
+                        }
+                    </datalist>
                 </td>
                 <td>
                     <input placeholder="value as TOML: &quot;text&quot;, 4, true"
-                           aria-label="New value, as TOML" @bind="_value" />
+                           aria-label="New value, as TOML" list="@ValuesId" @bind="_value" />
+                    <datalist id="@ValuesId">
+                        @foreach (string choice in ChoicesOf(_key))
+                        {
+                            <option value="@($"\"{choice}\"")">@choice</option>
+                        }
+                    </datalist>
                 </td>
                 <td></td>
                 <td><button aria-label="@($"Add the value to {Kind}")" @onclick="Add">+ add</button></td>
             </tr>
         </tbody>
     </table>
+    @foreach (OfferedKey list in Entry.Offered.Where(offered => offered.Elements.Count > 0))
+    {
+        OfferedKey array = list;
+        <div class="group-head">
+            <h3>@($"Add to {array.Key}")</h3>
+            @foreach (OfferedKey inner in array.Elements)
+            {
+                string label = $"{array.Key} {inner.Key}, as TOML";
+                string key = inner.Key;
+                <input placeholder="@(inner.Required ? key + " (required)" : key)"
+                       aria-label="@label" value="@_element.GetValueOrDefault(key, "")"
+                       @onchange="@(change => Hold(key, change.Value))" />
+            }
+            <button aria-label="@($"Add an element to {array.Key}")"
+                    @onclick="() => AddElement(array)">+ add</button>
+        </div>
+    }
 </div>
 
 @code {
     private string _key = "";
     private string _value = "";
+    private readonly Dictionary<string, string> _element = new(StringComparer.Ordinal);
+
+    private string KeysId => $"offered-{string.Join('-', Entry.Section)}";
+
+    private string ValuesId => $"{KeysId}-values";
+
+    private static string Said(OfferedKey offered)
+    {
+        return offered.Required ? $"{offered.Kind} · required" : offered.Kind;
+    }
+
+    private IReadOnlyList<string> ChoicesOf(string key)
+    {
+        return Entry.Offered.FirstOrDefault(offered => offered.Key == key)?.Choices ?? [];
+    }
+
+    private void Hold(string key, object? value)
+    {
+        _element[key] = value?.ToString() ?? string.Empty;
+    }
+
+    private void AddElement(OfferedKey array)
+    {
+        ArtifactField[] values =
+        [
+            .. array.Elements
+                .Where(inner => _element.TryGetValue(inner.Key, out string? given)
+                    && !string.IsNullOrWhiteSpace(given))
+                .Select(inner => new ArtifactField((string[])[inner.Key], _element[inner.Key], inner.Kind)),
+        ];
+
+        if (Edit(new ClusterEdit.AddElement(Entry.Section, (string[])[array.Key], values)))
+        {
+            _element.Clear();
+        }
+    }
 
     /// <summary>The entry, as the runtime's views answer it.</summary>
     [Parameter, EditorRequired]

@@ -148,7 +148,7 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
     public void EveryControlIsNamedForWhatItEdits()
     {
         IRenderedComponent<Configure> page = Render<Configure>();
-        page.Find(".configs .config-item:not(.undefined)").Click();
+        page.Find(".configs .config-item").Click();
 
         IReadOnlyList<IElement> controls = page.FindAll(".cfg input, .cfg select, .cfg textarea");
         Assert.NotEmpty(controls);

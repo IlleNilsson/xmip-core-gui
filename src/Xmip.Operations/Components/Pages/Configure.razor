@@ -40,13 +40,10 @@
         @foreach (ArtifactView view in Artifacts())
         {
             ArtifactView kind = view;
-            <button class="config-item @Sel(KindKey(kind.Kind)) @(kind.Defined ? "" : "undefined")"
+            <button class="config-item @Sel(KindKey(kind.Kind))"
                     @onclick="() => Show(KindKey(kind.Kind))">
                 <span class="config-name">@kind.Title</span>
-                @if (kind.Defined)
-                {
-                    <span class="count">@kind.Entries.Count</span>
-                }
+                <span class="count">@kind.Entries.Count</span>
             </button>
         }
         <p class="dir">@Runtime.Delivery.ClusterPath</p>
@@ -146,7 +143,7 @@
             {
                 <EntryEditor Entry="own" Kind="NodeTitle" Edit="Edit" />
             }
-            @foreach (ArtifactView view in Artifacts().Where(view => view.Defined))
+            @foreach (ArtifactView view in Artifacts())
             {
                 <div class="group">
                     <div class="group-head">
@@ -162,19 +159,13 @@
             <div class="group">
                 <div class="group-head">
                     <h2>@view.Title</h2>
-                    @if (view.Defined)
-                    {
-                        <AddEntry Places="view.Places" Edit="Edit" />
-                    }
+                    <AddEntry Places="view.Places" Edit="Edit" />
                 </div>
                 @if (view.Note is { } note)
                 {
                     <p class="empty">@note</p>
                 }
-                @if (view.Defined)
-                {
-                    <EntryList Entries="view.Entries" Open="Open" Edit="Edit" />
-                }
+                <EntryList Entries="view.Entries" Open="Open" Edit="Edit" />
             </div>
         }
     </div>
