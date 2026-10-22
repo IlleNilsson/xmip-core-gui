@@ -366,8 +366,14 @@ cluster's authority signs and the authority itself in the files the
 document names as `Certificate` and `TrustAnchor` — it names no
 `PrivateKey` — presented from the next start, every handshake signed by the
 keeper. The Android keeper is built and not yet run on a phone; the iOS one
-is written and not built. The phone has no Configure page: it, its editing
-components and `MauiProgram.Desktop.cs` are compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
+is written and not built. The desktop has an Authority page besides, for a
+role that may configure (ADR-0034, amendment 2026-10-22): the cluster's
+authority kept in a folder on this machine — set up, inspected with every
+certificate it signed, revoked from, its anchor and list exported, backed up
+— and a node's request carried across an air gap signed, each act audited
+and the runtime's (`AuthorityCertificate`). The phone has no Configure or
+Authority page: they, its editing components and `MauiProgram.Desktop.cs`
+are compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
 is cross-platform: macOS too, and Linux through Avalonia's backend for
 .NET MAUI, a preview (<https://avaloniaui.net/blog/maui-avalonia-preview-1>;
 ADR-0014, amendment 2026-10-19). Same

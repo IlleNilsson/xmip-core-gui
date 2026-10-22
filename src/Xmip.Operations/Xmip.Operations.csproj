@@ -93,12 +93,12 @@
   </ItemGroup>
 
   <!-- What each build leaves out, by the SDK's own default globs. The phone
-       observes and nothing else: no Configure page, no editing components,
+       observes and nothing else: no Configure or Authority page, no editing components,
        no desktop start-up and no desktop document; its own is shipped inside
        the app (Resources/Raw/xmip.gui.toml). The desktop leaves out the
        phone's start-up and document. -->
   <PropertyGroup Condition="'$(XmipPhone)' == 'true'">
-    <DefaultItemExcludes>$(DefaultItemExcludes);MauiProgram.Desktop.cs;Components\Pages\Configure.razor;Components\Editing\**;xmip.gui.toml</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);MauiProgram.Desktop.cs;Components\Pages\Configure.razor;Components\Pages\Authority.razor;Components\Editing\**;xmip.gui.toml</DefaultItemExcludes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(XmipPhone)' != 'true'">
     <DefaultItemExcludes>$(DefaultItemExcludes);MauiProgram.Phone.cs;Resources\Raw\**</DefaultItemExcludes>
