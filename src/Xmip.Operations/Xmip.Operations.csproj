@@ -107,8 +107,14 @@
   <ItemGroup Condition="'$(XmipPhone)' != 'true'">
     <None Update="xmip.gui.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <!-- XmipPhoneDocument, where a build names one, is the phone's document
+       in place of Resources/Raw/xmip.gui.toml: Build-XmipService -Remote
+       Android -Package apk -Address writes it with the node to follow
+       (ADR-0014, amendment 2026-10-22), so no one edits the shipped one. -->
   <ItemGroup Condition="'$(XmipPhone)' == 'true'">
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiAsset Remove="Resources\Raw\xmip.gui.toml" Condition="'$(XmipPhoneDocument)' != ''" />
+    <MauiAsset Include="$(XmipPhoneDocument)" LogicalName="xmip.gui.toml" Condition="'$(XmipPhoneDocument)' != ''" />
   </ItemGroup>
 
   <!-- The runtime's native library for each platform, from xmip-core-abi,
