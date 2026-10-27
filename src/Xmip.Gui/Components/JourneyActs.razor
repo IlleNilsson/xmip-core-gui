@@ -32,6 +32,10 @@
         {
             <span class="subs-act-said">@Counted</span>
         }
+        @if (Blocked)
+        {
+            <span class="subs-act-said journey-blocked">@BlockedSaid</span>
+        }
         <ul class="journey-list">
             @foreach (FailedJourneyRecord failed in Shown)
             {
@@ -85,7 +89,12 @@
     /// <summary>What a Retry does, in the words the view says it.</summary>
     public const string RetrySaid =
         "Sent again, its tries begun anew, from the end of its Send Port's queue — or from its "
-        + "place, where it blocks a Sequential Send Port.";
+        + "place, where it blocks its sequence.";
+
+    /// <summary>What a blocked key is, in the words the view says it.</summary>
+    public const string BlockedSaid =
+        "BLOCKED: every Journey of its key waits behind the first that failed until it is "
+        + "retried or dismissed.";
 
     /// <summary>What a Dismiss does, in the words the view says it.</summary>
     public const string DismissSaid =
@@ -114,6 +123,10 @@
     private IReadOnlyList<FailedJourneyRecord> Shown { get; set; } = [];
 
     private ulong Count { get; set; }
+
+    // Whether a Journey shown blocks its sequence: said loud (ADR-0024,
+    // amendment 2026-10-27).
+    private bool Blocked { get; set; }
 
     private ulong? Next { get; set; }
 
@@ -168,6 +181,7 @@
             // list, which is unknown, nor the evidence's history.
             Shown = [];
             Count = 0;
+            Blocked = false;
             Next = null;
             return;
         }
@@ -191,6 +205,7 @@
         // A next place that does not move on is the queue's end, not a page.
         Shown = [.. failed.Journeys];
         Count = failed.Ports.Aggregate(0ul, (sum, port) => sum + port.Count);
+        Blocked = failed.Ports.Any(port => port.Blocked);
         Next = next > at ? next : null;
     }
 

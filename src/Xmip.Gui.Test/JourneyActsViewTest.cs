@@ -61,7 +61,7 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
                 $"Send Port; sent 1, failed 1, waiting 0; the Journey {Named} failed: refused")
             + Record(Fine, "Send Port; sent 4, failed 0, waiting 0, failed in its queue 0")
             + $"\n[[failed_journeys]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
-            + "count = 2\n"
+            + "count = 2\nblocked = true\n"
             + $"\n[[failed_journeys.journeys]]\njourney = \"{First}\"\nsequence = 3\n"
             + "reason = \"invoices: the far end refused it\"\n"
             + $"\n[[failed_journeys.journeys]]\njourney = \"{Second}\"\nsequence = 8\n"
@@ -117,6 +117,7 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
             page.FindAll(".journey-failed button").Select(button => button.TextContent.Trim()));
         Assert.Equal(
             JourneyActs.RetrySaid, page.FindAll(".journey-failed button")[0].GetAttribute("title"));
+        Assert.Equal(JourneyActs.BlockedSaid, page.Find(".journey-blocked").TextContent.Trim());
 
         page.FindAll(".journey-failed")[0].QuerySelectorAll("button")[0].Click();
         page.FindAll(".journey-failed")[1].QuerySelectorAll("button")[1].Click();
