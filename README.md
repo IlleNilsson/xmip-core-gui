@@ -350,7 +350,10 @@ operator certificate (`Xmip:Tester`).
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
 A native window; needs the maui-windows workload. The same host is the
 phone app (ADR-0014, amendment 2026-10-14): `-f net11.0-android` builds it
-for Android (the maui-android workload, the Android SDK and a JDK), and
+for Android (the maui-android workload, the Android SDK and NDK and
+Microsoft's OpenJDK 21), and `Build-XmipService -Remote Android -Package apk -Address <host:port>`,
+at the estate's root, makes the APK a person side-loads, signed with the
+Android SDK's debug key (ADR-0014, amendment 2026-10-22); and
 `net11.0-ios` is a target only on macOS — built by the estate's CI on macOS
 for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
 xcframework first), not signed, not run. On a phone it
