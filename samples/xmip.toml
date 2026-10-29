@@ -36,19 +36,15 @@ name = "approval"
 start = true
 required_modules = ["file"]
 
-# Where Xmip starts working, and where a Message leaves. The transport names
-# the module above; the address is in that transport's own terms.
+# Where Xmip starts working, and where a Message leaves, each entered by its
+# address alone: a path is the file transport's, the module above.
 
 [[receive_locations]]
 name = "orders-in"
-start = true
-transport = "file"
 address = "C:/xmip/in/orders"
 
 [[send_locations]]
 name = "billing-out"
-start = true
-transport = "file"
 address = "C:/xmip/out/billing"
 
 # The node this desktop starts (xmip.gui.toml's Node): its own values win
