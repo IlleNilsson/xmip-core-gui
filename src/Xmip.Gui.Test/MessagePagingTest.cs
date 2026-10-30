@@ -165,7 +165,7 @@ public sealed class MessagePagingTest : BunitContext, IDisposable
         ];
     }
 
-    // Each place's page: the Journeys found there and the next place.
+    // Each place's page: the Messages found there and the next place.
     private static Func<string, ulong, FailedMessageList> Pages(
         params (ulong From, (string Journey, ulong Place)[] Found, ulong? Next)[] pages)
     {

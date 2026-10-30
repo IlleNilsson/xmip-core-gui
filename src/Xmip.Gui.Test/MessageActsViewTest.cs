@@ -15,8 +15,8 @@ namespace Xmip.Gui.Test;
 /// Monitor's drill at the Port, over a publication of the test cluster whose
 /// sending node published one Port with two failed Messages, one whose
 /// evidence names a Journey the publication lists none for, and one without,
-/// and whose publisher takes orders. Each Journey listed with why and both
-/// acts for an Operator, each left for the sending node; the Journeys and no
+/// and whose publisher takes orders. Each Message listed with why and both
+/// acts for an Operator, each left for the sending node; the Messages and no
 /// act for an Observer; nothing where the publication lists none, whatever
 /// Journey the evidence names; nothing at a Port with no failed Message; and
 /// every act in the host's audit as <c>message.retry</c> or
