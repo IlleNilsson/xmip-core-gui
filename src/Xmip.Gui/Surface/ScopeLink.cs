@@ -3,10 +3,10 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the views. The web GUI is seven points
+/// Where a scope is reached in each of the views. The web GUI is eight points
 /// to drill from — Configuration, Monitor, Topology, Subscriptions (since
-/// 2026-09-30), Dead Message Queue (since 2026-10-03), Event subscriptions and
-/// Audit (since 2026-09-29) — and from
+/// 2026-09-30), Dead Message Queue (since 2026-10-03), Event subscriptions,
+/// Secrets (since 2026-10-30) and Audit (since 2026-09-29) — and from
 /// any of them a scope leads to the same scope in the others (the owner,
 /// 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link from any view
 /// ends at the view of the actual configuration). One place writes the
@@ -145,6 +145,21 @@ public static class ScopeLink
             ("pattern", query.Pattern),
             ("sort", query.Sort),
             ("order", query.Order));
+    }
+
+    /// <summary>
+    /// The Secrets view at the node <paramref name="location"/> names, on this
+    /// cluster; a location that names no node — the view's top, or the
+    /// cluster — is the one node the surface reaches, since a secret is kept
+    /// by a node and never by a cluster (ADR-0014, amendment 2026-10-30).
+    /// </summary>
+    public static string Secrets(string? location, Carry? carry = null)
+    {
+        string? node = location is { Length: > 0 } && ScopeTree.Node(location).Length > 0
+            ? location
+            : null;
+
+        return Address("/secrets", carry, ("location", node));
     }
 
     /// <summary>

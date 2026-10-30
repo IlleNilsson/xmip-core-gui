@@ -34,18 +34,19 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Seven views, and seven points to drill from, in this order on the bar:
+Eight views, and eight points to drill from, in this order on the bar:
 **Configuration**, the classic tree, holding still; **Monitor**, the board
 that follows Receive → Process → Send; **Topology** (ADR-0052, amendments
 2026-09-14 and 2026-09-18); **Subscriptions**, what picks a published Message
 up and opens a Journey (ADR-0013, amendment 2026-09-30); **Dead Message
 Queue**, the accepted Messages no Subscription matched (ADR-0052, amendment
 2026-10-01); **Event subscriptions**, who hears what Xmip did (ADR-0065,
-amendment 2026-09-29); and **Audit**, what every Xmip program recorded
-(ADR-0062, amendment 2026-09-29) — the last four described below, the
-Subscriptions placed before the Event subscriptions by ADR-0052, amendment
-2026-09-30, and the Dead Message Queue after the Subscriptions, whose
-declines it shows. A
+amendment 2026-09-29); **Secrets**, what a Location presents to the party
+it connects to (ADR-0014, amendment 2026-10-30); and **Audit**, what every
+Xmip program recorded (ADR-0062, amendment 2026-09-29) — the last five
+described below, the Subscriptions placed before the Event subscriptions by
+ADR-0052, amendment 2026-09-30, the Dead Message Queue after the
+Subscriptions, whose declines it shows, and the Secrets before the Audit. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -105,7 +106,7 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the seven
+is gone. The navigation is one component for both hosts, `TopNav`: the eight
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
@@ -255,12 +256,38 @@ amendment 2026-09-29). The three views share their pieces — the drill's crumbs
 (`SortHead`), what an act came to (`ActNotes`, `ActSaid`) — so they cannot
 drift apart.
 
+**The Secrets view** (`/secrets`; ADR-0014, amendment 2026-10-30) lists the
+secrets a node keeps — what a Location's `secret = "<name>"` names
+(ADR-0019, amendment 2026-10-29) — through `IOperatorSurface.Secrets`: each
+by its name, its kind (password, key or certificate), when it was last set
+and by whom, and never a value, which no surface reads back out. A time is
+shown where the person is, in the zone and the culture of the machine the
+view is drawn for, its offset from UTC beside it and the UTC in its title
+(`PersonTime`); every record keeps UTC. A secret is a node's, so the view
+stands at one node: the one the surface reaches, or the one the address
+names (`/secrets?location=xmip:///C1/node/R1`), and where the publisher draws
+more than one each is a link. An Operator sets a secret, or replaces one of
+the same name, by its name, its kind and its value — typed into a password
+field or read from a chosen file, a key's or a certificate's PEM, a mebibyte
+at most (`SecretSet.razor`). The value is never echoed, and the field and
+the file are let go before the act is raised, so the page holds no value
+once handed on. The set goes through `IOperatorSurface.SetSecret` behind
+the one gate (`GatedOperator`) as the proven caller, and is recorded in the
+host's audit as `secret.set` with the secret's name and kind, never its
+value. The listing is asked as the view opens, as it moves to another node
+and after each set, not at every tick of the publication. An Observer is
+told the secrets are an Operator's and shown neither the listing nor the
+act, as the node's own rule has it; a surface that reaches no node — a
+snapshot — says so in words.
+
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
 over an audit file in the capability's shape, and the Subscriptions, the
 Dead Message Queue and the Event subscriptions views over a publication
 whose publisher takes orders, so what is asserted is what an operator sees
-and no surface is faked.
+and no surface is faked. The Secrets view and the failed Messages' paging
+are rendered over a surface the test composes (`ScriptedSurface`), since no
+publication carries a node's secrets.
 
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
