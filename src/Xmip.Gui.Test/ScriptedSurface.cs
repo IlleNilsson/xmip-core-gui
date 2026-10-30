@@ -26,6 +26,18 @@ internal sealed class ScriptedSurface : IOperatorSurface
     /// <summary>How many watches were begun.</summary>
     public int Watches { get; private set; }
 
+    /// <summary>The secrets the node keeps; null where this surface reaches
+    /// no node, and so lists none.</summary>
+    public List<SecretRecord>? Kept { get; set; }
+
+    /// <summary>Every node the secrets were listed at, in order.</summary>
+    public List<string> Listings { get; } = [];
+
+    /// <summary>Every secret set, as <c>node name kind value who</c>: what
+    /// reached the surface, so a test sees the value crossed and nothing
+    /// else held it.</summary>
+    public List<string> SecretsSet { get; } = [];
+
     /// <inheritdoc />
     public string Source => "scripted";
 
@@ -55,6 +67,33 @@ internal sealed class ScriptedSurface : IOperatorSurface
         Acts.Add($"{MessageOperation.Word(act)} {journey}");
 
         return new MessageOperation(scope, journey, act, true, "applied");
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<SecretRecord> Secrets(string node)
+    {
+        Listings.Add(node);
+
+        return Kept is { } kept
+            ? [.. kept]
+            : throw new InvalidOperationException($"{Source} reaches no node, so lists no secrets");
+    }
+
+    /// <inheritdoc />
+    public SecretOperation SetSecret(
+        string node, string name, string kind, string value, string who)
+    {
+        SecretsSet.Add($"{node} {name} {kind} {value} {who}");
+
+        if (Kept is not { } kept)
+        {
+            return SecretOperation.Declined(node, name, "REFUSED: reaches no node");
+        }
+
+        kept.RemoveAll(secret => secret.Name == name);
+        kept.Add(new SecretRecord(name, kind, DateTimeOffset.UtcNow, who));
+
+        return new SecretOperation(node, name, true, $"the secret '{name}', a {kind}, is set");
     }
 
     /// <inheritdoc />
