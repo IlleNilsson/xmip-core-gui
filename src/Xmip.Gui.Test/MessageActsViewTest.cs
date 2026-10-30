@@ -10,21 +10,21 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// Every Journey that failed at a Send Port, listed at the Port's scope with
+/// Every Message that failed at a Send Port, listed at the Port's scope with
 /// Retry and Dismiss on each (runtime-model.md section 13; ADR-0013): the
 /// Monitor's drill at the Port, over a publication of the test cluster whose
-/// sending node published one Port with two failed Journeys, one whose
+/// sending node published one Port with two failed Messages, one whose
 /// evidence names a Journey the publication lists none for, and one without,
 /// and whose publisher takes orders. Each Journey listed with why and both
 /// acts for an Operator, each left for the sending node; the Journeys and no
 /// act for an Observer; nothing where the publication lists none, whatever
-/// Journey the evidence names; nothing at a Port with no failed Journey; and
-/// every act in the host's audit as <c>journey.retry</c> or
-/// <c>journey.dismiss</c>, as the caller the browser proved and never the
+/// Journey the evidence names; nothing at a Port with no failed Message; and
+/// every act in the host's audit as <c>message.retry</c> or
+/// <c>message.dismiss</c>, as the caller the browser proved and never the
 /// host's account; a caller nothing proved is offered no act and the gate
 /// takes none.
 /// </summary>
-public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
+public sealed partial class MessageActsViewTest : BunitContext, IDisposable
 {
     private const string First = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0b";
     private const string Second = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0c";
@@ -44,7 +44,7 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
     private readonly string _place = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-journey-{Guid.NewGuid():N}");
 
-    public JourneyActsViewTest()
+    public MessageActsViewTest()
     {
         Directory.CreateDirectory(_place);
         string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.toml");
@@ -54,17 +54,18 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
             + $"orders = '{Orders}'\n"
             + Record(
                 Failing,
-                "Send Port; sent 4, failed 2, waiting 0, failed in its queue 2; the Journey "
-                + $"{Second} failed: every Send Location failed its tries")
+                "Send Port; sent 4, failed 2, waiting 0, failed in its queue 2; the Message of the "
+                + $"Journey {Second} failed: every Send Location failed its tries")
             + Record(
                 Evidenced,
-                $"Send Port; sent 1, failed 1, waiting 0; the Journey {Named} failed: refused")
+                $"Send Port; sent 1, failed 1, waiting 0; the Message of the Journey {Named} "
+                + "failed: refused")
             + Record(Fine, "Send Port; sent 4, failed 0, waiting 0, failed in its queue 0")
-            + $"\n[[failed_journeys]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
+            + $"\n[[failed_messages]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
             + "count = 2\nblocked = true\n"
-            + $"\n[[failed_journeys.journeys]]\njourney = \"{First}\"\nsequence = 3\n"
+            + $"\n[[failed_messages.messages]]\njourney = \"{First}\"\nsequence = 3\n"
             + "reason = \"invoices: the far end refused it\"\n"
-            + $"\n[[failed_journeys.journeys]]\njourney = \"{Second}\"\nsequence = 8\n"
+            + $"\n[[failed_messages.messages]]\njourney = \"{Second}\"\nsequence = 8\n"
             + "reason = \"invoices: every Send Location failed its tries\"\n");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
@@ -97,42 +98,42 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
     {
         return
         [
-            .. page.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!),
+            .. page.FindAll(".message-failed").Select(row => row.GetAttribute("data-journey")!),
         ];
     }
 
     [Fact]
-    public void AnOperatorRetriesOrDismissesEachJourneyThatFailedAndEachIsAudited()
+    public void AnOperatorRetriesOrDismissesEachMessageThatFailedAndEachIsAudited()
     {
         IRenderedComponent<Cluster> page = At(Failing, Role.Operator);
 
         Assert.Equal([First, Second], Listed(page));
         Assert.Contains(
-            "2 Journeys failed", page.Find(".journey-acts").TextContent, StringComparison.Ordinal);
+            "2 Messages failed", page.Find(".message-acts").TextContent, StringComparison.Ordinal);
         Assert.Contains(
-            "invoices: the far end refused it", page.FindAll(".journey-failed")[0].TextContent,
+            "invoices: the far end refused it", page.FindAll(".message-failed")[0].TextContent,
             StringComparison.Ordinal);
         Assert.Equal(
             ["Retry", "Dismiss", "Retry", "Dismiss"],
-            page.FindAll(".journey-failed button").Select(button => button.TextContent.Trim()));
+            page.FindAll(".message-failed button").Select(button => button.TextContent.Trim()));
         Assert.Equal(
-            JourneyActs.RetrySaid, page.FindAll(".journey-failed button")[0].GetAttribute("title"));
-        Assert.Equal(JourneyActs.BlockedSaid, page.Find(".journey-blocked").TextContent.Trim());
+            MessageActs.RetrySaid, page.FindAll(".message-failed button")[0].GetAttribute("title"));
+        Assert.Equal(MessageActs.BlockedSaid, page.Find(".message-blocked").TextContent.Trim());
 
-        page.FindAll(".journey-failed")[0].QuerySelectorAll("button")[0].Click();
-        page.FindAll(".journey-failed")[1].QuerySelectorAll("button")[1].Click();
-        page.Find(".journey-confirm button.dismiss-confirm").Click();
+        page.FindAll(".message-failed")[0].QuerySelectorAll("button")[0].Click();
+        page.FindAll(".message-failed")[1].QuerySelectorAll("button")[1].Click();
+        page.Find(".message-confirm button.dismiss-confirm").Click();
 
         Assert.Equal(
-            [$"journey {First} retry", $"journey {Second} dismiss"],
+            [$"message {First} retry", $"message {Second} dismiss"],
             OrdersLeft.For(Orders, Sender));
         Assert.Contains(
-            $"left for {Sender}", page.Find(".journey-acts .subs-said").TextContent,
+            $"left for {Sender}", page.Find(".message-acts .subs-said").TextContent,
             StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
-        Assert.Contains("action = \"journey.retry\"", audit, StringComparison.Ordinal);
-        Assert.Contains("action = \"journey.dismiss\"", audit, StringComparison.Ordinal);
+        Assert.Contains("action = \"message.retry\"", audit, StringComparison.Ordinal);
+        Assert.Contains("action = \"message.dismiss\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{First}\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{Second}\"", audit, StringComparison.Ordinal);
         Assert.Equal(
@@ -148,13 +149,13 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
     {
         IRenderedComponent<Cluster> page = At(Failing, Role.Observer, who: null);
 
-        Assert.Empty(page.FindAll(".journey-acts button"));
+        Assert.Empty(page.FindAll(".message-acts button"));
 
-        JourneyOperation refused = new GatedOperator(
+        MessageOperation refused = new GatedOperator(
                 Services.GetRequiredService<ClusterSurfaces>().First,
                 new RoleContext(Role.Operator, null),
                 Services.GetRequiredService<ProgramAudit>())
-            .Act(Failing, First, JourneyAct.Retry, Proven);
+            .Act(Failing, First, MessageAct.Retry, Proven);
 
         Assert.False(refused.Applied);
         Assert.StartsWith("REFUSED. Nothing proved", refused.Result, StringComparison.Ordinal);
@@ -165,12 +166,12 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
     private static partial Regex WhoSaid();
 
     [Fact]
-    public void AnObserverIsShownTheJourneysAndNoAct()
+    public void AnObserverIsShownTheMessagesAndNoAct()
     {
         IRenderedComponent<Cluster> page = At(Failing, Role.Observer);
 
         Assert.Equal([First, Second], Listed(page));
-        Assert.Empty(page.FindAll(".journey-acts button"));
+        Assert.Empty(page.FindAll(".message-acts button"));
         Assert.False(Directory.Exists(Orders));
     }
 
@@ -180,16 +181,16 @@ public sealed partial class JourneyActsViewTest : BunitContext, IDisposable
         IRenderedComponent<Cluster> page = At(Evidenced, Role.Operator);
 
         Assert.Empty(Listed(page));
-        Assert.Empty(page.FindAll(".journey-acts"));
+        Assert.Empty(page.FindAll(".message-acts"));
         Assert.False(Directory.Exists(Orders));
     }
 
     [Fact]
-    public void APortWithNoFailedJourneyOffersNoAct()
+    public void APortWithNoFailedMessageOffersNoAct()
     {
         IRenderedComponent<Cluster> page = At(Fine, Role.Operator);
 
         Assert.Single(page.FindAll(".drill-leaf"));
-        Assert.Empty(page.FindAll(".journey-acts"));
+        Assert.Empty(page.FindAll(".message-acts"));
     }
 }

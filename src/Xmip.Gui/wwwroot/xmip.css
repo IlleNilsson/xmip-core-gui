@@ -386,9 +386,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .drill-leaf { cursor: default; }
 .drill-leaf .evidence { font-size: 0.9rem; color: var(--ink); white-space: normal; }
 .drill-leaf:not(.fine) .worst { color: var(--mood); }
-/* Retry and Dismiss on the last Journey that failed at a Send Port, beneath
+/* Retry and Dismiss on the last Message that failed at a Send Port, beneath
    its evidence, with what the last act came to beside them. */
-.drill-leaf .journey-acts {
+.drill-leaf .message-acts {
     grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
 }
 .row a.scope { color: inherit; text-decoration: none; }

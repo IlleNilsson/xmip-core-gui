@@ -27,7 +27,7 @@ host reads a node over gRPC at its operate listener — on this machine at its
 local endpoint (`LocalOperator`), on another at its operate address
 (`RemoteOperator`; ADR-0014, amendments 2026-10-12 and 2026-10-13) — or a
 snapshot a node published (`SnapshotOperator`), and which one is stated in
-its `xmip.gui.toml`, never guessed. What each answers — topology, the failed Journeys, and whether an
+its `xmip.gui.toml`, never guessed. What each answers — topology, the failed Messages, and whether an
 act applies at once or is submitted as an order — is xmip-core-abi's README,
 *What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
@@ -186,7 +186,7 @@ matched, kept in the Ledger with its receive context — when it was received,
 its identifier, the cluster and the node whose queue keeps it, the Receive
 Location it arrived at and how many Subscriptions declined it, the oldest
 first; a node publishes its oldest hundred. It is not a dead letter queue: a
-failed Journey never goes there, so an entry is no mood and its row is not
+failed Message never goes there, so an entry is no mood and its row is not
 painted. It drills cluster → node → one Message, a column's head orders by
 it and again the other way, and the pattern box narrows over each one's node
 and Message — all `DeadMessageQuery`'s, all in the address
@@ -201,32 +201,32 @@ still matches nothing stays. The Replay goes through `IOperatorSurface.Act`
 publication says its publisher takes orders — and is recorded in the host's
 audit as `dead-message.replay`. An Observer is shown the list and no act.
 
-**The Journeys that failed** (runtime-model.md section 13; ADR-0013) are
+**The Messages that failed** (runtime-model.md section 13; ADR-0013) are
 listed and acted on where the Monitor shows them: a Send Port's own record,
 at `<node>/send/<Port>`, says in its evidence what the Port sent, what
 failed, how many failed wait in its queue and the last that failed and why.
-Drilled to that scope, every Journey that failed there is listed with its
-identifier and why — read through `IOperatorSurface.FailedJourneys`, a page
+Drilled to that scope, every Message that failed there is listed with its
+identifier and why — read through `IOperatorSurface.FailedMessages`, a page
 at a time from Xmip Storage in the node's process with More for the next,
 or the oldest hundred a snapshot's publication carries — how many wait, and
 for each an Operator is offered Retry — sent again, its tries begun anew —
 and Dismiss — given up, written Dismissed and taken out of the Port's queue
-(`JourneyActs.razor`). Retry acts at once; Dismiss first names the Journey
+(`MessageActs.razor`). Retry acts at once; Dismiss first names the Message
 and says it leaves the queue for good, and acts only on **Dismiss for
 good** (**Keep it** withdraws). A page the node read empty with a next place
-is followed until failed Journeys or the queue's end, and paging starts
+is followed until failed Messages or the queue's end, and paging starts
 again at the queue's head when the Port in view changes. A surface that
 answered is taken at its word, an empty answer included; only a surface that
-cannot list failed Journeys (`FailedJourneyList.Unlisted`) offers the one
-Journey the evidence names as the last that failed
-(`JourneyOperation.FailedIn`), and not where the evidence says none wait in
-the queue now (`JourneyOperation.FailingIn`). Where the surface asked and
-Xmip Storage did not answer (`FailedJourneyList.Unanswered`), the view says
+cannot list failed Messages (`FailedMessageList.Unlisted`) offers the one
+Message the evidence names as the last that failed
+(`MessageOperation.FailedIn`), and not where the evidence says none wait in
+the queue now (`MessageOperation.FailingIn`). Where the surface asked and
+Xmip Storage did not answer (`FailedMessageList.Unanswered`), the view says
 the `FAILED:` sentence and offers nothing.
 The act goes through `IOperatorSurface.Act` — applied in the node's process,
 or over a snapshot left where its publication says its publisher takes
-orders — and is recorded in the host's audit as `journey.retry` or
-`journey.dismiss`. An Observer is shown the Journeys and no act.
+orders — and is recorded in the host's audit as `message.retry` or
+`message.dismiss`. An Observer is shown the Messages and no act.
 
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
