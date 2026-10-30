@@ -3,30 +3,30 @@
 @inject RoleContext Role
 @inject ProgramAudit Audited
 
-@* Every Journey that failed at a Send Port, at the Port's own record, with
+@* Every Message that failed at a Send Port, at the Port's own record, with
    Retry and Dismiss on each (runtime-model.md section 13; ADR-0013): the
-   list the surface reads (IOperatorSurface.FailedJourneys) — from Xmip
+   list the surface reads (IOperatorSurface.FailedMessages) — from Xmip
    Storage a page at a time where the node runs in this process, the oldest
-   hundred its publication carries otherwise — each Journey with its place
+   hundred its publication carries otherwise — each Message with its place
    and why, and how many wait at the Port. A page the node read empty with a
-   next place is followed until it finds failed Journeys or the queue's end:
-   the place, not the Journeys, says whether more remain. A surface that
+   next place is followed until it finds failed Messages or the queue's end:
+   the place, not the Messages, says whether more remain. A surface that
    answered is taken at its word, an empty answer included; only a surface
-   that cannot list failed Journeys falls back to the one Journey the Port's
-   evidence names (JourneyOperation.FailedIn), and not where the evidence
-   says none wait in the queue now (JourneyOperation.FailingIn). A surface
+   that cannot list failed Messages falls back to the one Message the Port's
+   evidence names (MessageOperation.FailedIn), and not where the evidence
+   says none wait in the queue now (MessageOperation.FailingIn). A surface
    that asked and was not answered — Xmip Storage did not answer — says so
    in its words and offers nothing. An Operator
-   retries at once, and dismisses only once the view has named the Journey
-   and said it leaves the queue for good; an Observer is shown the Journeys
+   retries at once, and dismisses only once the view has named the Message
+   and said it leaves the queue for good; an Observer is shown the Messages
    and no act. What the last act came to stays beside the list while the
    publications tick under it. *@
 @if (Shown.Count > 0 || Next is not null || Answer.Length > 0 || Unanswered.Length > 0)
 {
-    <div class="journey-acts">
+    <div class="message-acts">
         @if (Unanswered.Length > 0)
         {
-            <span class="subs-said refused journey-unanswered">@Unanswered</span>
+            <span class="subs-said refused message-unanswered">@Unanswered</span>
         }
         @if (Shown.Count > 0)
         {
@@ -34,16 +34,16 @@
         }
         @if (Blocked)
         {
-            <span class="subs-act-said journey-blocked">@BlockedSaid</span>
+            <span class="subs-act-said message-blocked">@BlockedSaid</span>
         }
-        <ul class="journey-list">
-            @foreach (FailedJourneyRecord failed in Shown)
+        <ul class="message-list">
+            @foreach (FailedMessageRecord failed in Shown)
             {
-                <li class="journey-failed" data-journey="@failed.Journey">
+                <li class="message-failed" data-journey="@failed.Journey">
                     @if (Role.MayOperate())
                     {
                         <button class="act" title="@RetrySaid"
-                                @onclick="() => Act(failed.Journey, JourneyAct.Retry)">
+                                @onclick="() => Act(failed.Journey, MessageAct.Retry)">
                             Retry
                         </button>
                         <button class="act" title="@DismissSaid"
@@ -51,18 +51,18 @@
                             Dismiss
                         </button>
                     }
-                    <span class="subs-act-said">the Journey @failed.Journey</span>
+                    <span class="subs-act-said">the Message of the Journey @failed.Journey</span>
                     @if (failed.Reason.Length > 0)
                     {
                         <span class="subs-act-said"> — @failed.Reason</span>
                     }
                     @if (Confirming == failed.Journey && Role.MayOperate())
                     {
-                        <span class="journey-confirm" role="alertdialog"
-                              aria-label="Dismiss the Journey @failed.Journey">
+                        <span class="message-confirm" role="alertdialog"
+                              aria-label="Dismiss the Message of the Journey @failed.Journey">
                             <span class="subs-act-said">@Asked(failed.Journey)</span>
                             <button class="act dismiss-confirm"
-                                    @onclick="() => Act(failed.Journey, JourneyAct.Dismiss)">
+                                    @onclick="() => Act(failed.Journey, MessageAct.Dismiss)">
                                 Dismiss for good
                             </button>
                             <button class="act dismiss-keep" @onclick="() => Confirming = null">
@@ -93,7 +93,7 @@
 
     /// <summary>What a blocked key is, in the words the view says it.</summary>
     public const string BlockedSaid =
-        "BLOCKED: every Journey of its key waits behind the first that failed until it is "
+        "BLOCKED: every Message of its key waits behind the first that failed until it is "
         + "retried or dismissed.";
 
     /// <summary>What a Dismiss does, in the words the view says it.</summary>
@@ -105,7 +105,7 @@
     [Parameter, EditorRequired]
     public IOperatorSurface Surface { get; set; } = default!;
 
-    /// <summary>The Send Port's own record: its scope is where the Journeys
+    /// <summary>The Send Port's own record: its scope is where the Messages
     /// are listed, its evidence names the last that failed.</summary>
     [Parameter, EditorRequired]
     public HealthRecord Record { get; set; } = default!;
@@ -116,15 +116,15 @@
 
     private string Answer { get; set; } = string.Empty;
 
-    // What the surface was told where it asked for the failed Journeys and
+    // What the surface was told where it asked for the failed Messages and
     // Xmip Storage did not answer; empty otherwise.
     private string Unanswered { get; set; } = string.Empty;
 
-    private IReadOnlyList<FailedJourneyRecord> Shown { get; set; } = [];
+    private IReadOnlyList<FailedMessageRecord> Shown { get; set; } = [];
 
     private ulong Count { get; set; }
 
-    // Whether a Journey shown blocks its sequence: said loud (ADR-0024,
+    // Whether a Message shown blocks its sequence: said loud (ADR-0024,
     // amendment 2026-10-27).
     private bool Blocked { get; set; }
 
@@ -137,19 +137,19 @@
     // from the queue's head.
     private string? Paged { get; set; }
 
-    // The Journey whose Dismiss waits for the Operator to confirm it.
+    // The Message whose Dismiss waits for the Operator to confirm it.
     private string? Confirming { get; set; }
 
     private string Counted => Count == 1
-        ? "1 Journey failed in its Send Port's queue"
-        : $"{Count} Journeys failed in its Send Port's queue";
+        ? "1 Message failed in its Send Port's queue"
+        : $"{Count} Messages failed in its Send Port's queue";
 
     /// <summary>What the view asks before it dismisses
     /// <paramref name="journey"/>.</summary>
     public static string Asked(string journey)
     {
-        return $"Dismiss the Journey {journey}? It leaves its Send Port's queue for good: "
-            + "written Dismissed, never sent again.";
+        return $"Dismiss the Message of the Journey {journey}? It leaves its Send Port's queue "
+            + "for good: written Dismissed, never sent again.";
     }
 
     /// <inheritdoc />
@@ -166,12 +166,12 @@
         Read();
     }
 
-    // The page from From of the Journeys that failed at the Port's scope,
+    // The page from From of the Messages that failed at the Port's scope,
     // following each next place past stretches that held none; the one the
     // evidence names only where the surface cannot list them.
     private void Read()
     {
-        FailedJourneyList failed = Surface.FailedJourneys(Record.Scope, From);
+        FailedMessageList failed = Surface.FailedMessages(Record.Scope, From);
 
         Unanswered = failed.Failure;
 
@@ -195,35 +195,35 @@
         ulong at = From;
         ulong? next = NextOf(failed);
 
-        while (!failed.Journeys.Any() && next is { } further && further > at)
+        while (!failed.Messages.Any() && next is { } further && further > at)
         {
             at = further;
-            failed = Surface.FailedJourneys(Record.Scope, at);
+            failed = Surface.FailedMessages(Record.Scope, at);
             next = NextOf(failed);
         }
 
         // A next place that does not move on is the queue's end, not a page.
-        Shown = [.. failed.Journeys];
+        Shown = [.. failed.Messages];
         Count = failed.Ports.Aggregate(0ul, (sum, port) => sum + port.Count);
         Blocked = failed.Ports.Any(port => port.Blocked);
         Next = next > at ? next : null;
     }
 
-    // A surface that cannot list failed Journeys: the one the Port's evidence
+    // A surface that cannot list failed Messages: the one the Port's evidence
     // names as the last that failed, unless the evidence says none wait now.
     private void Fallback()
     {
-        string? named = JourneyOperation.FailedIn(Record.Evidence);
-        bool waiting = JourneyOperation.FailingIn(Record.Evidence) is not 0;
+        string? named = MessageOperation.FailedIn(Record.Evidence);
+        bool waiting = MessageOperation.FailingIn(Record.Evidence) is not 0;
 
         Shown = named is not null && waiting
-            ? [new FailedJourneyRecord(string.Empty, string.Empty, named, 0, string.Empty)]
+            ? [new FailedMessageRecord(string.Empty, string.Empty, named, 0, string.Empty)]
             : [];
         Count = (ulong)Shown.Count;
         Next = null;
     }
 
-    private static ulong? NextOf(FailedJourneyList failed)
+    private static ulong? NextOf(FailedMessageList failed)
     {
         return failed.Ports.Select(port => port.Next).FirstOrDefault(next => next is not null);
     }
@@ -237,15 +237,15 @@
     // An act, through the one gate as the proven caller (ADR-0009, amendment
     // 2026-10-06), which refuses one whose role may not act; recorded in this
     // host's audit with what came of it (ADR-0062) under the action
-    // observe::Noun::Journey gives it — journey.retry or journey.dismiss — and
+    // observe::Noun::Message gives it — message.retry or message.dismiss — and
     // said. An Observer is shown no act.
-    private async Task Act(string journey, JourneyAct act)
+    private async Task Act(string journey, MessageAct act)
     {
-        string action = $"{JourneyOperation.Noun}.{JourneyOperation.Word(act)}";
+        string action = $"{MessageOperation.Noun}.{MessageOperation.Word(act)}";
         string who = Role.Who ?? string.Empty;
         Confirming = null;
 
-        JourneyOperation done = new GatedOperator(Surface, Role, Audited)
+        MessageOperation done = new GatedOperator(Surface, Role, Audited)
             .Act(Record.Scope, journey, act, who);
         Audited.Record(
             action,

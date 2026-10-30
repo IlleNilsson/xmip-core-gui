@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// A surface a test composes (ADR-0068, clause 5): the failed Journeys it
+/// A surface a test composes (ADR-0068, clause 5): the failed Messages it
 /// answers are the test's, page by page, or none at all where
 /// <see cref="Listing"/> is null — a surface that cannot list them. Every
 /// act and every watch begun is counted; a watch says its first view and
@@ -13,11 +13,11 @@ namespace Xmip.Gui.Test;
 /// </summary>
 internal sealed class ScriptedSurface : IOperatorSurface
 {
-    /// <summary>What a question for the failed Journeys at a scope, from a
+    /// <summary>What a question for the failed Messages at a scope, from a
     /// place, is answered; null where this surface cannot list them.</summary>
-    public Func<string, ulong, FailedJourneyList>? Listing { get; set; }
+    public Func<string, ulong, FailedMessageList>? Listing { get; set; }
 
-    /// <summary>Every place the failed Journeys were asked from, in order.</summary>
+    /// <summary>Every place the failed Messages were asked from, in order.</summary>
     public List<ulong> Asked { get; } = [];
 
     /// <summary>Every act taken, as <c>act journey</c>.</summary>
@@ -42,19 +42,19 @@ internal sealed class ScriptedSurface : IOperatorSurface
     }
 
     /// <inheritdoc />
-    public FailedJourneyList FailedJourneys(string scope, ulong from = 0, uint most = 0)
+    public FailedMessageList FailedMessages(string scope, ulong from = 0, uint most = 0)
     {
         Asked.Add(from);
 
-        return Listing is { } listing ? listing(scope, from) : FailedJourneyList.Unlisted;
+        return Listing is { } listing ? listing(scope, from) : FailedMessageList.Unlisted;
     }
 
     /// <inheritdoc />
-    public JourneyOperation Act(string scope, string journey, JourneyAct act, string who)
+    public MessageOperation Act(string scope, string journey, MessageAct act, string who)
     {
-        Acts.Add($"{JourneyOperation.Word(act)} {journey}");
+        Acts.Add($"{MessageOperation.Word(act)} {journey}");
 
-        return new JourneyOperation(scope, journey, act, true, "applied");
+        return new MessageOperation(scope, journey, act, true, "applied");
     }
 
     /// <inheritdoc />

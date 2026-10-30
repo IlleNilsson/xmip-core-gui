@@ -17,7 +17,7 @@
 @* What each node's Dead Message Queue keeps (ADR-0052, amendment
    2026-10-01; the owner, the same day): every accepted Message that no
    Subscription matched, kept in the Ledger with its receive context. It is
-   not a dead letter queue: a failed Journey never goes there. Listed per
+   not a dead letter queue: a failed Message never goes there. Listed per
    cluster and node, as every view drills; one opened shows its gate
    verdicts, its promoted properties and every Subscription's decline. The
    drill is in the address: cluster, node, one Message, the pattern and the

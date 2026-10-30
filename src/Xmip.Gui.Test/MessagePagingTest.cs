@@ -7,7 +7,7 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// The failed Journeys at a Send Port, read through a surface the test
+/// The failed Messages at a Send Port, read through a surface the test
 /// composes (<see cref="ScriptedSurface"/>): a page the node read empty with a
 /// next place is followed until failures or the queue's end; a change of Port
 /// starts again from the head; an answer that lists none is taken at its word
@@ -15,7 +15,7 @@ namespace Xmip.Gui.Test;
 /// to the evidence's Journey, and not once the evidence says none wait; and a
 /// Dismiss is taken only once the Operator has confirmed it.
 /// </summary>
-public sealed class JourneyPagingTest : BunitContext, IDisposable
+public sealed class MessagePagingTest : BunitContext, IDisposable
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Node = $"{Names.Scope}/node/{Names.WithRole("sending")}";
@@ -27,7 +27,7 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
 
     private readonly ScriptedSurface _surface = new();
 
-    public JourneyPagingTest()
+    public MessagePagingTest()
     {
         Directory.CreateDirectory(_place);
         Services.AddSingleton(new RoleContext(Role.Operator, "tester"));
@@ -48,7 +48,7 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
             (1_024, [], 2_048),
             (2_048, [("j-late", 2_100)], null));
 
-        IRenderedComponent<JourneyActs> acts = At(Port, "failed in its queue 1");
+        IRenderedComponent<MessageActs> acts = At(Port, "failed in its queue 1");
 
         Assert.Equal(["j-late"], Listed(acts));
         Assert.Equal([0ul, 1_024ul, 2_048ul], _surface.Asked);
@@ -63,7 +63,7 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
             (5, [], 9),
             (9, [("j-2", 12)], null));
 
-        IRenderedComponent<JourneyActs> acts = At(Port, "failed in its queue 2");
+        IRenderedComponent<MessageActs> acts = At(Port, "failed in its queue 2");
         Assert.Equal(["j-1"], Listed(acts));
 
         acts.Find("button.more").Click();
@@ -81,72 +81,73 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
     {
         _surface.Listing = Pages((0, [], null));
 
-        IRenderedComponent<JourneyActs> acts =
-            At(Port, "failed in its queue 1; the Journey j-old failed: refused");
+        IRenderedComponent<MessageActs> acts =
+            At(Port, "failed in its queue 1; the Message of the Journey j-old failed: refused");
 
-        Assert.Empty(acts.FindAll(".journey-acts"));
+        Assert.Empty(acts.FindAll(".message-acts"));
     }
 
     [Fact]
-    public void ASurfaceThatCannotListOffersTheEvidencesJourneyOnlyWhileOneWaits()
+    public void ASurfaceThatCannotListOffersTheEvidencesMessageOnlyWhileOneWaits()
     {
         _surface.Listing = null;
 
         Assert.Equal(
             ["j-old"],
-            Listed(At(Port, "failed in its queue 1; the Journey j-old failed: refused")));
+            Listed(At(
+                Port, "failed in its queue 1; the Message of the Journey j-old failed: refused")));
         Assert.Equal(
             ["j-old"],
-            Listed(At(Port, "sent 1, failed 1; the Journey j-old failed: refused")));
+            Listed(At(Port, "sent 1, failed 1; the Message of the Journey j-old failed: refused")));
         Assert.Empty(
-            At(Port, "failed in its queue 0; the Journey j-old failed: refused")
-                .FindAll(".journey-acts"));
+            At(Port, "failed in its queue 0; the Message of the Journey j-old failed: refused")
+                .FindAll(".message-acts"));
     }
 
     [Fact]
     public void StorageThatDoesNotAnswerIsSaidAndNothingIsOffered()
     {
-        _surface.Listing = (scope, _) => JourneyOperation.Read(
+        _surface.Listing = (scope, _) => MessageOperation.Read(
             scope, () => throw new InvalidOperationException("Xmip Storage is not open"));
 
-        IRenderedComponent<JourneyActs> acts =
-            At(Port, "failed in its queue 1; the Journey j-old failed: refused");
+        IRenderedComponent<MessageActs> acts =
+            At(Port, "failed in its queue 1; the Message of the Journey j-old failed: refused");
 
         Assert.Equal(
-            $"FAILED: the Journeys that failed at {Port} could not be read: "
+            $"FAILED: the Messages that failed at {Port} could not be read: "
                 + "Xmip Storage is not open",
-            acts.Find(".journey-unanswered").TextContent);
+            acts.Find(".message-unanswered").TextContent);
         Assert.Empty(Listed(acts));
         Assert.Empty(acts.FindAll("button"));
     }
 
     [Fact]
-    public void ADismissNamesTheJourneyAndIsTakenOnlyOnceConfirmed()
+    public void ADismissNamesTheMessageAndIsTakenOnlyOnceConfirmed()
     {
         _surface.Listing = Pages((0, [("j-1", 3)], null));
-        IRenderedComponent<JourneyActs> acts = At(Port, "failed in its queue 1");
+        IRenderedComponent<MessageActs> acts = At(Port, "failed in its queue 1");
 
-        acts.FindAll(".journey-failed button")[1].Click();
+        acts.FindAll(".message-failed button")[1].Click();
         Assert.Empty(_surface.Acts);
         Assert.Equal(
-            JourneyActs.Asked("j-1"), acts.Find(".journey-confirm .subs-act-said").TextContent);
-        Assert.Contains("for good", JourneyActs.Asked("j-1"), StringComparison.Ordinal);
+            MessageActs.Asked("j-1"), acts.Find(".message-confirm .subs-act-said").TextContent);
+        Assert.Contains("for good", MessageActs.Asked("j-1"), StringComparison.Ordinal);
 
         acts.Find("button.dismiss-keep").Click();
-        Assert.Empty(acts.FindAll(".journey-confirm"));
+        Assert.Empty(acts.FindAll(".message-confirm"));
         Assert.Empty(_surface.Acts);
 
-        acts.FindAll(".journey-failed button")[1].Click();
+        acts.FindAll(".message-failed button")[1].Click();
         acts.Find("button.dismiss-confirm").Click();
         Assert.Equal(["dismiss j-1"], _surface.Acts);
 
-        acts.FindAll(".journey-failed button")[0].Click();
+        acts.FindAll(".message-failed button")[0].Click();
         Assert.Equal(["dismiss j-1", "retry j-1"], _surface.Acts);
     }
 
-    private IRenderedComponent<JourneyActs> At(string scope, string evidence)
+    private IRenderedComponent<MessageActs> At(string scope, string evidence)
     {
-        return Render<JourneyActs>(parameters => parameters
+        return Render<MessageActs>(parameters => parameters
             .Add(view => view.Surface, _surface)
             .Add(view => view.Record, Record(scope, evidence)));
     }
@@ -156,16 +157,16 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
         return new HealthRecord(scope, HealthState.Fine, 0, evidence, DateTimeOffset.UnixEpoch);
     }
 
-    private static List<string> Listed(IRenderedComponent<JourneyActs> acts)
+    private static List<string> Listed(IRenderedComponent<MessageActs> acts)
     {
         return
         [
-            .. acts.FindAll(".journey-failed").Select(row => row.GetAttribute("data-journey")!),
+            .. acts.FindAll(".message-failed").Select(row => row.GetAttribute("data-journey")!),
         ];
     }
 
     // Each place's page: the Journeys found there and the next place.
-    private static Func<string, ulong, FailedJourneyList> Pages(
+    private static Func<string, ulong, FailedMessageList> Pages(
         params (ulong From, (string Journey, ulong Place)[] Found, ulong? Next)[] pages)
     {
         return (_, from) =>
@@ -173,16 +174,16 @@ public sealed class JourneyPagingTest : BunitContext, IDisposable
             (ulong _, (string Journey, ulong Place)[] found, ulong? next) =
                 pages.Single(page => page.From == from);
 
-            return new FailedJourneyList(
+            return new FailedMessageList(
                 string.Empty,
                 [
-                    new FailedJourneyPort(
+                    new FailedMessagePort(
                         Node,
                         "invoices",
                         (ulong)pages.Sum(page => page.Found.Length),
                         next,
                         [
-                            .. found.Select(failed => new FailedJourneyRecord(
+                            .. found.Select(failed => new FailedMessageRecord(
                                 Node, "invoices", failed.Journey, failed.Place, "refused")),
                         ]),
                 ]);
