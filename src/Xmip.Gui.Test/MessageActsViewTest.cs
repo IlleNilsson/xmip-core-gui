@@ -30,9 +30,9 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
     private const string Second = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0c";
     private const string Named = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0d";
 
-    // The identity the browser's connection proved, which every act is taken
-    // and audited as (ADR-0009, amendment 2026-10-06).
-    private const string Proven = "CN=xmip-operator";
+    // The caller the runtime proved, this process's account, which every act is taken
+    // and audited as (ADR-0009, amendments 2026-10-06 and 2026-11-01).
+    private static readonly string Proven = RoleAssignment.ProcessCaller()?.Name ?? "nobody";
 
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Sender = Names.WithRole("sending");
@@ -87,11 +87,18 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         base.Dispose();
     }
 
-    private IRenderedComponent<Cluster> At(string scope, Role role, string? who = Proven)
+    private IRenderedComponent<Cluster> At(string scope, Role role, bool proven = true)
     {
-        Services.AddSingleton(new RoleContext(role, who));
+        Services.AddSingleton(
+            new RoleContext(role, proven ? RoleAssignment.ProcessCaller() : null));
         Services.GetRequiredService<NavigationManager>().NavigateTo(ScopeLink.Monitor(scope));
         return Render<Cluster>();
+    }
+
+    // A name as a TOML basic string writes it: a backslash escaped.
+    private static string InToml(string name)
+    {
+        return name.Replace("\\", "\\\\", StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<string> Listed(IRenderedComponent<Cluster> page)
@@ -137,17 +144,19 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         Assert.Contains($"\"journey\" = \"{First}\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{Second}\"", audit, StringComparison.Ordinal);
         Assert.Equal(
-            [Proven],
+            [InToml(Proven)],
             WhoSaid().Matches(audit).Select(said => said.Groups[1].Value).Distinct());
         Assert.All(
             Directory.GetFiles(Orders, "*.toml", SearchOption.AllDirectories),
-            order => Assert.Contains(Proven, File.ReadAllText(order), StringComparison.Ordinal));
+            order => Assert.Contains(
+                Proven, File.ReadAllText(order).Replace("\\\\", "\\", StringComparison.Ordinal),
+                StringComparison.Ordinal));
     }
 
     [Fact]
     public void ACallerNothingProvedIsShownNoActAndTheGateRefusesOneThatArrives()
     {
-        IRenderedComponent<Cluster> page = At(Failing, Role.Observer, who: null);
+        IRenderedComponent<Cluster> page = At(Failing, Role.Observer, proven: false);
 
         Assert.Empty(page.FindAll(".message-acts button"));
 

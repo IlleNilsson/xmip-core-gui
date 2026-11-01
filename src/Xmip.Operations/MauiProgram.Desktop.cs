@@ -35,11 +35,13 @@ public static partial class MauiProgram
         ProgramAudit audit = new(Name, ProgramAudit.Stated(builder.Configuration, basePath));
 
         // The role is assigned, never chosen in the UI (ADR-0009): a person
-        // cannot promote themselves. The caller is the operating system user
-        // running the desktop, granted a role by the one rule both hosts and
-        // the hub take it by (ADR-0009, amendment 2026-10-06).
+        // cannot promote themselves. The caller is the account running the
+        // desktop, as the runtime read it from the operating system and its
+        // gate proved it — never the environment's word — held for the
+        // process's life, and granted a role by the one rule both hosts and
+        // the hub take it by (ADR-0009, amendments 2026-10-06 and 2026-11-01).
         builder.Services.AddSingleton(
-            RoleAssignment.From(builder.Configuration).For(GatedOperator.HostUser));
+            RoleAssignment.From(builder.Configuration).For(RoleAssignment.ProcessCaller()));
 
         // The cluster's xmip.toml the Configure page edits — the one file
         // anyone edits (ADR-0031, amendment 2026-10-05) — where each node's

@@ -27,7 +27,7 @@ public sealed class TopologySelectionTest : BunitContext, IDisposable
         _snapshot = Path.Combine(_place, "cluster.toml");
         File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml"), _snapshot);
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(_snapshot)));
-        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
     }
 
     void IDisposable.Dispose()

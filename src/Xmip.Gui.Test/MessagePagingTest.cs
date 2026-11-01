@@ -30,7 +30,7 @@ public sealed class MessagePagingTest : BunitContext, IDisposable
     public MessagePagingTest()
     {
         Directory.CreateDirectory(_place);
-        Services.AddSingleton(new RoleContext(Role.Operator, "tester"));
+        Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
     }
 

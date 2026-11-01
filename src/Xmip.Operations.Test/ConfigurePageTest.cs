@@ -31,7 +31,7 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
             new ProgramAudit("xmip-operations", Path.Combine(_directory, "audit")),
             new SliceDelivery(
                 _path, Path.Combine(_directory, "slices"), Estate.Cluster.Nodes[0])));
-        Services.AddSingleton(new RoleContext(Role.Operator, "tester"));
+        Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
     }
 
     private NavigationManager Nav => Services.GetRequiredService<NavigationManager>();
