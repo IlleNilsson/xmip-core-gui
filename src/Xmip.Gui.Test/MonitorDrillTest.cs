@@ -27,7 +27,7 @@ public sealed class MonitorDrillTest : BunitContext
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
-        Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
     }
 
@@ -154,7 +154,7 @@ public sealed class MonitorDrillTest : BunitContext
             """);
         using BunitContext own = new();
         own.Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(path)));
-        own.Services.AddSingleton(new RoleContext(Role.Observer, "tester"));
+        own.Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         own.Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
         own.Services.GetRequiredService<NavigationManager>()
             .NavigateTo(ScopeLink.Monitor(location));

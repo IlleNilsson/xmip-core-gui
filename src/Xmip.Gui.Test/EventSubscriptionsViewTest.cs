@@ -69,7 +69,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
 
     private IRenderedComponent<EventSubscriptions> At(string address, Role role)
     {
-        Services.AddSingleton(new RoleContext(role, "tester"));
+        Services.AddSingleton(new RoleContext(role, RoleAssignment.ProcessCaller()));
         Services.GetRequiredService<NavigationManager>().NavigateTo(address);
         return Render<EventSubscriptions>();
     }

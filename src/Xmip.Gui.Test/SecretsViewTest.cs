@@ -26,6 +26,9 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
 
     private static readonly DateTimeOffset Then = new(2026, 10, 30, 12, 5, 0, TimeSpan.Zero);
 
+    // The caller the runtime proved, this process's account: who sets.
+    private static readonly string Tester = RoleAssignment.ProcessCaller()?.Name ?? "nobody";
+
     private readonly string _place =
         Path.Combine(Path.GetTempPath(), $"xmip-gui-secrets-{Guid.NewGuid():N}");
 
@@ -51,7 +54,7 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
 
     private IRenderedComponent<Secrets> At(string address, Role role)
     {
-        Services.AddSingleton(new RoleContext(role, "tester"));
+        Services.AddSingleton(new RoleContext(role, RoleAssignment.ProcessCaller()));
         Services.GetRequiredService<NavigationManager>().NavigateTo(address);
         return Render<Secrets>();
     }
@@ -108,7 +111,7 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
         page.Find("input.secret-set-value").Input(Value);
         page.Find(".secret-set button").Click();
 
-        Assert.Equal([$" partner-x-https password {Value} tester"], _surface.SecretsSet);
+        Assert.Equal([$" partner-x-https password {Value} {Tester}"], _surface.SecretsSet);
         Assert.Equal(["partner-x-https", "partner-x-sftp"], Column(page, "name").Order());
         Assert.Contains(
             "the secret 'partner-x-https', a password, is set",
@@ -140,7 +143,7 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
             InputFileContent.CreateFromText(Pem, "partner-x.key"));
         page.Find(".secret-set button").Click();
 
-        Assert.Equal([$" partner-x-sftp password {Pem} tester"], _surface.SecretsSet);
+        Assert.Equal([$" partner-x-sftp password {Pem} {Tester}"], _surface.SecretsSet);
         Assert.DoesNotContain("BEGIN OPENSSH", page.Markup, StringComparison.Ordinal);
         Assert.DoesNotContain("BEGIN OPENSSH", Audit, StringComparison.Ordinal);
         Assert.True(page.Find(".secret-set button").HasAttribute("disabled"));

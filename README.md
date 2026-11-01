@@ -348,14 +348,18 @@ by one rule, `RoleAssignment` (in `Xmip.Surface`):
 word that is no role is Observer; stated by neither, the directory named by
 `Directory` answers, and with none the role is Observer. The one directory
 built is `tester`, the Playground's fake directory, which allows the user the
-host runs as every role; `Start-XmipOperationWeb` names it for a host over a
-Playground roll. Every act — pause, resume, remove, replay, retry, dismiss —
-from a browser or the desktop passes one gate, `GatedOperator` over the
-runtime's `xmip_act_admitted_v1` — the gate a node's operate listener asks of
-an act from another machine too — as its caller: taken only where the caller's role
-may act, never under a name the caller gives, refused in words otherwise, and
-audited as that caller either way (ADR-0009, amendments 2026-10-03 and
-2026-10-06).
+host runs as — as the runtime read it from the operating system — every role;
+`Start-XmipOperationWeb` names it for a host over a Playground roll. Every
+act — pause, resume, remove, replay, retry, dismiss — from a browser or the
+desktop passes one gate, `GatedOperator` over the runtime's
+`xmip_act_admitted_v1` — the gate a node's operate listener asks of an act
+from another machine too — as its caller, carried as the handle the runtime
+holds it by (`RoleContext.Caller`, a `HeldCaller`): a browser's circuit's own,
+the desktop's the account the runtime proved for this process
+(`RoleAssignment.ProcessCaller`): taken only where the caller's role may act,
+never under a name the caller or the host gives, refused in words otherwise,
+and audited as that caller either way (ADR-0009, amendments 2026-10-03,
+2026-10-06 and 2026-11-01).
 
 It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an

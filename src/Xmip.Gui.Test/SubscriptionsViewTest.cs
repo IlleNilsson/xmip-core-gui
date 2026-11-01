@@ -78,7 +78,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
 
     private IRenderedComponent<Subscriptions> At(string address, Role role)
     {
-        Services.AddSingleton(new RoleContext(role, "tester"));
+        Services.AddSingleton(new RoleContext(role, RoleAssignment.ProcessCaller()));
         Services.GetRequiredService<NavigationManager>().NavigateTo(address);
         return Render<Subscriptions>();
     }
