@@ -7,10 +7,10 @@
     operator boundary, so the desktop and the web cannot disagree.
 
     Windows, Android and iOS (ADR-0014, amendment 2026-10-14: the phone is
-    this host on more targets, not a fifth surface). Each target is built
-    where its platform can be: Android everywhere, Windows on Windows, iOS
-    only on macOS, since Apple's tools run nowhere else — on Windows the iOS
-    target is written and never attempted. On a phone the host follows nodes
+    this host on more targets, not a fifth surface). Only Windows is built
+    for now (the owner, 2026-11-02: *Just build Windows, we can get back to
+    other OS and target*): the Android and iOS targets are written and not
+    attempted, iOS only ever on macOS, where Apple's tools run. On a phone the host follows nodes
     remotely over their operate listener and only observes: what configures
     a cluster (the Configure page, its editing components and
     MauiProgram.Desktop.cs) is compiled for Windows alone, and
@@ -22,9 +22,7 @@
     <!-- Directory.Build.props names one framework for the repository; this
          project names its own, per platform, so the one is cleared. -->
     <TargetFramework></TargetFramework>
-    <TargetFrameworks>net11.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net11.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>net11.0-windows10.0.19041.0</TargetFrameworks>
 
     <OutputType>Exe</OutputType>
     <RootNamespace>Xmip.Operations</RootNamespace>
