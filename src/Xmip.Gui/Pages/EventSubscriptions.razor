@@ -203,7 +203,7 @@
         string who = Role.Who ?? string.Empty;
 
         EventSubscriptionOperation done = new GatedOperator(Surface, Role, Audited)
-            .Act(subscription, act, who);
+            .Act(subscription, act, who, Role.Caller);
         Audited.Record(
             $"event.{word}",
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,

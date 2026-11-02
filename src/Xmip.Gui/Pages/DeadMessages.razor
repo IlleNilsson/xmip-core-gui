@@ -140,7 +140,7 @@
         string who = Role.Who ?? string.Empty;
 
         DeadMessageOperation done = new GatedOperator(Surface, Role, Audited)
-            .Act(message, act, who);
+            .Act(message, act, who, Role.Caller);
         Audited.Record(
             action,
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,

@@ -246,7 +246,7 @@
         Confirming = null;
 
         MessageOperation done = new GatedOperator(Surface, Role, Audited)
-            .Act(Record.Scope, journey, act, who);
+            .Act(Record.Scope, journey, act, who, Role.Caller);
         Audited.Record(
             action,
             done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
