@@ -62,7 +62,8 @@ internal sealed class ScriptedSurface : IOperatorSurface
     }
 
     /// <inheritdoc />
-    public MessageOperation Act(string scope, string journey, MessageAct act, string who)
+    public MessageOperation Act(
+        string scope, string journey, MessageAct act, string who, HeldCaller? caller)
     {
         Acts.Add($"{MessageOperation.Word(act)} {journey}");
 
@@ -70,7 +71,7 @@ internal sealed class ScriptedSurface : IOperatorSurface
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<SecretRecord> Secrets(string node)
+    public IReadOnlyList<SecretRecord> Secrets(string node, HeldCaller? caller)
     {
         Listings.Add(node);
 
@@ -81,7 +82,7 @@ internal sealed class ScriptedSurface : IOperatorSurface
 
     /// <inheritdoc />
     public SecretOperation SetSecret(
-        string node, string name, string kind, string value, string who)
+        string node, string name, string kind, string value, string who, HeldCaller? caller)
     {
         SecretsSet.Add($"{node} {name} {kind} {value} {who}");
 
@@ -107,13 +108,13 @@ internal sealed class ScriptedSurface : IOperatorSurface
     }
 
     /// <inheritdoc />
-    public string PauseScope(string scope, string who)
+    public string PauseScope(string scope, string who, HeldCaller? caller)
     {
         return string.Empty;
     }
 
     /// <inheritdoc />
-    public string ResumeScope(string scope)
+    public string ResumeScope(string scope, HeldCaller? caller)
     {
         return string.Empty;
     }

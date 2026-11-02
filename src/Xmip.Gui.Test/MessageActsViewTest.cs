@@ -164,7 +164,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
                 Services.GetRequiredService<ClusterSurfaces>().First,
                 new RoleContext(Role.Operator, null),
                 Services.GetRequiredService<ProgramAudit>())
-            .Act(Failing, First, MessageAct.Retry, Proven);
+            .Act(Failing, First, MessageAct.Retry, Proven, caller: null);
 
         Assert.False(refused.Applied);
         Assert.StartsWith("REFUSED. Nothing proved", refused.Result, StringComparison.Ordinal);

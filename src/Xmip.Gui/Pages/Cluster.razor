@@ -358,13 +358,13 @@
     // role may not act and audits both (ADR-0009, amendment 2026-10-06).
     private void Pause(string scope)
     {
-        new GatedOperator(Surface, Role, Audited).PauseScope(scope, Role.Who ?? string.Empty);
+        new GatedOperator(Surface, Role, Audited).PauseScope(scope, Role.Who ?? string.Empty, Role.Caller);
         Read();
     }
 
     private void Resume(string scope)
     {
-        new GatedOperator(Surface, Role, Audited).ResumeScope(scope);
+        new GatedOperator(Surface, Role, Audited).ResumeScope(scope, Role.Caller);
         Read();
     }
 
