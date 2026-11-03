@@ -419,8 +419,8 @@
       },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "uaFRda9NjtbJRkdx311eXlAA3n2em7223c1A8d1VWyl+4FL9vkG7y2lpPfBU9HYdj/9KgdRNdn1vFK8ZYCYT/A=="
+        "resolved": "11.0.0-rc.3.26522.148",
+        "contentHash": "JpbybhfTUy17djMYG1YWBLyQI0Sbl6Ob5mMF9tVXcJGqhZ9aSm6ZvLdbRR3ziiktgiUUTuJbATx6bWGqS9Plew=="
       },
       "System.Numerics.Tensors": {
         "type": "Transitive",
@@ -454,8 +454,8 @@
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "[10.0.6, )",
-          "System.Diagnostics.EventLog": "[10.0.0, )",
+          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.*, )",
+          "System.Diagnostics.EventLog": "[11.0.0-rc.3.*, )",
           "Tomlyn.Extensions.Configuration": "[2.0.1, )",
           "Xmip.Abi": "[1.0.0, )"
         }
@@ -494,8 +494,8 @@
       },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "uaFRda9NjtbJRkdx311eXlAA3n2em7223c1A8d1VWyl+4FL9vkG7y2lpPfBU9HYdj/9KgdRNdn1vFK8ZYCYT/A=="
+        "resolved": "11.0.0-rc.3.26522.148",
+        "contentHash": "JpbybhfTUy17djMYG1YWBLyQI0Sbl6Ob5mMF9tVXcJGqhZ9aSm6ZvLdbRR3ziiktgiUUTuJbATx6bWGqS9Plew=="
       }
     }
   }
