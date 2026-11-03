@@ -22,15 +22,22 @@
     <RootNamespace>Xmip.Operations.Test</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- xUnit v3: a test project is its own executable. `dotnet test`
+         drives it through VSTest and xunit.runner.visualstudio, the way
+         the estate's tooling calls it (Test-XmipDotnetModule); xunit.v3 4
+         would otherwise make it a Microsoft.Testing.Platform application,
+         which the .NET 10 and later SDK refuses under VSTest. -->
+    <OutputType>Exe</OutputType>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
 
     <!-- Test classes are public for the runner, not for a reader. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="bunit" Version="2.12.5" />
+    <PackageReference Include="bunit" Version="2.13.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
