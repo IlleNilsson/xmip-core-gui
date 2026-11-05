@@ -50,7 +50,7 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
         base.Dispose();
     }
 
-    private string Audit => File.ReadAllText(Path.Combine(_place, "audit.toml"));
+    private string Audit => File.ReadAllText(Path.Combine(_place, "audit.xmip"));
 
     private IRenderedComponent<Secrets> At(string address, Role role)
     {

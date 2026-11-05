@@ -23,12 +23,12 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     private static readonly string First = Names.Name;
     private static readonly string Receiver = Names.WithRole("receiving");
     private static readonly string Node = $"{Names.Scope}/node/{Receiver}";
-    private static readonly string NodeProgram = $"xmip-playground-{First}-node-{Receiver}";
-    private static readonly string RollProgram = $"xmip-playground-{First}-roll";
+    private static readonly string NodeProgram = $"xmip-essentials-{First}-node-{Receiver}";
+    private static readonly string RollProgram = $"xmip-essentials-{First}-roll";
 
     /// <summary>The second cluster, as its fixture's publication names it.</summary>
     private static readonly string Second = ClusterSurfaces.NameOf(new SnapshotOperator(
-        Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster-c2.toml")));
+        Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster-c2.xmip")));
 
     /// <summary>The machine the records were written on.</summary>
     private static readonly string Host = Environment.MachineName.ToLowerInvariant();
@@ -41,7 +41,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
         string sender = Names.WithRole("sending");
         Directory.CreateDirectory(_directory);
         File.WriteAllText(
-            Path.Combine(_directory, "audit.toml"),
+            Path.Combine(_directory, "audit.xmip"),
             Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
                 Names.Scope, "start", "Begin", "Information", null)
             + Record("02", "2026-09-29T10:00:02.000000000Z", NodeProgram,
@@ -49,12 +49,12 @@ public sealed class AuditViewTest : BunitContext, IDisposable
             + Record("03", "2026-09-29T10:00:03.000000000Z", NodeProgram,
                 Node, "publish", "Failure", "Error", "could not write")
             + Record("04", "2026-09-29T10:00:04.000000000Z",
-                $"xmip-playground-{Second}-node-{sender}",
+                $"xmip-essentials-{Second}-node-{sender}",
                 $"{ScopeTree.Root}{Second}/node/{sender}", "start", "Begin", "Information", null)
             + Record("05", "2026-09-29T10:00:05.000000000Z", "Xmip", null,
                 "Start-XmipTest", "Begin", "Warning", null));
 
-        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
+        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
@@ -123,7 +123,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     {
         // ADR-0070 clause 5, built 2026-10-12: the next append seals an
         // interrupted record, which is in no chain.
-        File.AppendAllText(Path.Combine(_directory, "audit.toml"), "[[record]]\naudit_id = \"0");
+        File.AppendAllText(Path.Combine(_directory, "audit.xmip"), "[[record]]\naudit_id = \"0");
 
         IRenderedComponent<Audit> open = At("/audit?verify=yes");
         Assert.StartsWith("UNFINISHED: ",

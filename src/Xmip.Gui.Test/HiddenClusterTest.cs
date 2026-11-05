@@ -23,7 +23,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
 
     /// <summary>The second cluster, as its fixture's publication names it.</summary>
     private static readonly string Second =
-        ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-c2.toml")));
+        ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-c2.xmip")));
 
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-hidden-{Environment.ProcessId}-{Guid.NewGuid():N}");
@@ -34,7 +34,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
         File.WriteAllText(
-            Path.Combine(_directory, "audit.toml"),
+            Path.Combine(_directory, "audit.xmip"),
             Record("01", $"{ScopeTree.Root}{First}", hidden: false)
             + Record("02", $"{ScopeTree.Root}{Second}", hidden: true));
     }
@@ -53,14 +53,14 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     // The second cluster's fixture, its run declaring itself hidden or not.
     private string Published(bool hidden)
     {
-        string text = File.ReadAllText(Fixture("cluster-c2.toml"));
+        string text = File.ReadAllText(Fixture("cluster-c2.xmip"));
 
         if (hidden)
         {
             text = text.Replace("\n[run]\n", "\n[run]\nhidden = true\n", StringComparison.Ordinal);
         }
 
-        string path = Path.Combine(_directory, $"{Second}-{hidden}.toml");
+        string path = Path.Combine(_directory, $"{Second}-{hidden}.xmip");
         File.WriteAllText(path, text);
 
         return path;
@@ -81,7 +81,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     {
         Services.AddSingleton(ClusterSurfaces.Over(
             [
-                new SnapshotOperator(Fixture("cluster.toml")),
+                new SnapshotOperator(Fixture("cluster.xmip")),
                 new SnapshotOperator(Published(hidden)),
             ]));
     }

@@ -11,7 +11,7 @@
 # machine followed over gRPC at the local endpoint Local names — a named pipe
 # on Windows, a Unix domain socket elsewhere, the name its [operate] local
 # gives (ADR-0014, amendment 2026-10-13) — "snapshot", a file a node or the
-# Playground publishes, or "remote", a node on another machine followed over
+# Essentials publishes, or "remote", a node on another machine followed over
 # gRPC at its operate Address. Chosen here and never guessed from a file in a
 # temp directory. Local left out, the page says no node is named.
 Surface = "local"
@@ -30,9 +30,9 @@ Surface = "local"
 # Role = "observer"
 
 # The directory asked where no role is stated. The one kind built is
-# "tester", the Playground's fake directory: it allows the user this host
+# "tester", the Essentials' fake directory: it allows the user this host
 # runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
-# Start-XmipOperationWeb names it for a host that follows a Playground roll.
+# Start-XmipOperationWeb names it for a host that follows an Essentials roll.
 # A browser is never that user for reaching loopback, so on a web host the
 # tester acts only once a certificate proves them; the desktop host's caller
 # is the user running it.
@@ -42,7 +42,7 @@ Surface = "local"
 # New-XmipCertificate -Operator names it, which the tester directory allows
 # beside the user this host runs as (ADR-0009, amendment 2026-10-21): a
 # browser presenting it acts as the tester. Start-XmipOperationWeb -Tester
-# names it for a host that follows a Playground roll.
+# names it for a host that follows an Essentials roll.
 # Tester = "CN=alice@example.org"
 
 # The runtime's native library, exporting xmip_operate_v1: what every surface
@@ -51,18 +51,18 @@ Surface = "local"
 # XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
-# The file to read when Surface = "snapshot". The Playground writes
-# <cluster>-snapshot.toml, named for the cluster a roll was started as, under
-# .local-work/playground at the estate root; name the same file here. A path
+# The file to read when Surface = "snapshot". The Essentials writes
+# <cluster>-snapshot.xmip, named for the cluster a roll was started as, under
+# .local-work/essentials at the estate root; name the same file here. A path
 # with no file behind it is said so on the page, not silently replaced.
-# Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
+# Snapshot = "D:/Repos/Xmip/.local-work/essentials/C1-snapshot.xmip"
 #
 # A list is one cluster per file, and the three views say which cluster they
 # are on and move between them (ADR-0052, amendment 2026-09-20). Two files
 # publishing one cluster are REFUSED, because a cluster rolls once.
 # Snapshot = [
-#   "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml",
-#   "D:/Repos/Xmip/.local-work/playground/C2-snapshot.toml",
+#   "D:/Repos/Xmip/.local-work/essentials/C1-snapshot.xmip",
+#   "D:/Repos/Xmip/.local-work/essentials/C2-snapshot.xmip",
 # ]
 
 # The node to follow when Surface = "remote", at its operate address,
@@ -87,7 +87,7 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # Where this host's audit records go (ADR-0062): its start and stop, every
 # error it logs — a circuit that dies among them — and every viewer's
-# circuit, as <AuditDirectory>/audit.toml. Unset, the audit capability
+# circuit, as <AuditDirectory>/audit.xmip. Unset, the audit capability
 # decides: XMIP_AUDIT_DIRECTORY, which Start-XmipOperationWeb's session sets
 # to .local-work/audit, else the operating system's log.
 # AuditDirectory = "D:/Repos/Xmip/.local-work/audit"

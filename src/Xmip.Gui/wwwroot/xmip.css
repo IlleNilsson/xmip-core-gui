@@ -445,7 +445,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .locs input.addr { min-width: 16rem; }
 .locs button.del { border-color: var(--red); color: var(--red); padding: 0.2rem 0.5rem; }
 
-/* Configuration editor: the cluster's xmip.toml — its overview, its nodes and
+/* Configuration editor: cluster.xmip — its overview, its nodes and
    its artifacts by kind — and the entry open beside them. */
 .cfg-layout { display: grid; grid-template-columns: 15rem 1fr; align-items: start; }
 .configs { padding: 1.25rem 1rem; border-right: 1px solid var(--line); display: grid; gap: 0.35rem; align-content: start; }

@@ -24,8 +24,8 @@ public sealed class TopologySelectionTest : BunitContext, IDisposable
     public TopologySelectionTest()
     {
         Directory.CreateDirectory(_place);
-        _snapshot = Path.Combine(_place, "cluster.toml");
-        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml"), _snapshot);
+        _snapshot = Path.Combine(_place, "cluster.xmip");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip"), _snapshot);
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(_snapshot)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
     }

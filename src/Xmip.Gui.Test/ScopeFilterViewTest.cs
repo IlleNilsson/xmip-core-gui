@@ -30,7 +30,7 @@ public sealed class ScopeFilterViewTest : BunitContext
 
     public ScopeFilterViewTest()
     {
-        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
+        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));

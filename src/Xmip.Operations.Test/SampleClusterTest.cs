@@ -1,8 +1,8 @@
 namespace Xmip.Operations.Test;
 
 /// <summary>
-/// The sample cluster this repository ships, <c>samples/xmip.toml</c> — the
-/// file the desktop's <c>xmip.gui.toml</c> names — opens as a cluster and
+/// The sample cluster this repository ships, <c>samples/cluster.xmip</c> — the
+/// file the desktop's <c>gui.xmip</c> names — opens as a cluster and
 /// validates in the runtime this estate built. The editing itself is
 /// <c>Xmip.Surface</c>'s and proved in <c>Xmip.Surface.Test</c>.
 /// </summary>
@@ -12,7 +12,7 @@ public sealed class SampleClusterTest
     public void TheSampleOpensAsAClusterAndValidatesInTheRuntime()
     {
         string sample = Path.Combine(
-            Root(), "module", "core", "operation", "gui", "samples", "xmip.toml");
+            Root(), "module", "core", "operation", "gui", "samples", "cluster.xmip");
         ClusterConfiguration cluster = ClusterConfiguration.Open(sample);
 
         Assert.True(cluster.Editable, cluster.Refusal);

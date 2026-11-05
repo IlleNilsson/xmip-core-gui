@@ -28,7 +28,7 @@ public sealed class TwoClustersTest : BunitContext
     public TwoClustersTest()
     {
         ClusterSurfaces surfaces = ClusterSurfaces.Over(
-            [Snapshot("cluster.toml"), Snapshot("cluster-c2.toml")]);
+            [Snapshot("cluster.xmip"), Snapshot("cluster-c2.xmip")]);
         second = surfaces.Clusters.Single(name => name != First);
         Services.AddSingleton(surfaces);
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
@@ -165,7 +165,7 @@ public sealed class TwoClustersTest : BunitContext
     public void AHostWithOneClusterDrawsNoChooserAndWritesTheAddressesItAlwaysWrote()
     {
         using BunitContext alone = new();
-        alone.Services.AddSingleton(ClusterSurfaces.Over(Snapshot("cluster.toml")));
+        alone.Services.AddSingleton(ClusterSurfaces.Over(Snapshot("cluster.xmip")));
         alone.Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         alone.Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
 

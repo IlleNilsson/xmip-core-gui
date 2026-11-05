@@ -20,7 +20,7 @@ public sealed class ThreeViewsTest : BunitContext
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Fixture =
-        Path.Combine(AppContext.BaseDirectory, "Fixture", "snapshot.toml");
+        Path.Combine(AppContext.BaseDirectory, "Fixture", "snapshot.xmip");
     private static readonly HealthRecord[] Records =
         [.. new SnapshotOperator(Fixture).Health(ScopeTree.Root)];
 

@@ -2,7 +2,7 @@ namespace Xmip.Gui.Test;
 
 /// <summary>
 /// The orders a surface left for a node, as <c>observe::Order</c> writes them
-/// — <c>&lt;orders&gt;/&lt;node name&gt;/&lt;nanos&gt;-&lt;sequence&gt;-&lt;act&gt;.toml</c>,
+/// — <c>&lt;orders&gt;/&lt;node name&gt;/&lt;nanos&gt;-&lt;sequence&gt;-&lt;act&gt;.xmip</c>,
 /// one flat table of strings — read oldest first, for a test of the views that
 /// leave them: which noun, which one, and which act.
 /// </summary>
@@ -18,7 +18,7 @@ internal static class OrdersLeft
             ? []
             :
             [
-                .. Directory.GetFiles(place, "*.toml")
+                .. Directory.GetFiles(place, "*.xmip")
                     .Order(StringComparer.Ordinal)
                     .Select(File.ReadAllLines)
                     .Select(lines => $"{Value(lines, "noun")} {Value(lines, "target")} "

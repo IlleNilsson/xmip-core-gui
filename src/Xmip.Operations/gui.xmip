@@ -7,10 +7,10 @@
 [Xmip]
 # Which surface the board reads (ADR-0052 clause 3): "local", a node on this
 # machine followed over gRPC at its local endpoint, "snapshot", a file a node
-# or the Playground publishes, or "remote", a node on another machine followed
+# or the Essentials publishes, or "remote", a node on another machine followed
 # over gRPC at its operate Address (ADR-0014, amendment 2026-10-13). Chosen
 # here and never guessed from a file in a temp directory. The same keys as the
-# web host's xmip.gui.toml. Local left out, the board says no node is named.
+# web host's gui.xmip. Local left out, the board says no node is named.
 Surface = "local"
 # Local = "xmip-node1"
 
@@ -23,11 +23,11 @@ Surface = "local"
 # own target directory.
 # RuntimeLibrary = "<path to xmip_core_runtime.dll>"
 
-# The cluster's xmip.toml the Configure page edits: the one configuration
+# cluster.xmip the Configure page edits: the one configuration
 # anyone edits, a node's own file never (ADR-0031, amendment 2026-10-05).
-# Saving it slices it for every node it declares. Unset, xmip/xmip.toml under
+# Saving it slices it for every node it declares. Unset, xmip/cluster.xmip under
 # the app's data, written on the first save.
-ClusterConfiguration = "module/core/operation/gui/samples/xmip.toml"
+ClusterConfiguration = "module/core/operation/gui/samples/cluster.xmip"
 
 # The node of that cluster configured here: its key under [nodes]. Its slice
 # is written where that node reads it, so saving ships it; when the surface
@@ -38,18 +38,18 @@ ClusterConfiguration = "module/core/operation/gui/samples/xmip.toml"
 # line to plan nothing.
 Node = "edge-01"
 
-# Where each node's slice is written on save, as <node>/xmip-node.toml, the
+# Where each node's slice is written on save, as <node>/node.xmip, the
 # name desired state writes it by. The slice of the Node above is shipped by
 # being written here; another node's is written and said not shipped, since
 # Xmip has no path yet that puts a file on another node. Unset, xmip/slices
 # under the app's data.
 # SliceDirectory = ".local-work/slices"
 
-# The file to read when Surface = "snapshot". The Playground writes
-# <cluster>-snapshot.toml, named for whatever the roll's cluster was called;
+# The file to read when Surface = "snapshot". The Essentials writes
+# <cluster>-snapshot.xmip, named for whatever the roll's cluster was called;
 # name the file yours writes. A path with no file behind it is said so on the
 # page, not silently replaced.
-# Snapshot = "D:/Repos/Xmip/.local-work/playground/C1-snapshot.toml"
+# Snapshot = "D:/Repos/Xmip/.local-work/essentials/C1-snapshot.xmip"
 
 # The node to follow when Surface = "remote", at its operate address,
 # host:port (ADR-0067). gRPC inside Xmip's mutual TLS, always: presenting
@@ -64,7 +64,7 @@ Node = "edge-01"
 # Where this desktop's audit records go (ADR-0062): its start and stop, every
 # save, slice and ship, every refused edit, every validate and plan of a
 # node, and every error it logs, as
-# <AuditDirectory>/audit.toml. Unset, the audit capability decides:
+# <AuditDirectory>/audit.xmip. Unset, the audit capability decides:
 # XMIP_AUDIT_DIRECTORY, else the operating system's log.
 # AuditDirectory = ".local-work/audit"
 
@@ -77,6 +77,6 @@ Node = "edge-01"
 # Role = "operator"
 
 # The directory asked where no role is stated. The one kind built is
-# "tester", the Playground's fake directory: it allows the user this program
+# "tester", the Essentials' fake directory: it allows the user this program
 # runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
 # Directory = "tester"
