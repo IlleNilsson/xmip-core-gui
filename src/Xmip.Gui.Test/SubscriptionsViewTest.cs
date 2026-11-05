@@ -38,7 +38,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     public SubscriptionsViewTest()
     {
         Directory.CreateDirectory(_place);
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.toml");
+        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -64,7 +64,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
             + "application = \"RoundTrip\"\n"
             + $"filter = \"MessageType = '{name}'\"\n"
             + "destination = \"the Send Port 'RoundTripOut'\"\n"
-            + "file = \"applications/round-trip.xmip.toml\"\n"
+            + "file = \"applications/round-trip.xmip\"\n"
             + $"configuration = '''\n{configuration}'''\n"
             + (state == "paused" ? "by = \"ilian\"\n" : string.Empty)
             + $"state = \"{state}\"\npicked_up = {picked}\nheld = {held}\n";
@@ -141,7 +141,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
             $"Subscription edi on {Receiver}", page.Find(".subs-detail h2").TextContent,
             StringComparison.Ordinal);
         Assert.Equal(Edi, page.Find("pre.subs-configuration").TextContent.TrimEnd('\n'));
-        Assert.Equal("applications/round-trip.xmip.toml", page.Find(".subs-file").TextContent);
+        Assert.Equal("applications/round-trip.xmip", page.Find(".subs-file").TextContent);
         Assert.Equal("ilian", page.Find(".subs-by").TextContent);
         Assert.Contains(
             "RoundTrip", page.Find(".subs-fields").TextContent, StringComparison.Ordinal);
@@ -190,7 +190,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
         Assert.Contains("action = \"subscription.pause\"", audit, StringComparison.Ordinal);
         Assert.Contains("action = \"subscription.resume\"", audit, StringComparison.Ordinal);
         Assert.Contains("\"subscription\" = \"structured\"", audit, StringComparison.Ordinal);

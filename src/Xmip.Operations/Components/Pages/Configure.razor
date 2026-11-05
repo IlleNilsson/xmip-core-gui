@@ -6,7 +6,7 @@
 
 <PageTitle>Xmip — Configure</PageTitle>
 
-@* The cluster's xmip.toml, the one file anyone edits (ADR-0031, amendment
+@* cluster.xmip, the one file anyone edits (ADR-0031, amendment
    2026-10-05): an overview of the cluster, drilling down to a node and to
    its artifacts by kind, then to an entry whose values are edited in place.
    Every view, edit and refusal is the runtime's (xmip_operate.h section
@@ -31,7 +31,7 @@
                 @if (name == Runtime.Delivery.Node)
                 {
                     <span class="badge"
-                          title="the Node xmip.gui.toml names: its slice is shipped and planned here; nothing runs it here">configured here</span>
+                          title="the Node gui.xmip names: its slice is shipped and planned here; nothing runs it here">configured here</span>
                 }
             </button>
         }
@@ -112,7 +112,7 @@
         else if (!_cluster.Editable)
         {
             <div class="group">
-                <h2>Not a cluster's xmip.toml</h2>
+                <h2>Not a cluster's cluster.xmip</h2>
                 <p class="empty">@_cluster.Refusal</p>
             </div>
         }

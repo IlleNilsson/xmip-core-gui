@@ -29,7 +29,7 @@
 
     <!-- The surface, its choice and the TOML reader (ADR-0052). Xmip
          configures nothing in JSON, so the template's appsettings files are
-         gone and xmip.gui.toml is read through Xmip.Surface instead. -->
+         gone and gui.xmip is read through Xmip.Surface instead. -->
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
 
     <!-- Where this host binds and how, and who each browser's request
@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="xmip.gui.toml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="gui.xmip" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

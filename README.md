@@ -27,7 +27,7 @@ host reads a node over gRPC at its operate listener — on this machine at its
 local endpoint (`LocalOperator`), on another at its operate address
 (`RemoteOperator`; ADR-0014, amendments 2026-10-12 and 2026-10-13) — or a
 snapshot a node published (`SnapshotOperator`), and which one is stated in
-its `xmip.gui.toml`, never guessed. What each answers — topology, the failed Messages, and whether an
+its `gui.xmip`, never guessed. What each answers — topology, the failed Messages, and whether an
 act applies at once or is submitted as an order — is xmip-core-abi's README,
 *What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
@@ -296,7 +296,7 @@ services, processes, interfaces, ports, protocols and locations. Its animated
 movement represents application semantics — request/response, send/receive,
 publish/consume, streaming, fire-and-forget, sessions and retries — rather than
 decorative packets or an assumed bidirectional flow. The snapshot surface reads
-this model, and a Playground roll publishes it: the cluster, its nodes, the
+this model, and an Essentials roll publishes it: the cluster, its nodes, the
 stages of the message path each node runs — receive, process, send — one
 endpoint per transport beneath a receive or a send stage, and the handoffs
 between the nodes, receive to process to send — every pair the roster
@@ -344,12 +344,12 @@ machine's loopback as from anywhere (ADR-0009, amendment 2026-10-21) — and
 one nothing proved watches and acts on nothing; the desktop's caller is the
 user running it. Both hosts grant a caller a role
 by one rule, `RoleAssignment` (in `Xmip.Surface`):
-`Role` in `xmip.gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
+`Role` in `gui.xmip`, else `XMIP_ROLE`, is every proven caller's, and a
 word that is no role is Observer; stated by neither, the directory named by
 `Directory` answers, and with none the role is Observer. The one directory
-built is `tester`, the Playground's fake directory, which allows the user the
+built is `tester`, the Essentials' fake directory, which allows the user the
 host runs as — as the runtime read it from the operating system — every role;
-`Start-XmipOperationWeb` names it for a host over a Playground roll. Every
+`Start-XmipOperationWeb` names it for a host over an Essentials roll. Every
 act — pause, resume, remove, replay, retry, dismiss — from a browser or the
 desktop passes one gate, `GatedOperator` over the runtime's
 `xmip_act_admitted_v1` — the gate a node's operate listener asks of an act
@@ -365,7 +365,7 @@ It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an
 audit record where it binds it — and any other address in
 `[Kestrel.Endpoints]` is `https://`, presenting the PEM certificate and key
-`xmip.gui.toml` names as `Certificate` and `PrivateKey`. It asks a caller for
+`gui.xmip` names as `Certificate` and `PrivateKey`. It asks a caller for
 a certificate and verifies one presented against `TrustAnchor`, which https
 needs; a browser may decline and reads the pages. Plain http beyond
 loopback, or https with no certificate or no anchors, is refused before the
@@ -374,8 +374,8 @@ host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the one rule in
 `UseSurface(Protection.Tls, …)` binds every https address on the runtime's
 listener (`xmip_operate.h` section 21, `xmip-core-library-tls`), and Kestrel
 serves HTTP/1.1 over what it hands over, never its own HTTPS. Over a
-Playground roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
-under the Playground's authority and `-Tester <person>` names the tester's
+Essentials roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
+under the Essentials' authority and `-Tester <person>` names the tester's
 operator certificate (`Xmip:Tester`).
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.
@@ -388,7 +388,7 @@ Android SDK's debug key (ADR-0014, amendment 2026-10-22); and
 `net11.0-ios` is a target only on macOS — built by the estate's CI on macOS
 for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
 xcframework first), not signed, not run. On a phone it
-reads `Resources/Raw/xmip.gui.toml`, shipped inside the app, follows one
+reads `Resources/Raw/gui.xmip`, shipped inside the app, follows one
 node remotely (`Surface = "remote"`, nothing else) with its certificate
 files under the app's data, and is an Observer: it acts on nothing. Its
 key is made in the phone's keeper and never leaves it — the
@@ -411,11 +411,11 @@ are compiled for Windows alone. The desktop builds for Windows today; .NET MAUI
 is cross-platform: macOS too, and Linux through Avalonia's backend for
 .NET MAUI, a preview (<https://avaloniaui.net/blog/maui-avalonia-preview-1>;
 ADR-0014, amendment 2026-10-19). Same
-screen, same operator boundary, so the two cannot disagree — and the desktop configures: it edits the cluster's `xmip.toml`,
+screen, same operator boundary, so the two cannot disagree — and the desktop configures: it edits `cluster.xmip`,
 slices it for each node on save, and plans the node of it its configuration
 names — validated and its plan published; nothing runs it here.
 
-**The Configure page edits the cluster's `xmip.toml` and nothing else**
+**The Configure page edits `cluster.xmip` and nothing else**
 (ADR-0031, amendment 2026-10-05: *node TOML files shall not be edited, only
 cluster TOML files, the files are sliced / node and distributed*). It opens
 on an overview of the cluster — its shared sections (`[service]`,
@@ -447,11 +447,11 @@ first compares the disk against it: a file another editor saved meanwhile is
 not written over — the save is refused in words, audited, and offers
 **Reload from disk** — the same ground the VS Code designer refuses an edit
 on, by the document's version. A save writes a temporary file of its own
-beside the target (`xmip.toml.<guid>.writing`), flushes it to the device and
+beside the target (`cluster.xmip.<guid>.writing`), flushes it to the device and
 renames it over the file, so a reader never sees half of one and two saves
 never share a temporary file. The comparison, the rename and the delivery of
 every node's slice are one step for every Xmip writer: each holds
-`xmip.toml.lock`, opened exclusively and deleted when closed, from before the
+`cluster.xmip.lock`, opened exclusively and deleted when closed, from before the
 comparison until the last slice is written, so two saves can never both pass
 the check and an older save never delivers its slices over a newer one's; a
 save that finds the lock held is refused in words — *REFUSED: another save
@@ -463,7 +463,7 @@ file, its lock and its comparison (`ClusterConfiguration`), each node's
 slice and where it goes (`SliceDelivery`, `NodeDelivery`), the whole-file
 write and the audited Validate, Save and Plan (`RuntimeCommands`) are
 `Xmip.Surface`'s, and so is the rule that reads `ClusterConfiguration`,
-`Node` and `SliceDirectory` from `xmip.gui.toml` (`SliceDelivery.From`).
+`Node` and `SliceDirectory` from `gui.xmip` (`SliceDelivery.From`).
 Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
 `RuntimeDesign` (`RuntimeRules.Design`) and read in `Xmip.Surface` as
@@ -483,7 +483,7 @@ cluster TOML file is sliced into node TOML files and shipped to each node on
 save*). Save writes the cluster's file whole, has the runtime judge what is
 on disk, then slices it for each node it declares through the one slicing,
 `xmip_cluster_slices_v1` (`configure::slice`), and writes each slice as
-`<SliceDirectory>/<node>/xmip-node.toml`, the name desired state writes it
+`<SliceDirectory>/<node>/node.xmip`, the name desired state writes it
 by — whole, through a temporary file of its own beside it, like the
 cluster's file. Before it delivers, a save confirms the file on disk still
 holds exactly the text it wrote; where a writer outside Xmip's lock replaced
@@ -519,7 +519,7 @@ over each other's temporary file and leave its slice whole; a delivery whose
 cluster text was replaced since delivers nothing; a plan while a save holds
 the file is refused and delivers nothing; and every save, slice, ship, refused edit and
 plan lands in the audit. `src/Xmip.Operations.Test` holds what is the
-desktop's own: the sample cluster, `samples/xmip.toml`, opens and validates
+desktop's own: the sample cluster, `samples/cluster.xmip`, opens and validates
 (`SampleClusterTest`), and `ConfigurePageTest` renders the page with bUnit,
 compiling its Razor components where they live: leaving with edits is held
 and Stay keeps them, Discard and leave drops them, Save and leave writes them, leaving with nothing
@@ -527,7 +527,7 @@ changed is not held, Discard changes is offered only while there are edits,
 a stale save offers a reload, the node is planned and never said to start,
 and every control has its accessible name.
 
-Configuration is each host's `xmip.gui.toml`, with the same keys under
+Configuration is each host's `gui.xmip`, with the same keys under
 `[Xmip]`: `Surface = "local" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Local = <endpoint>`,
 a node's local endpoint on this machine, when the surface is local — left
@@ -535,8 +535,8 @@ out, the page says no node is named — `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
 the page — `Address = <host:port>`, a node's operate address, when the surface
 is remote, `Role`, and, on the
-desktop only, `ClusterConfiguration` (the cluster's `xmip.toml`, else
-`xmip/xmip.toml` under the app's data), `Node` (the node of it configured
+desktop only, `ClusterConfiguration` (`cluster.xmip`, else
+`xmip/cluster.xmip` under the app's data), `Node` (the node of it configured
 here, planned only by Plan; none when unset) and `SliceDirectory` (where each node's slice is
 written, else `xmip/slices` under the app's data). A remote surface follows a
 node over gRPC to its operate listener, told when its publication advances
@@ -552,7 +552,7 @@ because Xmip configures nothing in JSON anywhere — the web host's default
 Both hosts audit through `xmip-core-audit` (ADR-0062), through
 `Xmip.Surface`'s `ProgramAudit`, as programs `xmip-gui-web` and
 `xmip-operations`, into the directory `[Xmip] AuditDirectory` names in
-`xmip.gui.toml`, else the one `XMIP_AUDIT_DIRECTORY` names, else the
+`gui.xmip`, else the one `XMIP_AUDIT_DIRECTORY` names, else the
 operating system's log. Each records its start and stop, every exception
 nothing handled, and — through `Xmip.Gui`'s `AuditLoggerProvider`, added to
 each host's logging — every error the host logs, with the exception, the
@@ -560,7 +560,7 @@ category and the event. A Blazor circuit that dies, which the browser shows
 as *An unhandled error has occurred*, is logged by the framework at Error and
 so is a record; the web host's `AuditCircuitHandler` records who was
 connected — each circuit opened, its connection lost and regained, closed. The
-desktop records each save of the cluster's `xmip.toml`, each node's slice and
+desktop records each save of `cluster.xmip`, each node's slice and
 its ship, every edit the runtime refused, and each validate and plan of a
 node, with what the runtime answered. A web host that cannot start records why, and when the
 runtime's library cannot be loaded at all the host writes one entry to the

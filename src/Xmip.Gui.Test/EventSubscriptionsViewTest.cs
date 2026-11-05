@@ -34,7 +34,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
     public EventSubscriptionsViewTest()
     {
         Directory.CreateDirectory(_place);
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.toml");
+        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -162,7 +162,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             $"left for {Sender}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
         foreach (string act in new[] { "pause", "resume", "remove" })
         {
             Assert.Contains($"action = \"event.{act}\"", audit, StringComparison.Ordinal);

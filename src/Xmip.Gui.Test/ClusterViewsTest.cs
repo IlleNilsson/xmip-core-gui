@@ -35,7 +35,7 @@ public sealed class ClusterViewsTest : BunitContext
 
     public ClusterViewsTest()
     {
-        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.toml");
+        string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
@@ -75,7 +75,7 @@ public sealed class ClusterViewsTest : BunitContext
     [Fact]
     public void AConfigurationRowSaysWhatThePublisherSaysItIs()
     {
-        // The depth alone read a Playground cluster one level off: the
+        // The depth alone read an Essentials cluster one level off: the
         // nodes' rollup branch said node, a node said scope, a stage said
         // receive location. The publisher's topology says what each is.
         IRenderedComponent<Configuration> tree = Render<Configuration>();

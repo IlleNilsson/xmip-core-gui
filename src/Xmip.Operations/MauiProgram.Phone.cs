@@ -13,8 +13,8 @@ namespace Xmip.Operations;
 public static partial class MauiProgram
 {
     /// <summary>The document shipped inside the app
-    /// (<c>Resources/Raw/xmip.gui.toml</c>).</summary>
-    private const string Document = "xmip.gui.toml";
+    /// (<c>Resources/Raw/gui.xmip</c>).</summary>
+    private const string Document = "gui.xmip";
 
     private static partial ProgramAudit Platform(MauiAppBuilder builder)
     {
