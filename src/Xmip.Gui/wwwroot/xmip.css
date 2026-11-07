@@ -533,6 +533,19 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node.active .node-pulse {
     animation: topology-pulse calc(2.6s - var(--activity) * 1.6s) ease-out infinite;
 }
+/* How busy a node is, in tenths, by class: the Operation Web's content
+   security policy refuses an inline style. */
+.topology-node.activity-0 { --activity: 0; }
+.topology-node.activity-1 { --activity: 0.1; }
+.topology-node.activity-2 { --activity: 0.2; }
+.topology-node.activity-3 { --activity: 0.3; }
+.topology-node.activity-4 { --activity: 0.4; }
+.topology-node.activity-5 { --activity: 0.5; }
+.topology-node.activity-6 { --activity: 0.6; }
+.topology-node.activity-7 { --activity: 0.7; }
+.topology-node.activity-8 { --activity: 0.8; }
+.topology-node.activity-9 { --activity: 0.9; }
+.topology-node.activity-10 { --activity: 1; }
 @keyframes topology-pulse {
     0% { r: 34px; opacity: calc(0.12 + var(--activity) * 0.28); }
     100% { r: 58px; opacity: 0; }

@@ -91,8 +91,7 @@
                it, else its configuration. *@
             <a class="topology-node-link" href="@Drill(node)">
             <g class="@NodeClass(node)"
-               transform="@Transform(placed)"
-               style="@NodeStyle(node)">
+               transform="@Transform(placed)">
                 <title>@Title(node)</title>
                 <circle class="node-pulse" r="42" />
                 <rect class="node-body" x="-64" y="-34" width="128" height="68" rx="12" />
@@ -382,6 +381,7 @@
     private string NodeClass(TopologyNode node) =>
         $"topology-node {English.Word(node.Kind)} {MoodClass.Of(node.State)} {English.Word(node.Origin)}"
         + (node.Activity > 0.05 ? " active" : "")
+        + $" activity-{Step(node.Activity)}"
         + (node.Id == SelectedId ? " selected" : "");
 
     private static string Title(TopologyNode node) =>
@@ -390,13 +390,10 @@
     private static string Transform(Spot node) =>
         FormattableString.Invariant($"translate({node.X:0.##} {node.Y:0.##})");
 
-    private static string NodeStyle(TopologyNode node)
-    {
-        double activity = Math.Clamp(node.Activity, 0D, 1D);
-        double load = Math.Clamp(node.Load, 0D, 1D);
-
-        return FormattableString.Invariant($"--activity:{activity:0.###};--load:{load:0.###}");
-    }
+    // How busy a node is, in tenths: a class xmip.css gives its --activity by,
+    // never an inline style, which the Operation Web's policy refuses.
+    private static int Step(double activity) =>
+        (int)Math.Round(Math.Clamp(activity, 0D, 1D) * 10D, MidpointRounding.AwayFromZero);
 
     private static double LoadWidth(TopologyNode node) =>
         96D * Math.Clamp(node.Load, 0D, 1D);

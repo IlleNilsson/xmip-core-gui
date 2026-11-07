@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
-using Xmip.Surface;
 
 namespace Xmip.Operations;
 

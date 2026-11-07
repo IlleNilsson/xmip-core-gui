@@ -33,3 +33,15 @@ csharp_style_var_for_built_in_types = false:suggestion
 csharp_prefer_braces = true:error
 dotnet_style_require_accessibility_modifiers = always:error
 dotnet_diagnostic.CA1416.severity = error
+
+# A discarded result is the intent (fluent builders, Utf8JsonWriter); `_ =` on each is noise.
+dotnet_diagnostic.IDE0058.severity = none
+# The estate's methods are block-bodied.
+dotnet_diagnostic.IDE0022.severity = none
+# The estate's local functions are block-bodied.
+dotnet_diagnostic.IDE0061.severity = none
+
+# MAUI compiles Platforms/<system> into the app's own namespace; the folder
+# says which system builds the file, not where its type lives.
+[**/Platforms/**.cs]
+dotnet_diagnostic.IDE0130.severity = none
