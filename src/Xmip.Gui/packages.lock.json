@@ -4,7 +4,7 @@
     "net11.0": {
       "Microsoft.AspNetCore.Components.Web": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.3.*, )",
+        "requested": "[11.0.0-rc.3.26522.148, )",
         "resolved": "11.0.0-rc.3.26522.148",
         "contentHash": "JTN1KKCFHcA1KNkbYw4KO1rF3wRaUYAZ2H4qDH2/FjKffbF55q3wCB21uvQ2OSABZc0GiiB5LpEBvG1X4NedgA==",
         "dependencies": {
@@ -151,8 +151,8 @@
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.*, )",
-          "System.Diagnostics.EventLog": "[11.0.0-rc.3.*, )",
+          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.26522.148, )",
+          "System.Diagnostics.EventLog": "[11.0.0-rc.3.26522.148, )",
           "Tomlyn.Extensions.Configuration": "[2.0.1, )",
           "Xmip.Abi": "[1.0.0, )"
         }
