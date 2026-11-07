@@ -25,11 +25,6 @@
          told so, and that is the point. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- NETSDK1057 says .NET 11 is a preview. Known and chosen; ADR-0021
-         keeps Xmip on current platforms. Left as a warning rather than
-         suppressed, so it stops being ignorable when 11 goes stable. -->
-    <NoWarn>$(NoWarn)</NoWarn>
-
     <!-- An operator surface reports identifiers, status codes and module
          names. None of that is locale-dependent, and pulling ICU in for it
          costs about 30 MB in a self-contained build. -->
