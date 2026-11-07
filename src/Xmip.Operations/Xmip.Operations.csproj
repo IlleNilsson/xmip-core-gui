@@ -65,6 +65,13 @@
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
+  <!-- Every page and keeper speaks to the runtime through Xmip.Surface; the
+       test links the platform keepers and says the same, so one global using
+       serves both and neither warns about the other's. -->
+  <ItemGroup>
+    <Using Include="Xmip.Surface" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- The app icon is just the X on white; the wordmark is for the web
          header, not a tiny icon. The splash is the same X on the same white:

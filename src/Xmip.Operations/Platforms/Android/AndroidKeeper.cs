@@ -3,7 +3,6 @@ using Signature = Java.Security.Signature;
 using Android.Security.Keystore;
 using Java.Security;
 using Java.Security.Spec;
-using Xmip.Surface;
 
 namespace Xmip.Operations;
 

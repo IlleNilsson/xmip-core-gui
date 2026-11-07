@@ -373,7 +373,14 @@ host listens (`SurfaceBinding` in `Xmip.Surface.Relay`, over the one rule in
 `Xmip.Surface`'s `SecureSurface`). The TLS is Xmip's own since 2026-10-21:
 `UseSurface(Protection.Tls, …)` binds every https address on the runtime's
 listener (`xmip_operate.h` section 21, `xmip-core-library-tls`), and Kestrel
-serves HTTP/1.1 over what it hands over, never its own HTTPS. Over a
+serves HTTP/1.1 over what it hands over, never its own HTTPS; there is no
+HTTPS redirection, since Kestrel names those addresses `http://` and the
+plain one left is loopback's. Every response carries a strict content
+security policy with a nonce of its own (`UseXmipContentSecurity`,
+`ContentSecurity` in `Xmip.Surface.Relay`): scripts only from the host and
+the import map `App.razor` marks with that nonce, styles only from
+`xmip.css`, never an inline `style=` (the topology's node activity is a
+class), never framed. Over a
 Essentials roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
 under the Essentials' authority and `-Tester <person>` names the tester's
 operator certificate (`Xmip:Tester`).

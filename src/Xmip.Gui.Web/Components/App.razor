@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Http
+@using Xmip.Surface.Relay
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -10,7 +13,9 @@
     @* One stylesheet, the shared library's; this host has no scoped CSS of
        its own, the template's went (ADR-0052 clause 6). *@
     <link rel="stylesheet" href="@Assets["_content/Xmip.Gui/xmip.css"]" />
-    <ImportMap />
+    @* The one inline script, carrying this response's nonce: the content
+       security policy runs no other (ContentSecurity, Xmip.Surface.Relay). *@
+    <ImportMap nonce="@ContentSecurity.Nonce(HttpContext)" />
     <HeadOutlet />
 </head>
 
@@ -25,3 +30,9 @@
 </body>
 
 </html>
+
+@code {
+    // The request this page renders for: its nonce is the policy's.
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+}

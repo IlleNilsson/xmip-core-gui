@@ -3,7 +3,6 @@ using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
-using Xmip.Gui.Components;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Surface;

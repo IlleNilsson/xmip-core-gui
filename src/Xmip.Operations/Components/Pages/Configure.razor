@@ -95,7 +95,7 @@
                     <tbody>
                         @foreach (NodeDelivery delivered in _deliveries)
                         {
-                            <tr class="@delivered.Outcome.ToString().ToLowerInvariant()">
+                            <tr class="@Row(delivered.Outcome)">
                                 <td>@delivered.Node</td>
                                 <td>@delivered.Word</td>
                                 <td>@delivered.Said</td>
@@ -312,6 +312,14 @@
 
     private static string NodeKey(string node) => NodePrefix + node;
 
+    // The row's class, which xmip.css colors it by.
+    private static string Row(NodeDelivery.Standing outcome) => outcome switch
+    {
+        NodeDelivery.Standing.Shipped => "shipped",
+        NodeDelivery.Standing.NotShipped => "notshipped",
+        NodeDelivery.Standing.Refused => "refused",
+    };
+
     private static string KindKey(string kind) => KindPrefix + kind;
 
     private string Sel(string key) => _entry is null && _selection == key ? "selected" : "";
@@ -400,7 +408,8 @@
         _deliveries = saved.Nodes;
         _status = saved.Said;
         _stale = saved.Stale;
-        _ok = saved.Valid && saved.Nodes.All(node => node.Outcome != NodeDelivery.Standing.Refused);
+        _ok = saved.Valid
+            && saved.Nodes.All(node => node.Outcome is not NodeDelivery.Standing.Refused);
     }
 
     // The verdict is decided from the record and the sentence is shown

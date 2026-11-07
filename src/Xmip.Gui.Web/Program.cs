@@ -127,14 +127,22 @@ try
         ProcessDeclaration.PurposeOf(app.Configuration),
         RuntimeLibrary.Find(app.Configuration, basePath));
 
+    // Every response, an error page included, carries the Operation Web's
+    // content security policy and a nonce of its own, which App.razor's
+    // import map carries (ContentSecurity in Xmip.Surface.Relay).
+    app.UseXmipContentSecurity();
+
     if (!app.Environment.IsDevelopment())
     {
         app.UseExceptionHandler("/Error", createScopeForErrors: true);
         app.UseHsts();
     }
 
+    // No HTTPS redirection: Kestrel names every address the runtime's TLS
+    // serves http:// (SecureTransport.Shown), so the middleware never found
+    // an HTTPS port to send a request to and redirected nothing, and the one
+    // plain address it could act on is loopback's, which is plain on purpose.
     app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-    app.UseHttpsRedirection();
 
     // Every request's user is the caller its connection proved — a client
     // certificate, else no one, over loopback as from anywhere — before a page
