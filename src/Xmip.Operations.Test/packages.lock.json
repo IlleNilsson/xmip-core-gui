@@ -422,8 +422,8 @@
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.*, )",
-          "System.Diagnostics.EventLog": "[11.0.0-rc.3.*, )",
+          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.26522.148, )",
+          "System.Diagnostics.EventLog": "[11.0.0-rc.3.26522.148, )",
           "Tomlyn.Extensions.Configuration": "[2.0.1, )",
           "Xmip.Abi": "[1.0.0, )"
         }

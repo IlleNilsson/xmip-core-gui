@@ -15,7 +15,7 @@
       },
       "Microsoft.Extensions.Logging.Debug": {
         "type": "Direct",
-        "requested": "[11.0.0-rc.3.*, )",
+        "requested": "[11.0.0-rc.3.26522.148, )",
         "resolved": "11.0.0-rc.3.26522.148",
         "contentHash": "VvOZ778X5p1yAu91zxSTpehDE8RkMJbCmmfrVUYw6c2Xt0tHxp/9r6ucK7Xg4Hfau5vrF59NmczdBdjDICZPEw==",
         "dependencies": {
@@ -447,15 +447,15 @@
       "xmip.gui": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Web": "[11.0.0-rc.3.*, )",
+          "Microsoft.AspNetCore.Components.Web": "[11.0.0-rc.3.26522.148, )",
           "Xmip.Surface": "[1.0.0, )"
         }
       },
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.*, )",
-          "System.Diagnostics.EventLog": "[11.0.0-rc.3.*, )",
+          "Microsoft.Extensions.Configuration": "[11.0.0-rc.3.26522.148, )",
+          "System.Diagnostics.EventLog": "[11.0.0-rc.3.26522.148, )",
           "Tomlyn.Extensions.Configuration": "[2.0.1, )",
           "Xmip.Abi": "[1.0.0, )"
         }
