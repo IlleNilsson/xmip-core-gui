@@ -65,7 +65,7 @@
     private IReadOnlyDictionary<string, TopologyNode> Drawn { get; set; } =
         new Dictionary<string, TopologyNode>();
 
-    private IReadOnlySet<string> Opens { get; set; } = new HashSet<string>();
+    private HashSet<string> Opens { get; set; } = [];
 
     protected override void Read()
     {
@@ -81,10 +81,13 @@
         Drawn = topology.Nodes
             .GroupBy(node => node.Scope, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-        Opens = topology.Nodes
-            .Where(node => node.ParentId is not null)
-            .Select(node => node.ParentId!)
-            .ToHashSet(StringComparer.Ordinal);
+        Opens =
+        [
+            with(StringComparer.Ordinal),
+            .. topology.Nodes
+                .Where(node => node.ParentId is not null)
+                .Select(node => node.ParentId!),
+        ];
     }
 
     // One level of the tree beneath a scope. Configuration order, not trouble
