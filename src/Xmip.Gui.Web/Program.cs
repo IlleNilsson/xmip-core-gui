@@ -16,18 +16,22 @@ ProgramAudit audit = new(Name);
 
 try
 {
-    // Development unless the environment says otherwise. launchSettings.json used
-    // to set this and it is gone with the rest of the JSON; without it the host
-    // assumes Production, serves the development static-asset manifest as if it
-    // were published, and every script and stylesheet 500s — which the browser
-    // reports as "an unhandled error has occurred". A deployment sets
-    // ASPNETCORE_ENVIRONMENT in its service definition, per registration.rs.
+    // Production unless the environment says otherwise: Development shows a
+    // browser the exception page, stack traces included, and drops HSTS. A
+    // host run from its build output rather than a publish reads its static
+    // assets through the build's manifest, which is what UseStaticWebAssets
+    // turns on; without it every script and stylesheet 500s.
     WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
     {
         Args = args,
         EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? Environments.Development,
+            ?? Environments.Production,
     });
+
+    if (File.Exists(Path.Combine(AppContext.BaseDirectory, $"{Name}.staticwebassets.runtime.json")))
+    {
+        builder.WebHost.UseStaticWebAssets();
+    }
 
     // TOML, and only TOML. The host would read appsettings.json and its
     // environment variant by default; Xmip configures nothing in JSON anywhere,
