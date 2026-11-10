@@ -11,7 +11,7 @@ using Xmip.Surface.Relay;
 const string Name = "xmip-gui-web";
 
 // Audited from the first line: until the configuration is read, where the
-// capability decides; after, where gui.xmip says.
+// capability decides; after, where gui.toml says.
 ProgramAudit audit = new(Name);
 
 try
@@ -35,7 +35,7 @@ try
 
     // TOML, and only TOML. The host would read appsettings.json and its
     // environment variant by default; Xmip configures nothing in JSON anywhere,
-    // so those sources go and gui.xmip takes their place, through the one
+    // so those sources go and gui.toml takes their place, through the one
     // reader every surface uses. Command line and environment variables stay,
     // because an operator overriding one key at launch is not a configuration
     // file.
@@ -53,7 +53,7 @@ try
         }
     }
 
-    TomlDocument.Add(builder.Configuration, "gui.xmip", optional: false);
+    TomlDocument.Add(builder.Configuration, "gui.toml", optional: false);
     builder.Configuration.AddEnvironmentVariables();
     builder.Configuration.AddCommandLine(args);
 
@@ -64,7 +64,7 @@ try
     string basePath = TomlDocument.BasePath(builder.Environment.ContentRootPath);
 
     // Everything this host does and every failure, audited through the audit
-    // capability (ADR-0062): into the directory gui.xmip names, else where
+    // capability (ADR-0062): into the directory gui.toml names, else where
     // the capability decides. Every error the host logs is a record — a circuit
     // that dies, which the browser shows as "an unhandled error has occurred",
     // among them — and so is every exception nothing handled.
@@ -87,7 +87,7 @@ try
     builder.Services.AddSingleton(RoleAssignment.From(builder.Configuration));
     builder.Services.AddXmipProvenCaller();
 
-    // The surfaces every screen reads, chosen in gui.xmip and never guessed
+    // The surfaces every screen reads, chosen in gui.toml and never guessed
     // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
     // path — or, since the amendment of 2026-09-20, one snapshot per cluster, so
     // one host serves two rolls and the views move between them. This host loads
@@ -106,7 +106,7 @@ try
     // Xmip's own traffic is TLS (ADR-0063 clause 1). Every address this host
     // binds beyond this machine is HTTPS in Xmip's own TLS, the runtime's
     // (xmip_operate.h section 21; ADR-0009, amendment 2026-10-21), presenting
-    // the certificate gui.xmip names and asking a caller for one, verified
+    // the certificate gui.toml names and asking a caller for one, verified
     // against its TrustAnchor; plain HTTP beyond loopback is refused here,
     // before anything listens. Loopback is the one exception, and it is said
     // below where it is bound. Kestrel's own HTTPS is never used.

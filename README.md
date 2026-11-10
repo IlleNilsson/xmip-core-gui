@@ -27,7 +27,7 @@ host reads a node over gRPC at its operate listener — on this machine at its
 local endpoint (`LocalOperator`), on another at its operate address
 (`RemoteOperator`; ADR-0014, amendments 2026-10-12 and 2026-10-13) — or a
 snapshot a node published (`SnapshotOperator`), and which one is stated in
-its `gui.xmip`, never guessed. What each answers — topology, the failed Messages, and whether an
+its `gui.toml`, never guessed. What each answers — topology, the failed Messages, and whether an
 act applies at once or is submitted as an order — is xmip-core-abi's README,
 *What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
@@ -344,7 +344,7 @@ machine's loopback as from anywhere (ADR-0009, amendment 2026-10-21) — and
 one nothing proved watches and acts on nothing; the desktop's caller is the
 user running it. Both hosts grant a caller a role
 by one rule, `RoleAssignment` (in `Xmip.Surface`):
-`Role` in `gui.xmip`, else `XMIP_ROLE`, is every proven caller's, and a
+`Role` in `gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
 word that is no role is Observer; stated by neither, the directory named by
 `Directory` answers, and with none the role is Observer. The one directory
 built is `tester`, the Essentials' fake directory, which allows the user the
@@ -365,7 +365,7 @@ It speaks TLS beyond this machine (ADR-0063 clause 1). Plain http is bound on
 loopback only — the one exception, which the host says in its log and as an
 audit record where it binds it — and any other address in
 `[Kestrel.Endpoints]` is `https://`, presenting the PEM certificate and key
-`gui.xmip` names as `Certificate` and `PrivateKey`. It asks a caller for
+`gui.toml` names as `Certificate` and `PrivateKey`. It asks a caller for
 a certificate and verifies one presented against `TrustAnchor`, which https
 needs; a browser may decline and reads the pages. Plain http beyond
 loopback, or https with no certificate or no anchors, is refused before the
@@ -395,7 +395,7 @@ Android SDK's debug key (ADR-0014, amendment 2026-10-22); and
 `net11.0-ios` is a target only on macOS — built by the estate's CI on macOS
 for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
 xcframework first), not signed, not run. On a phone it
-reads `Resources/Raw/gui.xmip`, shipped inside the app, follows one
+reads `Resources/Raw/gui.toml`, shipped inside the app, follows one
 node remotely (`Surface = "remote"`, nothing else) with its certificate
 files under the app's data, and is an Observer: it acts on nothing. Its
 key is made in the phone's keeper and never leaves it — the
@@ -470,7 +470,7 @@ file, its lock and its comparison (`ClusterConfiguration`), each node's
 slice and where it goes (`SliceDelivery`, `NodeDelivery`), the whole-file
 write and the audited Validate, Save and Plan (`RuntimeCommands`) are
 `Xmip.Surface`'s, and so is the rule that reads `ClusterConfiguration`,
-`Node` and `SliceDirectory` from `gui.xmip` (`SliceDelivery.From`).
+`Node` and `SliceDirectory` from `gui.toml` (`SliceDelivery.From`).
 Every view, edit and slice is the
 runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
 `RuntimeDesign` (`RuntimeRules.Design`) and read in `Xmip.Surface` as
@@ -534,7 +534,7 @@ changed is not held, Discard changes is offered only while there are edits,
 a stale save offers a reload, the node is planned and never said to start,
 and every control has its accessible name.
 
-Configuration is each host's `gui.xmip`, with the same keys under
+Configuration is each host's `gui.toml`, with the same keys under
 `[Xmip]`: `Surface = "local" | "snapshot" | "remote"`, `RuntimeLibrary`
 (else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Local = <endpoint>`,
 a node's local endpoint on this machine, when the surface is local — left
@@ -559,7 +559,7 @@ because Xmip configures nothing in JSON anywhere — the web host's default
 Both hosts audit through `xmip-core-audit` (ADR-0062), through
 `Xmip.Surface`'s `ProgramAudit`, as programs `xmip-gui-web` and
 `xmip-operations`, into the directory `[Xmip] AuditDirectory` names in
-`gui.xmip`, else the one `XMIP_AUDIT_DIRECTORY` names, else the
+`gui.toml`, else the one `XMIP_AUDIT_DIRECTORY` names, else the
 operating system's log. Each records its start and stop, every exception
 nothing handled, and — through `Xmip.Gui`'s `AuditLoggerProvider`, added to
 each host's logging — every error the host logs, with the exception, the

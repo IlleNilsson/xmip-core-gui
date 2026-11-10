@@ -162,7 +162,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             $"left for {Sender}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         foreach (string act in new[] { "pause", "resume", "remove" })
         {
             Assert.Contains($"action = \"event.{act}\"", audit, StringComparison.Ordinal);

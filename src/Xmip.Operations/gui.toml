@@ -10,7 +10,7 @@
 # or the Essentials publishes, or "remote", a node on another machine followed
 # over gRPC at its operate Address (ADR-0014, amendment 2026-10-13). Chosen
 # here and never guessed from a file in a temp directory. The same keys as the
-# web host's gui.xmip. Local left out, the board says no node is named.
+# web host's gui.toml. Local left out, the board says no node is named.
 Surface = "local"
 # Local = "xmip-node1"
 
@@ -64,7 +64,7 @@ Node = "edge-01"
 # Where this desktop's audit records go (ADR-0062): its start and stop, every
 # save, slice and ship, every refused edit, every validate and plan of a
 # node, and every error it logs, as
-# <AuditDirectory>/audit.xmip. Unset, the audit capability decides:
+# <AuditDirectory>/audit.toml. Unset, the audit capability decides:
 # XMIP_AUDIT_DIRECTORY, else the operating system's log.
 # AuditDirectory = ".local-work/audit"
 

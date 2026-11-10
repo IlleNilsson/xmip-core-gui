@@ -16,7 +16,7 @@ public static partial class MauiProgram
         string here = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
             ?? AppContext.BaseDirectory;
         TomlDocument.Add(
-            builder.Configuration, Path.Combine(here, "gui.xmip"), optional: true);
+            builder.Configuration, Path.Combine(here, "gui.toml"), optional: true);
 
         // Relative paths in the config resolve by the one rule the web host
         // shares: the estate root in a development build, the app's own
@@ -29,7 +29,7 @@ public static partial class MauiProgram
         // configures and monitors a real node: runtime.
         ProcessDeclaration.Declare(Name, ScopeTree.Root, ProcessDeclaration.Runtime, library);
 
-        // Into the directory gui.xmip names, else where the capability
+        // Into the directory gui.toml names, else where the capability
         // decides (ADR-0062).
         ProgramAudit audit = new(Name, ProgramAudit.Stated(builder.Configuration, basePath));
 
@@ -45,13 +45,13 @@ public static partial class MauiProgram
         // cluster.xmip the Configure page edits — the one file
         // anyone edits (ADR-0031, amendment 2026-10-05) — where each node's
         // slice is written on save, and the node of it configured here:
-        // all three as gui.xmip declares them, never read from a name.
+        // all three as gui.toml declares them, never read from a name.
         SliceDelivery delivery = SliceDelivery.From(
             builder.Configuration,
             basePath,
             Path.Combine(FileSystem.AppDataDirectory, "xmip"));
 
-        // The surfaces every screen reads, chosen in gui.xmip and never
+        // The surfaces every screen reads, chosen in gui.toml and never
         // guessed (ADR-0052 clause 3), by the web host's one rule: one
         // snapshot per cluster where several are named, so the desktop moves
         // between clusters as the web does (the owner, 2026-10-02: "make it so

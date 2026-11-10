@@ -34,7 +34,7 @@ public sealed class AuditLoggerProviderTest
             new InvalidOperationException("the snapshot is gone"),
             (said, _) => said);
 
-        string text = File.ReadAllText(Path.Combine(directory, "audit.xmip"));
+        string text = File.ReadAllText(Path.Combine(directory, "audit.toml"));
         Assert.Contains("program = \"xmip-gui-web\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"error logged\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);

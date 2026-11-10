@@ -41,7 +41,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
         string sender = Names.WithRole("sending");
         Directory.CreateDirectory(_directory);
         File.WriteAllText(
-            Path.Combine(_directory, "audit.xmip"),
+            Path.Combine(_directory, "audit.toml"),
             Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
                 Names.Scope, "start", "Begin", "Information", null)
             + Record("02", "2026-09-29T10:00:02.000000000Z", NodeProgram,
@@ -123,7 +123,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     {
         // ADR-0070 clause 5, built 2026-10-12: the next append seals an
         // interrupted record, which is in no chain.
-        File.AppendAllText(Path.Combine(_directory, "audit.xmip"), "[[record]]\naudit_id = \"0");
+        File.AppendAllText(Path.Combine(_directory, "audit.toml"), "[[record]]\naudit_id = \"0");
 
         IRenderedComponent<Audit> open = At("/audit?verify=yes");
         Assert.StartsWith("UNFINISHED: ",

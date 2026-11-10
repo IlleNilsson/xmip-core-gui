@@ -172,7 +172,7 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
         Assert.Contains(
             $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"dead-message.replay\"", audit, StringComparison.Ordinal);
         Assert.Contains("\"message\" = \"m-2\"", audit, StringComparison.Ordinal);
     }

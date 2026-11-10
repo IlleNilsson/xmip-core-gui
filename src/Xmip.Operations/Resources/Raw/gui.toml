@@ -1,5 +1,5 @@
 # The phone's configuration: the same host as the desktop, on Android and
-# iOS, and the same keys as the desktop's and the web host's gui.xmip
+# iOS, and the same keys as the desktop's and the web host's gui.toml
 # (ADR-0014, amendment 2026-10-14). Shipped inside the app. Relative paths
 # resolve against the app's own data directory.
 
@@ -22,7 +22,7 @@ Surface = "remote"
 Certificate = "operator.pem"
 TrustAnchor = "anchor.pem"
 
-# Where this app's audit records go (ADR-0062), as <AuditDirectory>/audit.xmip.
+# Where this app's audit records go (ADR-0062), as <AuditDirectory>/audit.toml.
 # Unset, audit/ under the app's data.
 # AuditDirectory = "audit"
 
