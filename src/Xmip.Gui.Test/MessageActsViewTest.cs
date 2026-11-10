@@ -138,7 +138,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
             $"left for {Sender}", page.Find(".message-acts .subs-said").TextContent,
             StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"message.retry\"", audit, StringComparison.Ordinal);
         Assert.Contains("action = \"message.dismiss\"", audit, StringComparison.Ordinal);
         Assert.Contains($"\"journey\" = \"{First}\"", audit, StringComparison.Ordinal);
@@ -147,7 +147,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
             [InToml(Proven)],
             WhoSaid().Matches(audit).Select(said => said.Groups[1].Value).Distinct());
         Assert.All(
-            Directory.GetFiles(Orders, "*.xmip", SearchOption.AllDirectories),
+            Directory.GetFiles(Orders, "*.toml", SearchOption.AllDirectories),
             order => Assert.Contains(
                 Proven, File.ReadAllText(order).Replace("\\\\", "\\", StringComparison.Ordinal),
                 StringComparison.Ordinal));

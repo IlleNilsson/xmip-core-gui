@@ -190,7 +190,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
 
-        string audit = File.ReadAllText(Path.Combine(Audited, "audit.xmip"));
+        string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"subscription.pause\"", audit, StringComparison.Ordinal);
         Assert.Contains("action = \"subscription.resume\"", audit, StringComparison.Ordinal);
         Assert.Contains("\"subscription\" = \"structured\"", audit, StringComparison.Ordinal);

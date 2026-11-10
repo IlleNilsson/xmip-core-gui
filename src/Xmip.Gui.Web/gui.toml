@@ -87,7 +87,7 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # Where this host's audit records go (ADR-0062): its start and stop, every
 # error it logs — a circuit that dies among them — and every viewer's
-# circuit, as <AuditDirectory>/audit.xmip. Unset, the audit capability
+# circuit, as <AuditDirectory>/audit.toml. Unset, the audit capability
 # decides: XMIP_AUDIT_DIRECTORY, which Start-XmipOperationWeb's session sets
 # to .local-work/audit, else the operating system's log.
 # AuditDirectory = "D:/Repos/Xmip/.local-work/audit"

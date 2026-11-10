@@ -34,7 +34,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
         File.WriteAllText(
-            Path.Combine(_directory, "audit.xmip"),
+            Path.Combine(_directory, "audit.toml"),
             Record("01", $"{ScopeTree.Root}{First}", hidden: false)
             + Record("02", $"{ScopeTree.Root}{Second}", hidden: true));
     }

@@ -47,7 +47,7 @@ address = "C:/xmip/in/orders"
 name = "billing-out"
 address = "C:/xmip/out/billing"
 
-# The node this desktop starts (gui.xmip's Node): its own values win
+# The node this desktop starts (gui.toml's Node): its own values win
 # over the cluster's.
 
 [nodes.edge-01.service]

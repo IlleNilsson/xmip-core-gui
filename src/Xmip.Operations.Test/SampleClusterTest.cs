@@ -2,7 +2,7 @@ namespace Xmip.Operations.Test;
 
 /// <summary>
 /// The sample cluster this repository ships, <c>samples/cluster.xmip</c> — the
-/// file the desktop's <c>gui.xmip</c> names — opens as a cluster and
+/// file the desktop's <c>gui.toml</c> names — opens as a cluster and
 /// validates in the runtime this estate built. The editing itself is
 /// <c>Xmip.Surface</c>'s and proved in <c>Xmip.Surface.Test</c>.
 /// </summary>
