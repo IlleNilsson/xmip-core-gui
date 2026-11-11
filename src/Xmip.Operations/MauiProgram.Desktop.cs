@@ -51,6 +51,13 @@ public static partial class MauiProgram
             basePath,
             Path.Combine(FileSystem.AppDataDirectory, "xmip"));
 
+        // The same file is what the Reports view's Quests probe, on the node
+        // configured here unless the address names another (ADR-0072,
+        // amendment 2026-11-10), registered by the one method a test hosts
+        // the view by too. The web host registers none, and its view says
+        // where a Quest is probed.
+        Xmip.Gui.Surface.ReportHosting.Add(builder.Services, delivery);
+
         // The surfaces every screen reads, chosen in gui.toml and never
         // guessed (ADR-0052 clause 3), by the web host's one rule: one
         // snapshot per cluster where several are named, so the desktop moves

@@ -1,9 +1,11 @@
 @using Xmip.Gui.Surface
 
-@* Where a subscriptions view's drill stands, written once for both kinds:
-   the view's top, then the cluster and the node the address stands at, then
-   the one opened — each a link that reproduces the view there — and the
-   Monitor at the same scope. *@
+@* Where a drill view's drill stands, written once for every view that
+   drills: the view's top, then the steps that are no scope — the Reports
+   view's Report, its probe and one row (ADR-0072, amendment 2026-11-10) —
+   then the cluster and the node the address stands at, then the one opened —
+   each a link that reproduces the view there — and the Monitor at the same
+   scope. *@
 <nav class="crumbs" aria-label="@($"{Top} drill-down")">
     @foreach ((string label, string href) in Trail)
     {
@@ -39,11 +41,21 @@
     [Parameter]
     public Carry? Carried { get; set; }
 
+    /// <summary>The steps below the top that are no scope, each as its crumb
+    /// says it and links to it.</summary>
+    [Parameter]
+    public IReadOnlyList<(string Label, string Href)> Steps { get; set; } = [];
+
     private IEnumerable<(string Label, string Href)> Trail
     {
         get
         {
             yield return (Top, At(null));
+
+            foreach ((string Label, string Href) step in Steps)
+            {
+                yield return step;
+            }
 
             if (Location is not { Length: > 0 } location)
             {

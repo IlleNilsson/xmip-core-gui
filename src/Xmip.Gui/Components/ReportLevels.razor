@@ -1,0 +1,96 @@
+@using System.Globalization
+
+@* What a Quest probed, at the level the address names (ADR-0072 and its
+   amendment 2026-11-10): what was probed, on which node, how long it took,
+   and its tally; then a row per requirement, each with its state and
+   citation and each a link to itself in full; or one requirement in full —
+   what was found, what is behind it and the actions that close it. Every
+   state, kind and word is the runtime's — each state of the tally and what
+   a row is called included — and a state is a word and no mood, so nothing
+   is painted by it; nothing here says compliant (ADR-0072 clause 8). What a
+   Quest does not answer is left out, never shown as nothing found. A probe
+   reads and changes nothing, and says so. *@
+<article class="subs-detail report-probed">
+    <h2>
+        @(Probed.Title.Length > 0 ? Probed.Title : Probed.Report)
+        <small>probed in @Milliseconds ms · nothing changed</small>
+    </h2>
+    <dl class="subs-fields report-tally">
+        <dt>node</dt><dd>@Probed.Node</dd>
+        @if (Entry.Parameter is { } parameter && Probed.Parameter is { } choice)
+        {
+            <dt>@parameter.Name</dt><dd>@choice</dd>
+        }
+        @foreach (ReportCount count in Probed.Tally)
+        {
+            <dt class="report-count">@count.State</dt><dd>@count.Count</dd>
+        }
+    </dl>
+</article>
+
+@if (Probed.Requirement is { } one)
+{
+    <article class="subs-detail report-requirement">
+        <h2>@one.Name <small>@one.State</small></h2>
+        <dl class="subs-fields">
+            <dt>citation</dt><dd>@one.Citation</dd>
+            <dt>state</dt><dd class="report-state">@one.State</dd>
+            <dt>found</dt><dd class="report-says">@one.Says</dd>
+        </dl>
+        @if (one.Behind.Count > 0)
+        {
+            <h3>behind it</h3>
+            <ul class="report-said report-behind">
+                @foreach (ReportBehind behind in one.Behind)
+                {
+                    <li>@behind</li>
+                }
+            </ul>
+        }
+        @if (one.Actions.Count > 0)
+        {
+            <h3>actions</h3>
+            <ul class="report-said report-actions">
+                @foreach (ReportAction action in one.Actions)
+                {
+                    <li>@action</li>
+                }
+            </ul>
+        }
+    </article>
+}
+else if (Probed.Rows.Count > 0)
+{
+    <section class="subs-records report-rows" aria-label="@Probed.Row">
+        <div class="subs-row subs-head" role="row">
+            <span role="columnheader">state</span>
+            <span role="columnheader">@Probed.Row</span>
+            <span role="columnheader">citation</span>
+        </div>
+        @foreach (ReportRow row in Probed.Rows)
+        {
+            <div class="subs-row report-row" role="row">
+                <span class="report-state">@row.State</span>
+                <a class="report-row-name" href="@Link(row.Name)">@row.Name</a>
+                <span class="report-citation" title="@row.Citation">@row.Citation</span>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    /// <summary>The Report's entry: what its parameter is called.</summary>
+    [Parameter, EditorRequired]
+    public ReportEntry Entry { get; set; } = default!;
+
+    /// <summary>What its Quest probed and found.</summary>
+    [Parameter, EditorRequired]
+    public ReportProbed Probed { get; set; } = default!;
+
+    /// <summary>The address of one row, by its name, in full.</summary>
+    [Parameter, EditorRequired]
+    public Func<string, string> Link { get; set; } = _ => string.Empty;
+
+    private string Milliseconds =>
+        Probed.TookMilliseconds.ToString(CultureInfo.InvariantCulture);
+}

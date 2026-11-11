@@ -527,14 +527,17 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node .node-load { fill: var(--green); }
 .topology-node:is(.stressed, .exhausted, .done) .node-load { fill: var(--mood); }
 .topology-node .node-state { fill: var(--mood); }
-/* Movement is the brand's green; a mood, when there is one, overrides it on
-   the line and the particle (done red, stressed yellow) as everywhere else. */
+/* A node's ring is the brand's green and never a mood, and it pulses as fast
+   as what moved through it, still where nothing did (ADR-0052, amendment
+   2026-11-10). A line's and a pulse's colors are said at the link rules
+   below: pattern, origin and health, each a channel of its own. */
 .topology-node .node-pulse { fill: none; stroke: var(--brand); opacity: 0; pointer-events: none; }
 .topology-node.active .node-pulse {
     animation: topology-pulse calc(2.6s - var(--activity) * 1.6s) ease-out infinite;
 }
-/* How busy a node is, in tenths, by class: the Operation Web's content
-   security policy refuses an inline style. */
+/* How much moved through a node, in the GUI's ten bands (Motion.Band), by
+   class: the Operation Web's content security policy refuses an inline
+   style. */
 .topology-node.activity-0 { --activity: 0; }
 .topology-node.activity-1 { --activity: 0.1; }
 .topology-node.activity-2 { --activity: 0.2; }
@@ -609,11 +612,32 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link .link-hit:focus { outline: none; }
 .topology-link .link-hit:focus-visible { stroke: var(--brand); stroke-opacity: 0.35; }
 .topology-traffic li.configured .figure { color: var(--muted); font-style: italic; }
-.topology-link .flow-particle { fill: var(--brand); pointer-events: none; }
+/* What moved over a line: pulses from its sender to its receiver, as often
+   as its rate says and none where nothing moved, each outlined in the paper
+   so it stands off the line it rides (ADR-0052, amendment 2026-11-10). */
+.topology-link .flow-particle {
+    fill: var(--brand); stroke: var(--paper); stroke-width: 2.5; pointer-events: none;
+}
 .topology-link.retry .flow-particle { fill: var(--red); }
 .topology-link:is(.done, .stressed) .flow-particle { fill: var(--mood); }
 .topology-link.publish-consume .flow-particle { fill: var(--orange); }
 .arrow-head { fill: var(--brand); }
+/* Where movement is paused, or the reader asked for reduced motion, the same
+   pulses stand along the line and a node that carried traffic keeps its ring
+   at the strength of what moved, so where traffic is still shows. Each rule
+   here comes after the one it overrides, and is at least as specific. */
+.topology-link .pulses-still { display: none; }
+.topology-canvas.paused .topology-link .pulses-still { display: inline; }
+.topology-canvas.paused .topology-node.active .node-pulse {
+    animation: none; r: 46px; opacity: calc(0.12 + var(--activity) * 0.28);
+}
+@media (prefers-reduced-motion: reduce) {
+    .topology-link .pulses-moving { display: none; }
+    .topology-link .pulses-still { display: inline; }
+    .topology-node.active .node-pulse {
+        animation: none; r: 46px; opacity: calc(0.12 + var(--activity) * 0.28);
+    }
+}
 .topology-legend {
     display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem;
     padding: 0.75rem 1rem; border-top: 1px solid var(--line);
@@ -864,6 +888,59 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .secret-set .act:disabled { opacity: 0.5; cursor: default; }
 .secret-set .subs-said { flex: 1 1 100%; margin: 0; }
 
+/* The Reports (ADR-0072, amendment 2026-11-10): every Report in one list,
+   in the subscriptions views' shape — its kind, its name, what it covers
+   and what to expect — and a probed Report's rows, its state, requirement
+   and citation. A kind is a small plain icon, drawn in the text's own color
+   and always with its name beside it: a bolt for quick, a Report of data
+   that already exists; an hourglass for takes longer, a Report of what a
+   Quest probes first. Neither is the brand or a mood, so neither is
+   colored, and a state is a word, never painted. One not yet available is
+   muted and in italics and says so in words. */
+.report-entries .subs-row {
+    grid-template-columns: 8.5rem minmax(10rem, 16rem) minmax(12rem, 1fr) 11rem;
+}
+.report-rows .subs-row { grid-template-columns: 8rem minmax(12rem, 1fr) minmax(8rem, 16rem); }
+.report-kind {
+    display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap;
+    color: var(--muted); font-size: 0.8rem; font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+.report-icon {
+    width: 1em; height: 1em; flex: none;
+    stroke: currentColor; fill: none; stroke-width: 1.5;
+    stroke-linejoin: round; stroke-linecap: round;
+}
+.report-legend {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+    margin: 0 0 1rem; padding: 0; list-style: none;
+}
+.report-legend li { display: flex; align-items: center; gap: 0.5rem; }
+.report-meaning { color: var(--muted); font-size: 0.85rem; }
+.subs-row .report-name, .subs-row .report-row-name { font-weight: 600; }
+.subs-row .report-covers, .subs-row .report-citation {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.subs-row .report-expect { color: var(--muted); font-variant-numeric: tabular-nums; }
+.report-entry.unavailable, .report-detail.unavailable { color: var(--muted); font-style: italic; }
+.report-entry.unavailable .report-name { font-weight: 400; }
+.report-state { font-family: ui-monospace, monospace; }
+.report-detail h2 .report-kind { margin-left: 0.25rem; }
+.report-detail .report-covers { margin: 0 0 0.75rem; }
+.report-levels { margin: 0; padding-left: 1.2rem; }
+.report-where, .report-presented { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.report-choices {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0 0 1rem;
+}
+.report-choices-said { color: var(--muted); font-size: 0.85rem; }
+.report-choice {
+    padding: 0.2rem 0.6rem; border: 1px solid var(--line); border-radius: 6px;
+    font-family: ui-monospace, monospace; color: inherit; text-decoration: none;
+}
+.report-choice:hover { border-color: var(--brand); background: var(--brand-tint); }
+.report-choice.current { border-color: var(--brand); font-weight: 700; }
+.report-said { margin: 0 0 1rem; padding-left: 1.2rem; font-size: 0.85rem; }
+
 /* The phone (ADR-0014, amendment 2026-10-14): the same pages on a narrow
    screen, in one column. Every row puts its name first and its evidence
    wrapped beneath it, whole, rather than clipped beside it; everything an
@@ -919,6 +996,18 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     .topology-tools, .topology-trail { margin: 0.75rem 1rem 0; flex-wrap: wrap; }
     .topology-layout { grid-template-columns: 1fr; padding: 0.75rem 1rem 1rem; }
     .topology-beneath a, .topology-trail a { display: inline-flex; align-items: center; min-height: 44px; }
+
+    /* A Report: its kind and its name, and beneath them, whole, what it
+       covers and what to expect; a probed row the same. */
+    .report-entries .subs-row, .report-rows .subs-row {
+        grid-template-columns: minmax(0, 1fr); gap: 0.2rem; min-height: 44px;
+    }
+    .report-entries .subs-head, .report-rows .subs-head { display: none; }
+    .subs-row .report-covers, .subs-row .report-citation {
+        white-space: normal; overflow-wrap: anywhere;
+    }
+    .subs-row a.report-name, .subs-row a.report-row-name, .report-choice,
+    .report-presented { display: inline-flex; align-items: center; min-height: 44px; }
 
     .cluster-pick:hover:not(.current), .crumbs .crumb-btn:hover {
         background: none; color: var(--muted);

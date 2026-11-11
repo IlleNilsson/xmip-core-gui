@@ -111,7 +111,8 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
         foreach (IRenderedComponent<IComponent> page in (IRenderedComponent<IComponent>[])
             [At<Cluster>("/"), At<Configuration>("/configuration"), At<Topology>("/topology"),
              At<Subscriptions>("/subscriptions"),
-             At<EventSubscriptions>("/event-subscriptions"), At<Audit>("/audit")])
+             At<EventSubscriptions>("/event-subscriptions"), At<Audit>("/audit"),
+             At<Reports>("/reports")])
         {
             Assert.Empty(Picked(page));
             Assert.False(Box(page).HasAttribute("checked"));

@@ -1,0 +1,239 @@
+@page "/reports"
+@using Microsoft.Extensions.DependencyInjection
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject ProgramAudit Audited
+@inject IServiceProvider Services
+
+<PageTitle>Xmip — Reports</PageTitle>
+
+<RunLine Run="Surface.Run()" Cluster="@Cluster" Source="@Surface.Source"
+         IncludeHidden="IncludeHidden" />
+
+@* Every Report in one list, each saying with a small icon and in words
+   whether it is quick — it presents data that already exists — or takes
+   longer — it presents what a Quest probes first (ADR-0072, amendment
+   2026-11-10; the owner, the same day: "I want a list of reports, Firewall
+   and what not, Quest. I just want the user to know that a report may go
+   quicker than a report based on quests"). The list, each kind, every word
+   and each probe are the runtime's, xmip_operate.h section 25, read through
+   ReportCatalog; this page keeps no list. A quick Report opens at the view
+   that already presents it. A Quest's opens here, and the level is in the
+   address: the Report and its parameter's choices; the Report probed for a
+   choice on a node, its tally and a row per requirement; one requirement in
+   full. A Quest probes the cluster.xmip this desktop edits (ReportHosting,
+   over its SliceDelivery) and changes nothing, so every role may list and
+   probe, an Observer included; the runtime audits each probe under this
+   host's program, where the list reads its time back, and where it cannot
+   the list is shown all the same with the runtime's sentence. A host with no
+   cluster.xmip — the web — lists every Report and says where a Quest is
+   probed; a remote build — the phone — carries no Reports, and the page says
+   so in the runtime's words. *@
+<section class="drill reports">
+    <DrillTrail Top="reports" At="@(_ => ScopeLink.Reports(Carried))" Carried="@Carried"
+                Steps="@(Crumbs.ToArray())" />
+
+    @if (Said.Length > 0)
+    {
+        <p class="subs-said @(Refused ? "refused" : string.Empty)">@Said</p>
+    }
+
+    @if (Opened is { } entry)
+    {
+        <ReportNodes Nodes="Nodes" Node="@(Probed?.Node ?? AskedNode)" At="AtNode" />
+
+        @if (Probed is { } probed)
+        {
+            <ReportLevels Entry="entry" Probed="probed"
+                          Link="@(row => ScopeLink.Reports(
+                              Carried, entry.Name, AskedParameter, AskedNode, row))" />
+        }
+        else
+        {
+            <ReportDetail Entry="entry" Probing="@(Delivery is not null)" Node="@AskedNode"
+                          Carried="@Carried" />
+        }
+    }
+    else if (Listing is { } listing && AskedReport is null)
+    {
+        <ReportTable Listing="listing" Carried="@Carried" />
+    }
+
+    @if (Listing?.Unread is { } unread)
+    {
+        <p class="subs-said report-unread">@unread</p>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "report")] public string? AskedReport { get; set; }
+    [SupplyParameterFromQuery(Name = "parameter")] public string? AskedParameter { get; set; }
+    [SupplyParameterFromQuery(Name = "node")] public string? AskedNode { get; set; }
+    [SupplyParameterFromQuery(Name = "row")] public string? AskedRow { get; set; }
+
+    private ReportListing? Listing { get; set; }
+
+    private ReportEntry? Opened { get; set; }
+
+    private ReportProbed? Probed { get; set; }
+
+    private IReadOnlyList<string> Nodes { get; set; } = [];
+
+    private string Said { get; set; } = string.Empty;
+
+    private bool Refused =>
+        Said.StartsWith("REFUSED", StringComparison.Ordinal)
+        || Said.StartsWith("FAILED", StringComparison.Ordinal);
+
+    // The address last read: a tick of the publication asks the runtime
+    // nothing again, and probes nothing again; a move does.
+    private string? readAt;
+
+    // What this host hosts the view with (ReportHosting.Add on the desktop);
+    // the runtime this process loaded and no file where it registered none.
+    private ReportHosting Hosting =>
+        Services.GetService<ReportHosting>() ?? ReportHosting.Loaded;
+
+    // The cluster's file this host probes, with the node configured here;
+    // null on a host that edits none.
+    private SliceDelivery? Delivery => Hosting.Probed;
+
+    // The steps below the top: the Report, its probe and one row.
+    private IEnumerable<(string Label, string Href)> Crumbs
+    {
+        get
+        {
+            if (AskedReport is not { Length: > 0 } report)
+            {
+                yield break;
+            }
+
+            yield return (report, ScopeLink.Reports(Carried, report));
+
+            if (Probed is { } probed)
+            {
+                string said = probed.Parameter is { } choice
+                    ? $"{choice} on {probed.Node}"
+                    : probed.Node;
+
+                yield return (said, ScopeLink.Reports(
+                    Carried, report, AskedParameter, AskedNode));
+
+                if (probed.Requirement is { } one)
+                {
+                    yield return (one.Name, ScopeLink.Reports(
+                        Carried, report, AskedParameter, AskedNode, one.Name));
+                }
+            }
+        }
+    }
+
+    protected override void Read()
+    {
+        string at = $"{AskedReport}\n{AskedParameter}\n{AskedNode}\n{AskedRow}";
+
+        if (at == readAt)
+        {
+            return;
+        }
+
+        readAt = at;
+        Said = string.Empty;
+        Opened = null;
+        Probed = null;
+        Nodes = [];
+
+        Listing = null;
+        RuntimeReports reports;
+
+        try
+        {
+            reports = Hosting.Reports;
+        }
+        catch (InvalidOperationException unread)
+        {
+            Said = $"NATIVE — the Reports cannot be read here: {unread.Message}";
+            return;
+        }
+
+        try
+        {
+            // The one Report the address names is the runtime's to find, and
+            // a name that is none its to refuse, naming those there are.
+            Listing = AskedReport is { Length: > 0 } report
+                ? ReportCatalog.Named(reports, Audited, report)
+                : ReportCatalog.List(reports, Audited);
+        }
+        catch (InvalidOperationException refused)
+        {
+            Said = refused.Message;
+            return;
+        }
+
+        Opened = AskedReport is { Length: > 0 } ? Listing.Entries[0] : null;
+
+        if (Opened is not null && Asking(Opened))
+        {
+            Probe(reports, Opened);
+        }
+    }
+
+    // Whether the address asks the Report probed: a choice of its parameter
+    // or a row is named, or it is a Quest built with no parameter to choose.
+    // A quick Report, or one not available, asked so is refused by the
+    // runtime, in its words.
+    private bool Asking(ReportEntry entry) =>
+        AskedParameter is not null
+        || AskedRow is not null
+        || entry is { Kind: ReportKind.Quest, Available: true, Parameter: null };
+
+    // The probe of the cluster's file this desktop edits, on the node the
+    // address names, else the one configured here; the runtime refuses a
+    // cluster's file with no node, naming its nodes, and every one is
+    // offered. A host with none probes nothing, and the entry says where a
+    // Quest is probed.
+    private void Probe(RuntimeReports reports, ReportEntry entry)
+    {
+        if (Delivery is not { } delivery)
+        {
+            return;
+        }
+
+        Nodes = NodesOf(delivery.ClusterPath);
+
+        try
+        {
+            Probed = ReportCatalog.Open(
+                reports,
+                new ReportProbe(entry.Name, delivery.ClusterPath)
+                {
+                    Parameter = AskedParameter,
+                    Row = AskedRow,
+                    Node = AskedNode ?? delivery.Node,
+                },
+                Audited);
+        }
+        catch (InvalidOperationException refused)
+        {
+            Said = refused.Message;
+        }
+    }
+
+    // The nodes the cluster's file declares, as the runtime's views list
+    // them; none for a node's own file, or one not there.
+    private static IReadOnlyList<string> NodesOf(string path)
+    {
+        try
+        {
+            return ClusterConfiguration.Open(path).Nodes;
+        }
+        catch (Exception unread) when (unread is IOException or InvalidOperationException)
+        {
+            return [];
+        }
+    }
+
+    private string AtNode(string node) =>
+        ScopeLink.Reports(Carried, AskedReport, AskedParameter, node, AskedRow);
+}
