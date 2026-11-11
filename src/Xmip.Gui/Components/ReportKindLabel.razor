@@ -1,0 +1,41 @@
+@using Xmip.Abi.Operate
+
+@* A Report's kind: a small icon and its name beside it, never the icon
+   alone (ADR-0072, amendment 2026-11-10, clause 2; the owner, the same day:
+   "with a little icon saying if they were presenting existing data or
+   probing for data"). A bolt for quick, a Report that presents data that
+   already exists; an hourglass for takes longer, a Report that presents what
+   a Quest probes first. The kind is the runtime's, from what an entry holds
+   and never from its name, and so are its word, which styles it, its name,
+   which a person reads, and its meaning, its title; this picks only the
+   glyph. Plain, generic and inline, drawn in the text's own color — neither
+   the brand nor a mood — and painted by class, so the content security
+   policy's rule against an inline style holds. *@
+<span class="report-kind @Words.Word" title="@Words.Meaning">
+    @if (Glyph is { } glyph)
+    {
+        <svg class="report-icon @glyph.Name" viewBox="0 0 16 16" aria-hidden="true"
+             focusable="false">
+            <path d="@glyph.Path" />
+        </svg>
+    }
+    @Words.Name
+</span>
+
+@code {
+    /// <summary>The kind and the runtime's words for it: a legend's, or an
+    /// entry's own (<see cref="ReportEntry.Words"/>).</summary>
+    [Parameter, EditorRequired]
+    public ReportKindWords Words { get; set; } = default!;
+
+    // The glyph for each kind, by the kind's number in the header: the one
+    // choice this component makes. A kind with no glyph is shown by its name
+    // alone.
+    private (string Name, string Path)? Glyph => Words.Kind switch
+    {
+        ReportKind.ExistingData => ("bolt", "M9 1 3 9h4l-1 6 6-8H8l1-6z"),
+        ReportKind.Quest =>
+            ("hourglass", "M3.5 1.5h9M3.5 14.5h9M4.5 1.5 8 8l-3.5 6.5M11.5 1.5 8 8l3.5 6.5"),
+        _ => null,
+    };
+}

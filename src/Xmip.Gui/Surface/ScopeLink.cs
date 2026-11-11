@@ -1,12 +1,14 @@
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the views. The web GUI is eight points
+/// Where a scope is reached in each of the views. The web GUI is nine points
 /// to drill from — Configuration, Monitor, Topology, Subscriptions (since
 /// 2026-09-30), Dead Message Queue (since 2026-10-03), Event subscriptions,
-/// Secrets (since 2026-10-30) and Audit (since 2026-09-29) — and from
+/// Secrets (since 2026-10-30), Audit (since 2026-09-29) and Reports (since
+/// 2026-11-10) — and from
 /// any of them a scope leads to the same scope in the others (the owner,
 /// 2026-09-18; ADR-0052, amendment 2026-09-14, ruling 4: a link from any view
 /// ends at the view of the actual configuration). One place writes the
@@ -160,6 +162,54 @@ public static class ScopeLink
             : null;
 
         return Address("/secrets", carry, ("location", node));
+    }
+
+    /// <summary>
+    /// The Reports view (ADR-0072, amendment 2026-11-10) at the level the
+    /// address names, on this cluster: every Report; one
+    /// <paramref name="report"/> and its parameter's choices; that Report
+    /// probed for one <paramref name="parameter"/> choice on a
+    /// <paramref name="node"/>, its tally and rows; and one
+    /// <paramref name="row"/> in full. Each level is a link, so a link
+    /// reproduces the view.
+    /// </summary>
+    public static string Reports(
+        Carry? carry = null,
+        string? report = null,
+        string? parameter = null,
+        string? node = null,
+        string? row = null)
+    {
+        return Address(
+            "/reports",
+            carry,
+            ("report", report),
+            ("parameter", parameter),
+            ("node", node),
+            ("row", row));
+    }
+
+    /// <summary>
+    /// Where a quick Report is presented: the view of the reader its entry
+    /// names, by the reader's entrypoint in the header (ADR-0072, amendment
+    /// 2026-11-10) — the Audit, the Dead Message Queue, the Subscriptions and
+    /// the Configuration tree — on this cluster. Null for an entry that names
+    /// no reader, or a reader no view here presents: it is shown without a
+    /// link. The keys are the header's own constants, so no word list is
+    /// kept.
+    /// </summary>
+    public static string? Presented(ReportEntry entry, Carry? carry = null)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        return entry.ReadBy switch
+        {
+            OperateAbi.AuditReadEntrypoint => Audit(new AuditQuery(), carry),
+            OperateAbi.DeadMessagesEntrypoint => DeadMessages(new DeadMessageQuery(), carry),
+            OperateAbi.SubscriptionsEntrypoint => Subscriptions(new SubscriptionQuery(), carry),
+            OperateAbi.PublicationReadEntrypoint => Configuration(ScopeTree.Root, carry),
+            _ => null,
+        };
     }
 
     /// <summary>

@@ -1,0 +1,32 @@
+@* The nodes of the cluster's file a Quest probes, each a link that probes it
+   on that node: a cluster's file is sliced for one node and probed as that
+   node's configuration, and the runtime refuses one with no node, naming
+   its nodes (ADR-0072, amendment 2026-11-10). The node probed is marked
+   here and named in words in the tally and the crumbs. *@
+@if (Nodes.Count > 0)
+{
+    <nav class="report-choices report-nodes" aria-label="Nodes">
+        <span class="report-choices-said">node</span>
+        @foreach (string node in Nodes)
+        {
+            <a class="report-choice @(Here(node) ? "current" : string.Empty)"
+               aria-current="@(Here(node) ? "page" : null)" href="@At(node)">@node</a>
+        }
+    </nav>
+}
+
+@code {
+    /// <summary>The nodes the cluster's file declares.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> Nodes { get; set; } = [];
+
+    /// <summary>The node probed; null where none was.</summary>
+    [Parameter]
+    public string? Node { get; set; }
+
+    /// <summary>The address probing on a node.</summary>
+    [Parameter, EditorRequired]
+    public Func<string, string> At { get; set; } = _ => string.Empty;
+
+    private bool Here(string node) => string.Equals(node, Node, StringComparison.Ordinal);
+}

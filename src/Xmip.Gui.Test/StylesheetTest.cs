@@ -63,6 +63,45 @@ public sealed partial class StylesheetTest
         Assert.Equal("none", MoodClass.Of([]));
     }
 
+    [Fact]
+    public void AReportsKindIsDrawnInTheTextsOwnColorNeverTheBrandOrAMood()
+    {
+        // The icon and the words beside it (ADR-0072, amendment 2026-11-10):
+        // painted by tokens and the text's own color, never a written
+        // color, the brand or a mood's color.
+        string[] colors = [.. Enum.GetValues<HealthState>().Select(English.Color).Distinct()];
+        Match[] reports =
+        [
+            .. Rule().Matches(Sheet).Where(rule =>
+                rule.Groups["selector"].Value.Contains(".report-", StringComparison.Ordinal)),
+        ];
+
+        Assert.Contains(reports, rule =>
+            rule.Groups["selector"].Value.Trim() == ".report-kind"
+            && rule.Groups["body"].Value.Contains("var(--muted)", StringComparison.Ordinal));
+        Assert.Contains(reports, rule =>
+            rule.Groups["selector"].Value.Trim() == ".report-icon"
+            && rule.Groups["body"].Value.Contains("stroke: currentColor", StringComparison.Ordinal)
+            && rule.Groups["body"].Value.Contains("fill: none", StringComparison.Ordinal));
+        Assert.All(reports, rule =>
+        {
+            string body = rule.Groups["body"].Value;
+
+            Assert.DoesNotMatch(Hex(), body);
+            Assert.DoesNotContain(
+                colors, color => body.Contains($"var(--{color})", StringComparison.Ordinal));
+
+            if (rule.Groups["selector"].Value.Contains("report-kind", StringComparison.Ordinal)
+                || rule.Groups["selector"].Value.Contains("report-icon", StringComparison.Ordinal))
+            {
+                Assert.DoesNotContain("--brand", body, StringComparison.Ordinal);
+            }
+        });
+    }
+
     [GeneratedRegex(@"(?<selector>[^{}]+)\{(?<body>[^}]*)\}")]
     private static partial Regex Rule();
+
+    [GeneratedRegex("#[0-9a-fA-F]{3,8}\\b")]
+    private static partial Regex Hex();
 }

@@ -1,8 +1,13 @@
 @* The topology's canvas: every visible node placed on a ring — or, where
    Parties are drawn, in columns as the streams run, a Party that sends on the
    left and one delivered to on the right (ADR-0052, amendment 2026-09-29) — the
-   communication between them drawn as a curve, and application movement as
-   particles running along it. Animation represents application movement; the
+   communication between them drawn as a curve, and what moved over it as
+   pulses riding that curve from its sender to its receiver. Motion follows
+   traffic (amendment 2026-11-10): pulses leave as often as the rate its
+   publisher stated says, none where nothing moved, and a node pulses as fast
+   as what moved through it, still where nothing did (Motion). Paused, or
+   where the reader asked for reduced motion, the same pulses stand along the
+   line and a busy node keeps its ring, so where traffic is still shows. The
    line remains the configured or observed relationship.
 
    What is drawn is what is configured and what is observed, together (the
@@ -15,7 +20,7 @@
    patterns. *@
 @using Xmip.Gui.Surface
 
-<div class="topology-canvas">
+<div class="@(MotionPaused ? "topology-canvas paused" : "topology-canvas")">
     <svg viewBox="0 0 1000 620" role="img"
          aria-label="Configured and observed communication topology">
         <defs>
@@ -52,9 +57,14 @@
             </g>
         }
 
+        @* Each line keeps its element from one publication to the next, by
+           its id, so a pulse riding it is not started over when a round is
+           read again (ClusterView reads every round). *@
         @foreach (RenderedLink link in RenderedLinks)
         {
-            <g class="@LinkClass(link.Link)">
+            int pulses = Motion.Count(link.Link);
+            int band = LinkBand(link.Link);
+            <g @key="link.Link.Id" class="@LinkClass(link.Link)">
                 <path class="link-hit" d="@Curve(link)" tabindex="0" role="button"
                       aria-label="@Named(link.Link)"
                       @onclick="() => OnSelectLink.InvokeAsync(link.Link)"
@@ -66,19 +76,43 @@
                    link configured and never used says so here. *@
                 <text class="link-figure" text-anchor="middle"
                       x="@Middle(link).X" y="@Middle(link).Y">@English.Traffic(link.Link)</text>
-                @if (!MotionPaused)
+                @if (pulses > 0 && !MotionPaused)
                 {
-                    @for (int particle = 0; particle < Particles(link.Link); particle++)
-                    {
-                        bool reverse = Reverse(link.Link, particle);
-                        <circle @key="particle" class="flow-particle"
-                                r="@Radius(link.Link)">
-                            <animateMotion path="@Motion(link, reverse)"
-                                           dur="@Duration(link.Link)"
-                                           begin="@($"{particle * -0.55}s")"
-                                           repeatCount="indefinite" />
-                        </circle>
-                    }
+                    <g class="pulses-moving">
+                        @for (int pulse = 0; pulse < pulses; pulse++)
+                        {
+                            <circle @key="pulse" class="flow-particle" r="@Motion.Radius(link.Link)">
+                                @if (Motion.Back(link.Link, pulse))
+                                {
+                                    <animateMotion dur="@Motion.Duration(band)"
+                                                   begin="@Motion.Begin(band, pulse)"
+                                                   repeatCount="indefinite" calcMode="linear"
+                                                   keyPoints="1;0" keyTimes="0;1">
+                                        <mpath href="#@SvgId(link.Link.Id)" />
+                                    </animateMotion>
+                                }
+                                else
+                                {
+                                    <animateMotion dur="@Motion.Duration(band)"
+                                                   begin="@Motion.Begin(band, pulse)"
+                                                   repeatCount="indefinite">
+                                        <mpath href="#@SvgId(link.Link.Id)" />
+                                    </animateMotion>
+                                }
+                            </circle>
+                        }
+                    </g>
+                }
+                @if (pulses > 0)
+                {
+                    <g class="pulses-still">
+                        @for (int pulse = 0; pulse < pulses; pulse++)
+                        {
+                            Spot at = Point(link, Motion.Along(pulse, pulses));
+                            <circle @key="pulse" class="flow-particle" r="@Motion.Radius(link.Link)"
+                                    cx="@Number(at.X)" cy="@Number(at.Y)" />
+                        }
+                    </g>
                 }
             </g>
         }
@@ -157,7 +191,9 @@
     [Parameter]
     public string? SelectedId { get; set; }
 
-    /// <summary>Whether the operator has paused the movement along the lines.</summary>
+    /// <summary>Whether the operator has paused all movement on the canvas:
+    /// the pulses stand along their lines, and a busy node's ring stands
+    /// still.</summary>
     [Parameter]
     public bool MotionPaused { get; set; }
 
@@ -168,6 +204,45 @@
     /// <summary>Raised with the communication relationship the operator clicked.</summary>
     [Parameter]
     public EventCallback<CommunicationLink> OnSelectLink { get; set; }
+
+    // The band each line and each node was drawn in, by id, kept from one
+    // round read to the next: a rate read a little each side of a band's
+    // edge keeps the band drawn (Motion.Band), so no pulse starts over and no
+    // ring changes its pace.
+    private IReadOnlyDictionary<string, int> LinkBands { get; set; } =
+        new Dictionary<string, int>(StringComparer.Ordinal);
+
+    private IReadOnlyDictionary<string, int> NodeBands { get; set; } =
+        new Dictionary<string, int>(StringComparer.Ordinal);
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        LinkBands = Banded(Snapshot.Links.Select(link => (link.Id, link.Rate)), LinkBands);
+        NodeBands = Banded(Snapshot.Nodes.Select(node => (node.Id, node.Activity)), NodeBands);
+    }
+
+    // The band of each rate by id, where `before` holds the band each was
+    // drawn in last.
+    private static Dictionary<string, int> Banded(
+        IEnumerable<(string Id, double PerSecond)> rates,
+        IReadOnlyDictionary<string, int> before)
+    {
+        Dictionary<string, int> bands = new(StringComparer.Ordinal);
+
+        foreach ((string id, double perSecond) in rates)
+        {
+            bands[id] = Motion.Band(perSecond, before.GetValueOrDefault(id));
+        }
+
+        return bands;
+    }
+
+    private int LinkBand(CommunicationLink link) =>
+        LinkBands.GetValueOrDefault(link.Id, Motion.Band(link.Rate));
+
+    private int NodeBand(TopologyNode node) =>
+        NodeBands.GetValueOrDefault(node.Id, Motion.Band(node.Activity));
 
     private IReadOnlyDictionary<string, TopologyNode> NodeById =>
         Snapshot.Nodes.ToDictionary(node => node.Id, StringComparer.Ordinal);
@@ -304,7 +379,9 @@
                 placed.ToDictionary(item => item.Node.Id, StringComparer.Ordinal);
             List<RenderedLink> links = [];
 
-            foreach (CommunicationLink link in Snapshot.Links.Where(Show))
+            // One line per link id, as one box per node id: the id keeps the
+            // line's element from round to round.
+            foreach (CommunicationLink link in Snapshot.Links.Where(Show).DistinctBy(each => each.Id))
             {
                 Spot? from = Representative(link.From, positions);
                 Spot? to = Representative(link.To, positions);
@@ -378,10 +455,14 @@
     private static string LinkClass(CommunicationLink link) =>
         $"topology-link {MoodClass.Of(link.State)} {English.Word(link.Origin)} {English.Word(link.Pattern)}";
 
+    // How fast a node pulses is what moved through it, in the band it was
+    // drawn in: a class xmip.css gives its --activity by, never an inline
+    // style, which the Operation Web's policy refuses. Band zero, nothing
+    // moved, is still.
     private string NodeClass(TopologyNode node) =>
         $"topology-node {English.Word(node.Kind)} {MoodClass.Of(node.State)} {English.Word(node.Origin)}"
-        + (node.Activity > 0.05 ? " active" : "")
-        + $" activity-{Step(node.Activity)}"
+        + (NodeBand(node) > 0 ? " active" : "")
+        + $" activity-{NodeBand(node)}"
         + (node.Id == SelectedId ? " selected" : "");
 
     private static string Title(TopologyNode node) =>
@@ -390,18 +471,20 @@
     private static string Transform(Spot node) =>
         FormattableString.Invariant($"translate({node.X:0.##} {node.Y:0.##})");
 
-    // How busy a node is, in tenths: a class xmip.css gives its --activity by,
-    // never an inline style, which the Operation Web's policy refuses.
-    private static int Step(double activity) =>
-        (int)Math.Round(Math.Clamp(activity, 0D, 1D) * 10D, MidpointRounding.AwayFromZero);
-
     private static double LoadWidth(TopologyNode node) =>
         96D * Math.Clamp(node.Load, 0D, 1D);
 
+    // A line's element id, which its pulses ride by: the link's id with
+    // every character no id may carry a dash, and the id's hash after it, so
+    // two links whose ids differ only there — a Location named with a space
+    // and one with a dash — never share a line.
     private static string SvgId(string id)
     {
+        string hash = unchecked((uint)Stable(id))
+            .ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+
         return "topology-" + string.Concat(id.Select(character =>
-            char.IsLetterOrDigit(character) ? character : '-'));
+            char.IsLetterOrDigit(character) ? character : '-')) + "-" + hash;
     }
 
     private static int Stable(string value) =>
@@ -431,49 +514,27 @@
             + FormattableString.Invariant($"{link.To.X:0.##} {link.To.Y:0.##}");
     }
 
-    // Where the curve is halfway, for the figure written on it: a quadratic
-    // curve at one half is a quarter of each end and half its control point.
-    private static (string X, string Y) Middle(RenderedLink link)
+    // Where the curve is at `along`, from zero at its sender to one at its
+    // receiver: the quadratic curve's point, its two ends and its control
+    // point weighed by how far along it is. A still pulse stands there, and
+    // the figure written on the line just above the half.
+    private static Spot Point(RenderedLink link, double along)
     {
         (double controlX, double controlY) = Control(link);
-        double x = (link.From.X + link.To.X) / 4D + controlX / 2D;
-        double y = (link.From.Y + link.To.Y) / 4D + controlY / 2D - 6D;
+        double rest = 1D - along;
 
-        return (
-            x.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
-            y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
+        return new Spot(
+            rest * rest * link.From.X + 2D * rest * along * controlX + along * along * link.To.X,
+            rest * rest * link.From.Y + 2D * rest * along * controlY + along * along * link.To.Y);
     }
 
-    private static string Motion(RenderedLink link, bool reverse) =>
-        reverse
-            ? FormattableString.Invariant(
-                $"M {link.To.X:0.##} {link.To.Y:0.##} L {link.From.X:0.##} {link.From.Y:0.##}")
-            : FormattableString.Invariant(
-                $"M {link.From.X:0.##} {link.From.Y:0.##} L {link.To.X:0.##} {link.To.Y:0.##}");
-
-    private static int Radius(CommunicationLink link) =>
-        link.Pattern == CommunicationPattern.Streaming ? 4 : 5;
-
-    private static int Particles(CommunicationLink link) =>
-        link.Pattern switch
-        {
-            CommunicationPattern.Streaming => 4,
-            CommunicationPattern.Session => 2,
-            CommunicationPattern.RequestResponse => 2,
-            CommunicationPattern.Retry => (int)Math.Clamp(link.Attempts, 1U, 4U),
-            _ => 1,
-        };
-
-    private static bool Reverse(CommunicationLink link, int particle) =>
-        link.Pattern is CommunicationPattern.RequestResponse or CommunicationPattern.Session
-        && particle % 2 == 1;
-
-    private static string Duration(CommunicationLink link)
+    private static (string X, string Y) Middle(RenderedLink link)
     {
-        double seconds = link.Pattern == CommunicationPattern.Streaming
-            ? 1.1D
-            : Math.Clamp(3.2D - Math.Log10(link.Rate + 1D), 0.8D, 3.2D);
+        Spot half = Point(link, 0.5D);
 
-        return FormattableString.Invariant($"{seconds:0.##}s");
+        return (Number(half.X), Number(half.Y - 6D));
     }
+
+    private static string Number(double value) =>
+        value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 }

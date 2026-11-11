@@ -58,7 +58,9 @@
             }
             <dt>Origin</dt><dd>@English.Name(FocusNode.Origin)</dd>
             <dt>Load</dt><dd>@English.Percent(FocusNode.Load)</dd>
-            <dt>Activity</dt><dd>@English.Percent(FocusNode.Activity)</dd>
+            @* What moved through it, per second over its publisher's window,
+               in words: never a share (ADR-0052, amendment 2026-11-10). *@
+            <dt>Activity</dt><dd>@Motion.Said(FocusNode.Activity)</dd>
             <dt>Scope</dt><dd class="mono">@English.Value(FocusNode.Scope)</dd>
         </dl>
         @if (FocusNode.Kind != TopologyNodeKind.Party)
@@ -71,8 +73,9 @@
         <h2>Infrastructure</h2>
         <p>
             Open a node to draw what is beneath it and what runs between those.
-            Animation represents application movement; the line remains the
-            configured or observed relationship.
+            Pulses run from sender to receiver as often as traffic moves, none
+            where nothing did; the line remains the configured or observed
+            relationship.
         </p>
     }
 

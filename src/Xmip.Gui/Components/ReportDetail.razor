@@ -1,0 +1,99 @@
+@using Xmip.Gui.Surface
+
+@* One Report at its first level (ADR-0072, amendment 2026-11-10): its kind,
+   what it covers and what to expect. A Quest's entry says its levels and
+   its parameter's choices; where this host has a cluster's configuration
+   to probe, each choice is a link that probes it, and where it has none —
+   the web — the entry says where it is probed. A quick entry links to the
+   view that already presents it, never to a second reader. One not yet
+   available says so and opens nothing. *@
+<article class="subs-detail report-detail @(Entry.Available ? string.Empty : "unavailable")">
+    <h2>@Entry.Name <ReportKindLabel Words="Entry.Words" /></h2>
+    <p class="report-covers">@Entry.Covers</p>
+    <dl class="subs-fields">
+        <dt>kind</dt><dd>@Entry.Words.Meaning</dd>
+        @if (Entry.Expect is { } expect)
+        {
+            <dt>expect</dt><dd class="report-expect">@expect</dd>
+        }
+        @if (Entry.ProbedAt is { } at)
+        {
+            <dt>last probed</dt><dd title="@PersonTime.Utc(at)">@PersonTime.Said(at)</dd>
+        }
+        @if (Entry.Levels.Count > 0)
+        {
+            <dt>levels</dt>
+            <dd>
+                <ol class="report-levels">
+                    @foreach (string level in Entry.Levels)
+                    {
+                        <li>@level</li>
+                    }
+                </ol>
+            </dd>
+        }
+        @if (Entry.Parameter is { } parameter)
+        {
+            <dt>@parameter.Name</dt><dd>@string.Join(", ", parameter.Choices)</dd>
+        }
+    </dl>
+
+    @if (Entry is { Available: true, Levels.Count: > 0 } && !Probing)
+    {
+        <p class="report-where">@Where(Entry.Name)</p>
+    }
+    else if (Entry is { Available: true, Parameter: { } choices } && Probing)
+    {
+        <nav class="report-choices" aria-label="@($"Probe for a {choices.Name}")">
+            <span class="report-choices-said">probe for</span>
+            @foreach (string choice in choices.Choices)
+            {
+                <a class="report-choice"
+                   href="@ScopeLink.Reports(Carried, Entry.Name, choice, Node)">@choice</a>
+            }
+        </nav>
+    }
+
+    @if (Entry is { Available: true, ReadBy: not null })
+    {
+        @if (ScopeLink.Presented(Entry, Carried) is { } presented)
+        {
+            <p>
+                <a class="report-presented" href="@presented">
+                    open @Entry.Name where it is presented
+                </a>
+            </p>
+        }
+        else
+        {
+            <p class="report-presented">No view here presents @Entry.Name.</p>
+        }
+    }
+</article>
+
+@code {
+    /// <summary>The Report.</summary>
+    [Parameter, EditorRequired]
+    public ReportEntry Entry { get; set; } = default!;
+
+    /// <summary>Whether this host has a cluster's configuration to
+    /// probe.</summary>
+    [Parameter]
+    public bool Probing { get; set; }
+
+    /// <summary>The node the address names, kept by each choice's
+    /// link.</summary>
+    [Parameter]
+    public string? Node { get; set; }
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public Carry? Carried { get; set; }
+
+    /// <summary>Where a Report's Quest probes, said by a host that has no
+    /// cluster's configuration to probe.</summary>
+    public static string Where(string report) =>
+        $"The {report} Report's Quest probes where a cluster's configuration is at hand: on "
+        + "the desktop, by xmip report and by Get-XmipReport. This host has none, so it lists "
+        + "the Report and probes nothing.";
+}

@@ -1,0 +1,66 @@
+@using Xmip.Abi.Operate
+@using Xmip.Gui.Surface
+
+@* Every Report in one list (ADR-0072, amendment 2026-11-10; the owner, the
+   same day: "I just want the user to know that a report may go quicker than
+   a report based on quests"). The legend first: each kind's icon, name and
+   meaning, as the runtime words them. Then a row per Report in the
+   runtime's order: its kind, its name, what it covers and what to expect —
+   how long a Quest's last probe took, or that it was not probed yet. The
+   name is a link where the Report opens: a quick one at the view that
+   already presents it (ScopeLink.Presented), a Quest's to its probe. One not
+   yet available is listed, muted and in italics, says so in words, and
+   links nowhere. *@
+<ul class="report-legend" aria-label="What each kind means">
+    @foreach (ReportKindWords kind in Listing.Kinds)
+    {
+        <li>
+            <ReportKindLabel Words="kind" />
+            <span class="report-meaning">@kind.Meaning</span>
+        </li>
+    }
+</ul>
+
+<section class="subs-records report-entries" aria-label="Reports">
+    <div class="subs-row subs-head" role="row">
+        <span role="columnheader">kind</span>
+        <span role="columnheader">report</span>
+        <span role="columnheader">covers</span>
+        <span role="columnheader">expect</span>
+    </div>
+    @foreach (ReportEntry entry in Listing.Entries)
+    {
+        <div class="subs-row report-entry @(entry.Available ? string.Empty : "unavailable")"
+             role="row">
+            <ReportKindLabel Words="@entry.Words" />
+            @if (Link(entry) is { } href)
+            {
+                <a class="report-name" href="@href">@entry.Name</a>
+            }
+            else
+            {
+                <span class="report-name">@entry.Name</span>
+            }
+            <span class="report-covers" title="@entry.Covers">@entry.Covers</span>
+            <span class="report-expect">@entry.Expect</span>
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>Every Report and the words of each kind, as the runtime
+    /// listed them.</summary>
+    [Parameter, EditorRequired]
+    public ReportListing Listing { get; set; } = default!;
+
+    /// <summary>The cluster a link carries, as every view's links do.</summary>
+    [Parameter]
+    public Carry? Carried { get; set; }
+
+    // Where an entry opens: nowhere while it is not available; a quick one
+    // at its reader's view, a Quest's at its own level here.
+    private string? Link(ReportEntry entry) =>
+        !entry.Available ? null
+        : entry.Kind == ReportKind.Quest ? ScopeLink.Reports(Carried, report: entry.Name)
+        : ScopeLink.Presented(entry, Carried);
+}

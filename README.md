@@ -34,7 +34,7 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Eight views, and eight points to drill from, in this order on the bar:
+Nine views, and nine points to drill from, in this order on the bar:
 **Configuration**, the classic tree, holding still; **Monitor**, the board
 that follows Receive → Process → Send; **Topology** (ADR-0052, amendments
 2026-09-14 and 2026-09-18); **Subscriptions**, what picks a published Message
@@ -42,11 +42,14 @@ up and opens a Journey (ADR-0013, amendment 2026-09-30); **Dead Message
 Queue**, the accepted Messages no Subscription matched (ADR-0052, amendment
 2026-10-01); **Event subscriptions**, who hears what Xmip did (ADR-0065,
 amendment 2026-09-29); **Secrets**, what a Location presents to the party
-it connects to (ADR-0014, amendment 2026-10-30); and **Audit**, what every
-Xmip program recorded (ADR-0062, amendment 2026-09-29) — the last five
+it connects to (ADR-0014, amendment 2026-10-30); **Audit**, what every
+Xmip program recorded (ADR-0062, amendment 2026-09-29); and **Reports**,
+every Report in one list, each saying whether it is quick or a Quest probes
+first (ADR-0072, amendment 2026-11-10) — the last six
 described below, the Subscriptions placed before the Event subscriptions by
 ADR-0052, amendment 2026-09-30, the Dead Message Queue after the
-Subscriptions, whose declines it shows, and the Secrets before the Audit. A
+Subscriptions, whose declines it shows, the Secrets before the Audit, and
+the Reports after it, the Audit Report opening at the Audit view. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -106,7 +109,7 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the eight
+is gone. The navigation is one component for both hosts, `TopNav`: the nine
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
@@ -280,6 +283,47 @@ told the secrets are an Operator's and shown neither the listing nor the
 act, as the node's own rule has it; a surface that reaches no node — a
 snapshot — says so in words.
 
+**The Reports view** (`/reports`; ADR-0072, amendment 2026-11-10; the owner,
+the same day: *I want a list of reports, Firewall and what not, Quest. I just
+want the user to know that a report may go quicker than a report based on
+quests*) lists every Report in one list: the runtime's, through
+`ReportCatalog` in `Xmip.Surface` and `xmip_report_v1` (`xmip_operate.h`
+section 25), and the view keeps no list, kind or word of its own. A legend
+comes first: each kind with its icon, its name and what it means — a bolt
+for *Quick*, a Report that presents data that already exists; an hourglass
+for *Takes longer*, a Report that presents what a Quest probes first —
+plain inline icons drawn in the text's own color, never the brand or a mood,
+and never without the words (`ReportKindLabel`). Then a row per Report, in
+the runtime's order: its kind, its name, what it covers and what to expect,
+for a Quest how long its last probe took, read back from the audit the
+runtime recorded the probe in, or *not probed yet*. One not yet available is
+listed, muted and in italics, says *not yet available* and links nowhere. A
+quick Report opens at the view that already presents it, by the entrypoint
+of its reader (`ScopeLink.Presented`) — the Audit, the Dead Message Queue,
+the Subscriptions, the Configuration tree — and never at a second reader. A
+Quest's opens here, and the level is in the address:
+`/reports?report=<name>` says what it covers, its levels and its parameter's
+choices, each a link; `&parameter=<choice>` probes the desktop's
+`cluster.xmip` on the node `gui.toml` configures here, or on the one the
+address names (`&node=<node>`; each node of the file is offered as a link),
+and shows the tally, each state in the runtime's words with its count, and a
+row per requirement with its state and citation, the column headed by the
+runtime's word for a row; `&row=<requirement>` shows one in full, what was
+found, what is behind it and the actions that close it. What a Quest does
+not answer is left out, never shown as nothing found. A probe reads and
+changes nothing, so every role may list and probe, an Observer included; the
+runtime records each in this host's audit as `quest.probe`, and the view
+asks again only when the address moves, never at a tick of the publication.
+Where that audit cannot be read, every Report is listed all the same with
+the runtime's sentence below. The desktop hosts the view through
+`ReportHosting.Add`, over its `SliceDelivery`, the one method its test hosts
+the view by too. The web host registers none and has no `cluster.xmip`: it
+lists every Report and says the Report's Quest probes on the desktop, by
+`xmip report` and by `Get-XmipReport`. The phone's remote build carries no
+section 25, and the view says so in the runtime's words. A refusal — a
+Report that is none, found by the runtime and never by the page, a choice
+that is none, a cluster's file with no node — is the runtime's sentence.
+
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
 over an audit file in the capability's shape, and the Subscriptions, the
@@ -287,7 +331,17 @@ Dead Message Queue and the Event subscriptions views over a publication
 whose publisher takes orders, so what is asserted is what an operator sees
 and no surface is faked. The Secrets view and the failed Messages' paging
 are rendered over a surface the test composes (`ScriptedSurface`), since no
-publication carries a node's secrets.
+publication carries a node's secrets. The Reports view is rendered over the
+runtime's own list, and its Quests probe the estate's test cluster,
+`test/cluster.xmip`, into an audit directory of the test's own
+(`ReportsViewTest`): the legend, each entry's kind and glyph, one not yet
+available, a quick one opening at its view on the cluster in view, the last
+probe's time, the three levels in the address, the tally and the rows
+headed in the runtime's words, a refusal in words — a name that is none in
+the runtime's own sentence — the nodes offered, the web host saying where
+a Quest probes, and a runtime that carries no Reports said in its words.
+The desktop's hosting is `ReportHosting.Add`, which the test hosts the view
+by.
 
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
@@ -295,14 +349,28 @@ and observed relationships between infrastructure endpoints, then drills through
 services, processes, interfaces, ports, protocols and locations. Its animated
 movement represents application semantics — request/response, send/receive,
 publish/consume, streaming, fire-and-forget, sessions and retries — rather than
-decorative packets or an assumed bidirectional flow. The snapshot surface reads
-this model, and an Essentials roll publishes it: the cluster, its nodes, the
+decorative packets or an assumed bidirectional flow, and it follows traffic
+(ADR-0052, amendment 2026-11-10): pulses ride a line from its sender to its
+receiver only where something moved over it, as often as the rate its
+publisher stated over its window says, and a node pulses as fast as what
+moved through it and is still where nothing did — `Motion` is the one rule,
+and the inspector says what moved in words, never a percent. Paused, or where
+the reader's system asks for reduced motion, the pulses stand along the line
+and a busy node keeps its ring, so where traffic is still shows; the Desktop
+and the Web load the one stylesheet. An Essentials roll of real nodes, C1
+among them, draws no line yet: no node publishes what it hands another, and
+the roll matches its Parties to endpoints by transport while a real node
+names its endpoints by Location, so there only the nodes move (open problem
+62); a node read on its own draws its `any-party` lines and moves on them. A
+band drawn holds while the rate stays within a fifth of its edges, so a
+steady rate read a little each side of one keeps its pulses and its ring.
+The snapshot surface reads this model, and an Essentials roll publishes it: the cluster, its nodes, the
 stages of the message path each node runs — receive, process, send — one
 endpoint per transport beneath a receive or a send stage, and the handoffs
 between the nodes, receive to process to send — every pair the roster
 configures, and every pair a handoff was delivered over, each link's volume
-its hops and its rate their rise per second since the roll's last
-publication; the shared store
+its hops and its rate their rise per second over the roll's window of the
+last thirty seconds; the shared store
 is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
 ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
 started with — tests, cluster, nodes, which are online, the level — in one line
