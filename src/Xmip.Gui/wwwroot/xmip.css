@@ -5,36 +5,53 @@
    Send. Nodes are infrastructure and sit at the bottom, for when a stage is
    red and the operator needs to know where. */
 
+/* The theme is the operator's choice (ADR-0052, amendment 2026-11-12; the
+   owner, the same day: "Themes are missing, I like Dark Mode. Make it a
+   choice"): every token below has a light value and a dark one, light-dark()
+   picks by the color scheme in force, and data-theme on the frame every host
+   draws in (Themed) sets it — the system's, light or dark. */
+:root, .themed[data-theme="system"] { color-scheme: light dark; }
+.themed[data-theme="light"] { color-scheme: light; }
+.themed[data-theme="dark"] { color-scheme: dark; }
+
 :root {
     /* The brand: the logo's own lime green (the owner, 2026-09-12). It is the
        accent for everything that is chosen, active or primary — never a mood.
        Lime reads on ink, not on paper, so text that must be read on white
-       uses the deeper cut. */
+       uses the deeper cut; on dark paper lime itself reads. */
     --brand: #75c93b;
-    --brand-deep: #4f9a24;
-    --brand-tint: #eef8e6;
+    --brand-deep: light-dark(#4f9a24, #8fd65a);
+    --brand-tint: light-dark(#eef8e6, #23331b);
 
     /* Health is a mood, and which color names which mood is the runtime's
        to say (observe::Health::color, ADR-0041): the page carries the name
        as a class and this sheet only paints each name. Green is the brand
-       family, one cut deeper so a word in it stays legible. */
-    --green: #5cb32c;
-    --slate: #718096;
-    --blue: #3182ce;
-    --yellow: #d69e2e;
-    --burnt: #c05621;
-    --orange: #dd6b20;
-    --red: #c53030;
+       family, one cut deeper so a word in it stays legible; on dark paper
+       each mood takes a lighter cut, so a word in it stays legible there. */
+    --green: light-dark(#5cb32c, #6fc93f);
+    --slate: light-dark(#718096, #a0aec0);
+    --blue: light-dark(#3182ce, #63b3ed);
+    --yellow: light-dark(#d69e2e, #ecc94b);
+    --burnt: light-dark(#c05621, #dd6b20);
+    --orange: light-dark(#dd6b20, #f6ad55);
+    --red: light-dark(#c53030, #fc8181);
+
+    /* Ink is the brand's dark: the bar's ground in either theme and the
+       text on lime. The page's own text and paper follow the theme. */
     --ink: #1a202c;
-    --muted: #718096;
-    --line: #e2e8f0;
-    --paper: #ffffff;
-    --ground: #f7fafc;
+    --text: light-dark(#1a202c, #e2e8f0);
+    --muted: light-dark(#718096, #a0aec0);
+    --line: light-dark(#e2e8f0, #2d3748);
+    --paper: light-dark(#ffffff, #1e2430);
+    --ground: light-dark(#f7fafc, #151a22);
 
     /* The paint of whatever mood an element sits in; outside one, the text's
        own color. */
     --mood: currentColor;
 }
+
+/* The frame fills the window, so no edge shows the other theme's ground. */
+.themed { min-height: 100vh; color: var(--text); background: var(--ground); }
 
 /* Each color name the runtime gives a mood, to its token (ADR-0041, amendment
    2026-09-14). Nothing here says which mood is which color: an element in a
@@ -54,7 +71,7 @@
 body {
     margin: 0;
     font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-    color: var(--ink);
+    color: var(--text);
     background: var(--ground);
 }
 
@@ -135,7 +152,7 @@ body {
     flex: 0 1 26rem;
     padding: 0.2rem 0.5rem;
     font: inherit;
-    color: var(--ink);
+    color: var(--text);
     background: var(--ground);
     border: 1px solid var(--line);
     border-radius: 4px;
@@ -246,7 +263,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     width: 100%;
     z-index: 1000;
     padding: 0.6rem 1.25rem 0.7rem;
-    color: var(--ink);
+    color: var(--text);
     background: var(--paper);
     border-top: 3px solid var(--red);
     box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
@@ -272,7 +289,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .reconnect-panel {
     padding: 0.6rem 1.25rem 0.7rem;
-    color: var(--ink);
+    color: var(--text);
     background: var(--paper);
     border-top: 3px solid var(--brand);
     box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
@@ -295,7 +312,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .trouble { padding: 1.5rem; max-width: 40rem; }
 .trouble h1 { font-size: 1.15rem; margin: 0 0 0.5rem; }
 .trouble p { color: var(--muted); margin: 0 0 0.5rem; }
-.trouble code { font-family: ui-monospace, monospace; color: var(--ink); }
+.trouble code { font-family: ui-monospace, monospace; color: var(--text); }
 
 /* Pause and resume: the operator acting, not just watching. Small, on the row,
    never the loudest thing on the page. */
@@ -303,7 +320,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     font: inherit;
     font-size: 0.8rem;
     padding: 0.2rem 0.6rem;
-    color: var(--ink);
+    color: var(--text);
     background: var(--ground);
     border: 1px solid var(--line);
     border-radius: 4px;
@@ -319,7 +336,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem;
     min-width: 0; font-size: 0.85rem; color: var(--muted);
 }
-.why .leaf { font-family: ui-monospace, monospace; color: var(--ink); }
+.why .leaf { font-family: ui-monospace, monospace; color: var(--text); }
 .why .mood { font-weight: 600; }
 .why .evidence { overflow: hidden; text-overflow: ellipsis; }
 .why .age { font-variant-numeric: tabular-nums; }
@@ -390,7 +407,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     grid-column: 2 / -1; color: var(--muted); font-size: 0.8rem;
 }
 .drill-leaf { cursor: default; }
-.drill-leaf .evidence { font-size: 0.9rem; color: var(--ink); white-space: normal; }
+.drill-leaf .evidence { font-size: 0.9rem; color: var(--text); white-space: normal; }
 .drill-leaf:not(.fine) .worst { color: var(--mood); }
 /* Retry and Dismiss on the last Message that failed at a Send Port, beneath
    its evidence, with what the last act came to beside them. */
@@ -460,7 +477,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .group-head button { margin-left: auto; }
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
 .fields label { display: grid; gap: 0.25rem; color: var(--muted); font-size: 0.8rem; }
-.fields input { padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--ink); }
+.fields input { padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--text); }
 .locs { width: 100%; border-collapse: collapse; }
 .locs th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.8rem; padding: 0.25rem 0.5rem; }
 .locs td { padding: 0.25rem 0.5rem; }
@@ -511,7 +528,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .inspect-links a:hover, .crumb-link:hover { text-decoration: underline; }
 .crumb-link { margin-left: auto; }
 .topology-tools button {
-    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    border: 1px solid var(--line); background: var(--paper); color: var(--text);
     border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; cursor: pointer;
 }
 .topology-tools button:hover {
@@ -544,7 +561,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node:hover .node-body, .topology-node:focus .node-body { stroke: var(--brand); }
 .topology-node.configured .node-body { stroke-dasharray: 6 4; }
 .topology-node.observed .node-body { stroke-width: 3; }
-.topology-node .node-label { fill: var(--ink); font-size: 13px; font-weight: 700; pointer-events: none; }
+.topology-node .node-label { fill: var(--text); font-size: 13px; font-weight: 700; pointer-events: none; }
 .topology-node .node-kind { fill: var(--muted); font-size: 10px; pointer-events: none; }
 .topology-node .node-load-track { fill: var(--line); }
 .topology-node .node-load { fill: var(--green); }
@@ -589,7 +606,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 /* What passes over a line, written on it: a used line its volume and rate,
    a configured one that has carried nothing says so (2026-09-25). */
 .topology-link .link-figure {
-    fill: var(--ink); font-size: 11px; font-variant-numeric: tabular-nums;
+    fill: var(--text); font-size: 11px; font-variant-numeric: tabular-nums;
     paint-order: stroke; stroke: var(--paper); stroke-width: 4px; pointer-events: none;
 }
 .topology-link.configured .link-figure { fill: var(--muted); font-style: italic; }
@@ -598,7 +615,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-focus .focus-frame {
     fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 6;
 }
-.topology-focus .focus-label { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.topology-focus .focus-label { fill: var(--text); font-size: 14px; font-weight: 700; }
 .topology-focus .focus-kind { fill: var(--muted); font-size: 11px; font-weight: 400; }
 .topology-outside .outside-body {
     fill: var(--paper); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4;
@@ -609,7 +626,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-node-link:focus-visible .node-body { stroke: var(--brand); stroke-width: 3; }
 .topology-trail a { color: var(--muted); text-decoration: none; }
 .topology-trail a:hover { color: var(--brand-deep); text-decoration: underline; }
-.topology-trail a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.topology-trail a[aria-current="page"] { color: var(--text); font-weight: 600; }
 .topology-inspector h3 { font-size: 0.85rem; margin: 1rem 0 0.4rem; color: var(--muted); }
 .topology-beneath, .topology-traffic { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; }
 .topology-beneath li, .topology-traffic li {
@@ -693,7 +710,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .audit-filters label { display: inline-flex; align-items: center; gap: 0.35rem; }
 .audit-filters select, .audit-filters input {
-    font: inherit; color: var(--ink); background: var(--paper);
+    font: inherit; color: var(--text); background: var(--paper);
     border: 1px solid var(--line); border-radius: 4px; padding: 0.15rem 0.35rem;
 }
 .audit-filters select:focus, .audit-filters input:focus { outline: none; border-color: var(--brand); }
@@ -734,7 +751,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 }
 .audit-sort { color: var(--muted); text-decoration: none; white-space: nowrap; font-weight: 500; }
 .audit-sort:hover { color: var(--brand-deep); }
-.audit-sort.sorted { color: var(--ink); font-weight: 700; }
+.audit-sort.sorted { color: var(--text); font-weight: 700; }
 .audit-row .audit-at, .audit-row .audit-node, .audit-row .audit-program {
     font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -817,7 +834,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .subs-head span { color: var(--muted); font-weight: 500; }
 .subs-sort { color: var(--muted); text-decoration: none; white-space: nowrap; font-weight: 500; }
 .subs-sort:hover { color: var(--brand-deep); }
-.subs-sort.sorted { color: var(--ink); font-weight: 700; }
+.subs-sort.sorted { color: var(--text); font-weight: 700; }
 .subs-row a { color: inherit; text-decoration: none; }
 .subs-row a:hover { color: var(--brand-deep); text-decoration: underline; }
 /* The Party's declared name; its identifier where it was declared with
@@ -905,7 +922,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .secret-set label span { color: var(--muted); }
 .secret-set input, .secret-set select {
     padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
-    font: inherit; color: var(--ink);
+    font: inherit; color: var(--text);
 }
 .secret-set input:focus, .secret-set select:focus { outline: none; border-color: var(--brand); }
 .secret-set .act:disabled { opacity: 0.5; cursor: default; }

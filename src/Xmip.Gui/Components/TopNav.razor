@@ -1,7 +1,7 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Xmip.Gui.Surface
 @inject RoleContext Role
-@inject IBarOrderStore Bar
+@inject IPreferenceStore Bar
 
 @* The bar every host shows, once: the nine views this library draws, in
    the order the operator arranged them, else most wanted first (ADR-0052,
@@ -14,10 +14,12 @@
 
    An operator drags a view onto another to put it there, or presses
    Arrange for a ‹ and a › beside each view, the keyboard's way, and Reset
-   for the default; the order is kept by the host's store (IBarOrderStore),
+   for the default; the order is kept by the host's store (IPreferenceStore),
    a cookie for a browser, a local TOML file for the desktop, and the first
-   view is where the bare address opens. Arranging is a view of one's own,
-   no act on Xmip, so every role may. *@
+   view is where the bare address opens. Theme turns the paint from the
+   system's to light, to dark and round again, kept by the same store
+   (ThemeChoice). Arranging and the theme are a view of one's own, no act on
+   Xmip, so every role may. *@
 <nav class="topnav">
     <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
     @foreach ((BarTab tab, int at) in Order.Select((tab, at) => (tab, at)))
@@ -53,6 +55,9 @@
         <button type="button" class="topnav-arrange" title="The default order"
                 @onclick="() => Keep(null)">Reset</button>
     }
+    <button type="button" class="topnav-arrange topnav-theme"
+            title="@($"Theme: {ThemeChoice.Name(Bar.Theme)}; press for {ThemeChoice.Name(ThemeChoice.Next(Bar.Theme))}")"
+            @onclick="() => Bar.Keep(ThemeChoice.Next(Bar.Theme))">@ThemeChoice.Name(Bar.Theme)</button>
     <div class="role">
         <span class="role-label">role</span>
         <span class="role-pick active" title="@Role.Role.Describe()">@Role.Role</span>

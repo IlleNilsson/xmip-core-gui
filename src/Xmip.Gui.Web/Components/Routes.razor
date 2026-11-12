@@ -1,10 +1,11 @@
 ﻿@using Xmip.Gui.Surface
-@inject BarOrderCookie Bar
+@inject PreferenceCookie Preferences
 
 @* The pages live in Xmip.Gui, the shared library, so the router is told to
    look there too. This host contributes only the layout and error pages,
-   and the order the browser keeps the bar in, handed from the request that
-   asked for the page to the circuit that draws it. *@
+   and the operator's own view the browser keeps — the bar's order and the
+   theme — handed from the request that asked for the page to the circuit
+   that draws it. *@
 <Router AppAssembly="typeof(Program).Assembly"
         AdditionalAssemblies="new[] { typeof(Xmip.Gui.Pages.Cluster).Assembly }"
         NotFoundPage="typeof(Pages.NotFound)">
@@ -15,14 +16,20 @@
 </Router>
 
 @code {
-    /// <summary>What the browser's cookie held when the page was asked for
+    /// <summary>What the bar's cookie held when the page was asked for
     /// (<see cref="BarOrder.Cookie"/>); null where it held nothing.</summary>
     [Parameter]
     public string? BarSaid { get; set; }
 
+    /// <summary>What the theme's cookie held when the page was asked for
+    /// (<see cref="ThemeChoice.Cookie"/>); null where it held nothing.</summary>
+    [Parameter]
+    public string? ThemeSaid { get; set; }
+
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
-        Bar.Said = BarSaid;
+        Preferences.SaidBar = BarSaid;
+        Preferences.SaidTheme = ThemeSaid;
     }
 }

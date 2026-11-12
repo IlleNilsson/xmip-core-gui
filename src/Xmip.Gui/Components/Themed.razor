@@ -1,0 +1,34 @@
+@using Xmip.Gui.Surface
+@implements IDisposable
+@inject IPreferenceStore Preferences
+
+@* The operator's theme over everything a host draws, Web and Desktop
+   alike (ADR-0052, amendment 2026-11-12): data-theme says light, dark or
+   the system's, and the stylesheet paints every token by it. It fills the
+   window, so no edge shows the other theme's ground. *@
+<div class="themed" data-theme="@ThemeChoice.Word(Preferences.Theme)">
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>What the host draws: the bar and the view.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        Preferences.Changed += Redraw;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Preferences.Changed -= Redraw;
+    }
+
+    private void Redraw()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+}

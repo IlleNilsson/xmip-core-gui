@@ -40,7 +40,10 @@ by default (ADR-0052, amendments 2026-11-12; the owner, the same day:
 view onto another, or presses *Arrange* for a ‹ and a › beside each and
 *Reset* for the default; the Web host keeps the order in the browser's
 cookie, the Desktop in `preferences.toml` in its data folder
-(`BarOrder`, `IBarOrderStore`), and the bare address opens the first view.
+(`BarOrder`, `IPreferenceStore`), and the bare address opens the first view.
+The *Theme* button beside *Arrange* turns the paint from the system's to
+light, to dark and round again, kept by the same store (`ThemeChoice`;
+ADR-0052, amendment 2026-11-12: the theme).
 By default: **Monitor**, at `/monitor`, the board that follows Receive → Process →
 Send; **Dead Message Queue**, the accepted Messages no Subscription matched,
 the one view where something waits on a person (ADR-0052, amendment

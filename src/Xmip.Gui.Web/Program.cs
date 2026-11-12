@@ -88,12 +88,13 @@ try
     builder.Services.AddSingleton(RoleAssignment.From(builder.Configuration));
     builder.Services.AddXmipProvenCaller();
 
-    // The order of the bar's views is each browser's own, kept in its cookie
-    // (ADR-0052, amendment 2026-11-12): read as a page is asked for, handed
-    // to the circuit by Routes, and written at the address mapped below.
-    builder.Services.AddScoped<BarOrderCookie>();
-    builder.Services.AddScoped<IBarOrderStore>(
-        services => services.GetRequiredService<BarOrderCookie>());
+    // The operator's own view — the bar's order and the theme — is each
+    // browser's own, kept in its cookies (ADR-0052, amendments 2026-11-12):
+    // read as a page is asked for, handed to the circuit by Routes, and
+    // written at the address mapped below.
+    builder.Services.AddScoped<PreferenceCookie>();
+    builder.Services.AddScoped<IPreferenceStore>(
+        services => services.GetRequiredService<PreferenceCookie>());
 
     // The surfaces every screen reads, chosen in gui.toml and never guessed
     // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
@@ -164,33 +165,28 @@ try
 
     app.MapStaticAssets();
 
-    // A browser keeping the order it arranged the bar in: the cookie
-    // written, or deleted where the order is the default, and the browser
-    // sent back to the page it came from, on this host only (BarOrder.Asked).
-    // The cookie holds a view of one's own, nothing to protect, so it is the
-    // page's only and never sent across sites.
-    app.MapGet("/" + BarOrderCookie.Address, (HttpContext context, string? order, string? back) =>
-    {
-        (string? kept, string to) = BarOrder.Asked(order, back);
-
-        if (kept is null)
+    // A browser keeping what it chose — the order it arranged the bar in, or
+    // its theme: each cookie asked for written, or deleted where the choice
+    // is the default, and the browser sent back to the page it came from, on
+    // this host only (PreferenceCookie.Back). A cookie holds a view of one's
+    // own, nothing to protect, so it is the page's only and never sent across
+    // sites.
+    app.MapGet(
+        "/" + PreferenceCookie.Address,
+        (HttpContext context, string? bar, string? theme, string? back) =>
         {
-            context.Response.Cookies.Delete(BarOrder.Cookie);
-        }
-        else
-        {
-            context.Response.Cookies.Append(BarOrder.Cookie, kept, new CookieOptions
+            if (bar is not null)
             {
-                Path = "/",
-                HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                IsEssential = true,
-                MaxAge = TimeSpan.FromDays(400),
-            });
-        }
+                Kept(context, BarOrder.Cookie, BarOrder.Kept(bar));
+            }
 
-        return Results.LocalRedirect(to);
-    });
+            if (theme is not null)
+            {
+                Kept(context, ThemeChoice.Cookie, ThemeChoice.Kept(theme));
+            }
+
+            return Results.LocalRedirect(PreferenceCookie.Back(back));
+        });
 
     // The pages are in Xmip.Gui, the shared library. Both the endpoint mapping
     // here and the <Router> in Routes.razor have to be told so; the router alone
@@ -249,4 +245,24 @@ catch (Exception failure) when (failure is not HostAbortedException)
 static string? Located(IReadOnlyList<string> snapshots)
 {
     return snapshots.Count == 0 ? null : string.Join(", ", snapshots);
+}
+
+// One of the operator's choices kept in its cookie, or the cookie deleted
+// where the choice is the default (null).
+static void Kept(HttpContext context, string cookie, string? value)
+{
+    if (value is null)
+    {
+        context.Response.Cookies.Delete(cookie);
+        return;
+    }
+
+    context.Response.Cookies.Append(cookie, value, new CookieOptions
+    {
+        Path = "/",
+        HttpOnly = true,
+        SameSite = SameSiteMode.Strict,
+        IsEssential = true,
+        MaxAge = TimeSpan.FromDays(400),
+    });
 }
