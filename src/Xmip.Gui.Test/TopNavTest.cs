@@ -20,22 +20,21 @@ public sealed class TopNavTest : BunitContext
 
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
-        // The Subscriptions before the Event subscriptions (ADR-0052,
-        // amendment 2026-09-30), the Dead Message Queue after the
-        // Subscriptions whose declines it shows (amendment 2026-10-01), the
-        // Secrets before the Audit (ADR-0014, amendment 2026-10-30), the
-        // Reports after the Audit and offered an Observer too (ADR-0072,
-        // amendment 2026-11-10), each tab by what it is.
+        // Most wanted first (ADR-0052, amendment 2026-11-12): the Monitor,
+        // the Dead Message Queue and the Subscriptions that fix it, the
+        // Topology, the Configuration, the Event subscriptions, the Audit,
+        // the Reports offered an Observer too (ADR-0072, amendment
+        // 2026-11-10), and the Secrets last, each tab by what it is.
         Assert.Equal(
             [
-                "/configuration", "/", "/topology", "/subscriptions", "/dead-messages",
-                "/event-subscriptions", "/secrets", "/audit", "/reports",
+                "/", "/dead-messages", "/subscriptions", "/topology", "/configuration",
+                "/event-subscriptions", "/audit", "/reports", "/secrets",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
         Assert.Equal(
             [
-                "Configuration", "Monitor", "Topology", "Subscriptions", "Dead Message Queue",
-                "Event subscriptions", "Secrets", "Audit", "Reports",
+                "Monitor", "Dead Message Queue", "Subscriptions", "Topology", "Configuration",
+                "Event subscriptions", "Audit", "Reports", "Secrets",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.TextContent.Trim()));
         AngleSharp.Dom.IElement role = bar.Find(".role-pick");

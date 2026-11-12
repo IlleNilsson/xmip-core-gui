@@ -5,7 +5,8 @@
    same day: "I just want the user to know that a report may go quicker than
    a report based on quests"). The legend first: each kind's icon, name and
    meaning, as the runtime words them. Then a row per Report in the
-   runtime's order: its kind, its name, what it covers and what to expect —
+   runtime's order: its kind's icon alone (ADR-0072, amendment 2026-11-12),
+   its name, what it covers and what to expect —
    how long a Quest's last probe took, or that it was not probed yet. The
    name is a link where the Report opens: a quick one at the view that
    already presents it (ScopeLink.Presented), a Quest's to its probe. One not
@@ -15,7 +16,7 @@
     @foreach (ReportKindWords kind in Listing.Kinds)
     {
         <li>
-            <ReportKindLabel Words="kind" />
+            <ReportKindLabel Words="kind" Named="true" />
             <span class="report-meaning">@kind.Meaning</span>
         </li>
     }

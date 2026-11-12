@@ -34,22 +34,24 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Nine views, and nine points to drill from, in this order on the bar:
-**Configuration**, the classic tree, holding still; **Monitor**, the board
-that follows Receive → Process → Send; **Topology** (ADR-0052, amendments
-2026-09-14 and 2026-09-18); **Subscriptions**, what picks a published Message
-up and opens a Journey (ADR-0013, amendment 2026-09-30); **Dead Message
-Queue**, the accepted Messages no Subscription matched (ADR-0052, amendment
-2026-10-01); **Event subscriptions**, who hears what Xmip did (ADR-0065,
-amendment 2026-09-29); **Secrets**, what a Location presents to the party
-it connects to (ADR-0014, amendment 2026-10-30); **Audit**, what every
-Xmip program recorded (ADR-0062, amendment 2026-09-29); and **Reports**,
-every Report in one list, each saying whether it is quick or a Quest probes
-first (ADR-0072, amendment 2026-11-10) — the last six
-described below, the Subscriptions placed before the Event subscriptions by
-ADR-0052, amendment 2026-09-30, the Dead Message Queue after the
-Subscriptions, whose declines it shows, the Secrets before the Audit, and
-the Reports after it, the Audit Report opening at the Audit view. A
+Nine views, and nine points to drill from, most wanted first on the bar
+(ADR-0052, amendment 2026-11-12; the owner, the same day: *Monitor is the
+most desired view*): **Monitor**, the board that follows Receive → Process →
+Send; **Dead Message Queue**, the accepted Messages no Subscription matched,
+the one view where something waits on a person (ADR-0052, amendment
+2026-10-01); **Subscriptions**, what picks a published Message up and opens
+a Journey, beside the queue it usually fixes (ADR-0013, amendment
+2026-09-30); **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18);
+**Configuration**, the classic tree, holding still; **Event
+subscriptions**, who hears what Xmip did (ADR-0065, amendment 2026-09-29);
+**Audit**, what every Xmip program recorded (ADR-0062, amendment
+2026-09-29); **Reports**, every Report in one list, each with a Report or a
+Probing report icon (ADR-0072, amendments 2026-11-10 and 2026-11-12), the
+Audit Report opening at the Audit view; and **Secrets** last, what a
+Location presents to the party it connects to (ADR-0014, amendment
+2026-10-30), the least visited and the most sensitive — the Subscriptions,
+the Dead Message Queue, the Event subscriptions, the Audit, the Reports and
+the Secrets described below. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -289,12 +291,14 @@ want the user to know that a report may go quicker than a report based on
 quests*) lists every Report in one list: the runtime's, through
 `ReportCatalog` in `Xmip.Surface` and `xmip_report_v1` (`xmip_operate.h`
 section 25), and the view keeps no list, kind or word of its own. A legend
-comes first: each kind with its icon, its name and what it means — a bolt
-for *Quick*, a Report that presents data that already exists; an hourglass
-for *Takes longer*, a Report that presents what a Quest probes first —
-plain inline icons drawn in the text's own color, never the brand or a mood,
-and never without the words (`ReportKindLabel`). Then a row per Report, in
-the runtime's order: its kind, its name, what it covers and what to expect,
+comes first: each kind with its icon, its name and what it means — a page
+for *Report*, a Report that presents data that already exists; the page
+under a magnifying glass for *Probing report*, a Report that presents what a
+Quest probes first — plain inline icons drawn in the text's own color, never
+the brand or a mood (`ReportKindLabel`). Then a row per Report, in the
+runtime's order: its kind's icon alone, its name and meaning the icon's
+accessible name and hover text (the owner, 2026-11-12: *Report icon and a
+Probing report icon, not the text*), its name, what it covers and what to expect,
 for a Quest how long its last probe took, read back from the audit the
 runtime recorded the probe in, or *not probed yet*. One not yet available is
 listed, muted and in italics, says *not yet available* and links nowhere. A

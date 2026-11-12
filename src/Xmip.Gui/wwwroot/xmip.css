@@ -897,10 +897,11 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 /* The Reports (ADR-0072, amendment 2026-11-10): every Report in one list,
    in the subscriptions views' shape — its kind, its name, what it covers
    and what to expect — and a probed Report's rows, its state, requirement
-   and citation. A kind is a small plain icon, drawn in the text's own color
-   and always with its name beside it: a bolt for quick, a Report of data
-   that already exists; an hourglass for takes longer, a Report of what a
-   Quest probes first. Neither is the brand or a mood, so neither is
+   and citation. A kind is a small plain icon, drawn in the text's own color,
+   its name beside it in the legend alone (amendment 2026-11-12): a page for
+   a Report, of data that already exists; the page under a magnifying glass
+   for a Probing report, of what a Quest probes first. Neither is the brand
+   or a mood, so neither is
    colored, and a state is a word, never painted. One not yet available is
    muted and in italics and says so in words. */
 .report-entries .subs-row {
@@ -913,7 +914,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     text-transform: uppercase; letter-spacing: 0.04em;
 }
 .report-icon {
-    width: 1em; height: 1em; flex: none;
+    width: 1.4em; height: 1.4em; flex: none;
     stroke: currentColor; fill: none; stroke-width: 1.5;
     stroke-linejoin: round; stroke-linecap: round;
 }
