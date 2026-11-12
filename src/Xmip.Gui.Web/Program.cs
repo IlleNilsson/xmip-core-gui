@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
+using Xmip.Gui.Surface;
 using Xmip.Gui.Web;
 using Xmip.Gui.Web.Components;
 using Xmip.Surface;
@@ -87,6 +88,13 @@ try
     builder.Services.AddSingleton(RoleAssignment.From(builder.Configuration));
     builder.Services.AddXmipProvenCaller();
 
+    // The order of the bar's views is each browser's own, kept in its cookie
+    // (ADR-0052, amendment 2026-11-12): read as a page is asked for, handed
+    // to the circuit by Routes, and written at the address mapped below.
+    builder.Services.AddScoped<BarOrderCookie>();
+    builder.Services.AddScoped<IBarOrderStore>(
+        services => services.GetRequiredService<BarOrderCookie>());
+
     // The surfaces every screen reads, chosen in gui.toml and never guessed
     // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
     // path — or, since the amendment of 2026-09-20, one snapshot per cluster, so
@@ -155,6 +163,35 @@ try
     app.UseXmipProvenCaller();
 
     app.MapStaticAssets();
+
+    // A browser keeping the order it arranged the bar in: the cookie
+    // written, or deleted where the order is the default, and the browser
+    // sent back to the page it came from, on this host only (BarOrder.Asked).
+    // The cookie holds a view of one's own, nothing to protect, so it is the
+    // page's only and never sent across sites.
+    app.MapGet("/" + BarOrderCookie.Address, (HttpContext context, string? order, string? back) =>
+    {
+        (string? kept, string to) = BarOrder.Asked(order, back);
+
+        if (kept is null)
+        {
+            context.Response.Cookies.Delete(BarOrder.Cookie);
+        }
+        else
+        {
+            context.Response.Cookies.Append(BarOrder.Cookie, kept, new CookieOptions
+            {
+                Path = "/",
+                HttpOnly = true,
+                SameSite = SameSiteMode.Strict,
+                IsEssential = true,
+                MaxAge = TimeSpan.FromDays(400),
+            });
+        }
+
+        return Results.LocalRedirect(to);
+    });
+
     // The pages are in Xmip.Gui, the shared library. Both the endpoint mapping
     // here and the <Router> in Routes.razor have to be told so; the router alone
     // finds the page and the endpoint alone serves it, and either without the

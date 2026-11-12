@@ -1,0 +1,23 @@
+@page "/"
+@using Xmip.Gui.Surface
+@inject NavigationManager Navigation
+@inject IBarOrderStore Bar
+
+@* The bare address opens the first view on the operator's bar, the
+   Monitor unless they arranged another first (ADR-0052, amendment
+   2026-11-12; the owner, the same day: "First page in the operator view is
+   Monitor, unless sorted other"). An address that asks something of the
+   Monitor — a scope, a cluster, the test clusters' box, as every link built
+   before the Monitor had its own address did — is the Monitor's still. *@
+
+@code {
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        string query = new Uri(Navigation.Uri).Query;
+
+        Navigation.NavigateTo(
+            query.Length > 0 ? $"monitor{query}" : BarOrder.Start(Bar.Order).TrimStart('/'),
+            replace: true);
+    }
+}

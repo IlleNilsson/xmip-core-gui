@@ -39,7 +39,7 @@ public static class ScopeLink
     /// <summary>The Monitor's drill at the scope, on this cluster.</summary>
     public static string Monitor(string scope, Carry? carry = null)
     {
-        return Address("/", carry, ("scope", scope));
+        return Address("/monitor", carry, ("scope", scope));
     }
 
     /// <summary>The name the address gives the Topology's open node.</summary>

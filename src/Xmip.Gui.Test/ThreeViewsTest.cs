@@ -145,6 +145,7 @@ public sealed class ThreeViewsTest : BunitContext
         string anchor = $"s-xmip----{Names.Name}-node-{Names.Nodes[0]}";
         Assert.Equal(anchor, ScopeLink.Anchor(node));
         Assert.Equal($"configuration#{anchor}", ScopeLink.Configuration(node));
-        Assert.Equal($"/?scope=xmip%3A%2F%2F%2F{Names.Name}", ScopeLink.Monitor(Names.Scope));
+        Assert.Equal(
+            $"/monitor?scope=xmip%3A%2F%2F%2F{Names.Name}", ScopeLink.Monitor(Names.Scope));
     }
 }

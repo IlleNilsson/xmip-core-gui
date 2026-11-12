@@ -35,8 +35,13 @@ stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
 Nine views, and nine points to drill from, most wanted first on the bar
-(ADR-0052, amendment 2026-11-12; the owner, the same day: *Monitor is the
-most desired view*): **Monitor**, the board that follows Receive → Process →
+by default (ADR-0052, amendments 2026-11-12; the owner, the same day:
+*Monitor is the most desired view*). An operator arranges them: drags a
+view onto another, or presses *Arrange* for a ‹ and a › beside each and
+*Reset* for the default; the Web host keeps the order in the browser's
+cookie, the Desktop in `preferences.toml` in its data folder
+(`BarOrder`, `IBarOrderStore`), and the bare address opens the first view.
+By default: **Monitor**, at `/monitor`, the board that follows Receive → Process →
 Send; **Dead Message Queue**, the accepted Messages no Subscription matched,
 the one view where something waits on a person (ADR-0052, amendment
 2026-10-01); **Subscriptions**, what picks a published Message up and opens
