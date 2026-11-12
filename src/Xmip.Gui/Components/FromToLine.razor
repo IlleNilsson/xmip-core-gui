@@ -1,0 +1,16 @@
+@* From and to on every observation (the owner, 2026-11-10): where the work
+   at a row came from and where it went, in the runtime's own words
+   (IOperatorSurface.FromTo, observe::topology::from_to; ADR-0052, amendment
+   2026-11-11), the whole path on hover. Renders nothing where nothing is
+   said: a scope on no node, or a drawing not made yet. *@
+
+@if (Said is { Said: true } path)
+{
+    <span class="from-to" title="@path.Path">@path.Line</span>
+}
+
+@code {
+    /// <summary>What the runtime said of the row's scope.</summary>
+    [Parameter]
+    public FromTo? Said { get; set; }
+}

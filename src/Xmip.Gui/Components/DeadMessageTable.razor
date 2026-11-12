@@ -40,6 +40,14 @@
                 </a>
                 <span class="subs-destination dead-location" title="@entry.ReceiveLocation">
                     @entry.ReceiveLocation
+                    @* From where its Location takes its work, to no Subscription:
+                       the runtime's words (ADR-0052, amendment 2026-11-11). *@
+                    @if (PathOf?.Invoke(LocationScope(entry)) is { Said: true } path)
+                    {
+                        <small class="from-to" title="@path.Path">
+                            from @path.From → to @path.Unrouted
+                        </small>
+                    }
                 </span>
                 <span class="subs-figure dead-declines"
                       title="@string.Join("; ", entry.Declines.Select(Said))">
@@ -86,6 +94,17 @@
     /// <summary>Raised with a Message and the act taken on it.</summary>
     [Parameter]
     public EventCallback<(DeadMessageRecord, DeadMessageAct)> Acted { get; set; }
+
+    /// <summary>Where the work at a scope came from and went
+    /// (<c>IOperatorSurface.FromTo</c>); none where the view has no surface
+    /// to ask.</summary>
+    [Parameter]
+    public Func<string, FromTo>? PathOf { get; set; }
+
+    // The Receive Location an entry was taken at, as the node publishes it:
+    // beneath the node's first stage, receive.
+    private static string LocationScope(DeadMessageRecord entry) =>
+        ScopeTree.Join([.. ScopeTree.Parts(entry.Node), ScopeTree.Stages[0], entry.ReceiveLocation]);
 
     // The columns shown and what each is headed, by DeadMessageQuery's words.
     private static readonly (string Column, string Heading)[] Columns =

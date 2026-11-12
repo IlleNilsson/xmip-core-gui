@@ -323,6 +323,12 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .why .mood { font-weight: 600; }
 .why .evidence { overflow: hidden; text-overflow: ellipsis; }
 .why .age { font-variant-numeric: tabular-nums; }
+/* From and to on every observation (FromToLine.razor): the runtime's words,
+   beneath what they explain, quiet as evidence is. */
+.from-to {
+    display: block; font-size: 0.8rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .why:not(.fine, .holding) .mood { color: var(--mood); }
 .cluster .why { flex: 1; }
 .stage .why { margin-top: 0.35rem; font-size: 0.8rem; }

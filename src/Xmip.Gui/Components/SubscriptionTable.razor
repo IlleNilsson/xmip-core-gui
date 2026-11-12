@@ -37,7 +37,15 @@
                     @SubscriptionQuery.NodeName(entry)
                 </a>
                 <span class="subs-filter" title="@entry.Filter">@entry.Filter</span>
-                <span class="subs-destination" title="@entry.Destination">@entry.Destination</span>
+                @* Where its work goes: the Send Ports its destination reaches
+                   (ADR-0013, amendment 2026-11-11). *@
+                <span class="subs-destination" title="@entry.Destination">
+                    @entry.Destination
+                    @if (entry.Reaches.Count > 0)
+                    {
+                        <small class="subs-ports">to @string.Join(", ", entry.Reaches)</small>
+                    }
+                </span>
                 <span class="subs-state">@entry.State</span>
                 <span class="subs-figure">@English.Figure(entry.PickedUp)</span>
                 <span class="subs-figure">@English.Figure(entry.Held)</span>

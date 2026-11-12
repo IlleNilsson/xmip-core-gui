@@ -36,6 +36,13 @@
             <dt>Kind</dt><dd>@English.Name(FocusNode.Kind)</dd>
             <dt>State</dt><dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
             <dt>Evidence</dt><dd>@English.Value(FocusNode.Evidence)</dd>
+            @* From and to, as the runtime says them for this drawn thing
+               (observe::topology::from_to; ADR-0052, amendment 2026-11-11). *@
+            @if (Snapshot.Paths?.GetValueOrDefault(FocusNode.Scope) is { Said: true } path)
+            {
+                <dt>From</dt><dd class="from" title="@path.Path">@path.From</dd>
+                <dt>To</dt><dd class="to" title="@path.Path">@path.To</dd>
+            }
             @* Where the trouble is, not only what it says: the worst leaf
                beneath the node, one click from its record (ADR-0052
                clause 2). The topology draws down to an endpoint; the leaf

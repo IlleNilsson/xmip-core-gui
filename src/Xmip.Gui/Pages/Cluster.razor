@@ -25,7 +25,8 @@
 
 @* A card per stage: what that stage counted — the figures taken on it and
    nothing else (IOperatorSurface.Stage) — and what is configured at it, each
-   Receive Location, Work Process or Send Location once. Until 2026-09-26 the
+   Receive Location, Subscription or Send Location once by its name, however
+   many nodes hold it. The card is titled Receive, Work Process or Send. Until 2026-09-26 the
    card summed the whole cluster, so Receive counted the daily backlog's
    drain as received, and called every leaf beneath the stage, each contract
    and identity step, a thing configured. *@
@@ -36,9 +37,12 @@
         Figures counted = Surface.Stage(stage.Segment);
         FigureFlow moving = Watch(stage).Flow;
         int locations = Surface.Locations(stage.Segment).Count;
+        string unplaced = Surface.NoWorkProcessPlaced(stage.Segment)
+            ? $" · {English.NoWorkProcess}"
+            : string.Empty;
         string items = locations == 0
             ? "none configured"
-            : $"{stage.Location} ×{locations} · {English.Rollup(inStage)}";
+            : $"{stage.Location} ×{locations}{unplaced} · {English.Rollup(inStage)}";
         <button class="stage @Class(inStage) @(Selected == stage ? "selected" : "")"
                 @onclick="() => Select(stage)">
             <span class="name"><span class="dot"></span>@stage.Name</span>
@@ -61,7 +65,7 @@
    leaf's own record. *@
 <section class="drill">
     <nav class="crumbs">
-        @foreach (Crumb crumb in ScopeTree.Trail(Focus, Top))
+        @foreach (Crumb crumb in ScopeTree.Trail(Focus, Top, Index))
         {
             <a class="crumb-btn" href="@ScopeLink.Monitor(crumb.Scope, Carried)">@crumb.Label</a>
             <span class="sep">/</span>
@@ -111,8 +115,11 @@
                 <a class="branch @MoodClass.Of(branch.State)"
                    href="@ScopeLink.Monitor(branch.Scope, Carried)">
                     <span class="dot" title="severity @branch.Worst.Severity"></span>
-                    <span class="label">@branch.Label</span>
+                    @* A stage reads by its title: Work Process, never a bare
+                       process (ScopeIndex.Label; ADR-0052, amendment 2026-11-11). *@
+                    <span class="label">@Index.Label(branch.Scope)</span>
                     <span class="worst">@worst</span>
+                    <FromToLine Said="Surface.FromTo(branch.Scope)" />
                     @if (branch.IsLeaf)
                     {
                         <span class="evidence">@branch.Worst.Evidence</span>
@@ -153,7 +160,7 @@
                 <a class="scope"
                    href="@ScopeLink.Monitor(record.Scope, Carried)">@ScopeTree.Name(record.Scope)</a>
                 <span class="node">@ScopeTree.Node(record.Scope)</span>
-                <span class="evidence">@Evidence(record)</span>
+                <span class="evidence">@Evidence(record)<FromToLine Said="Surface.FromTo(record.Scope)" /></span>
                 <span class="age">@English.Age(record.Observed)</span>
                 @* Paused is a mood (ADR-0041): the record says so itself. *@
                 @if (Role.MayOperate() && ScopeTree.Pausable(record.Scope))
