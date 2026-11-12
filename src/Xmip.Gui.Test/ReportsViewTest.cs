@@ -121,15 +121,15 @@ public sealed class ReportsViewTest : BunitContext, IDisposable
         foreach ((ReportEntry entry, IElement row) in listing.Entries.Zip(rows))
         {
             IElement kind = row.QuerySelector(".report-kind")!;
-            string glyph = entry.Kind == ReportKind.ExistingData ? "bolt" : "hourglass";
-
-            Assert.Contains(entry.Words.Name, kind.TextContent, StringComparison.Ordinal);
-            Assert.Contains(
-                listing.Kinds.Single(words => words.Kind == entry.Kind).Word, kind.ClassList);
-            Assert.Contains(
-                glyph,
-                (kind.QuerySelector("svg.report-icon")?.GetAttribute("class") ?? string.Empty)
-                    .Split(' '));
+            IElement icon = kind.QuerySelector("svg.report-icon")!;
+            string glyph = entry.Kind == ReportKind.ExistingData ? "page" : "probing";
+            string word = listing.Kinds.Single(words => words.Kind == entry.Kind).Word;
+            // The icon alone; its name is what it says to a reader and on hover.
+            Assert.Equal(string.Empty, kind.TextContent.Trim());
+            Assert.Equal(entry.Words.Name, icon.GetAttribute("aria-label"));
+            Assert.Equal($"{entry.Words.Name}: {entry.Words.Meaning}", kind.GetAttribute("title"));
+            Assert.Contains(word, kind.ClassList);
+            Assert.Contains(glyph, (icon.GetAttribute("class") ?? string.Empty).Split(' '));
         }
     }
 
