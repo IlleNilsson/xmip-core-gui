@@ -89,7 +89,7 @@ public sealed class MonitorDrillTest : BunitContext
                 break;
             }
 
-            at = Uri.UnescapeDataString(next["/?scope=".Length..]);
+            at = Uri.UnescapeDataString(next["/monitor?scope=".Length..]);
         }
 
         Assert.Equal(Leaf, at);

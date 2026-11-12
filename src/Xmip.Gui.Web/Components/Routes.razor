@@ -1,5 +1,10 @@
-﻿@* The pages live in Xmip.Gui, the shared library, so the router is told to
-   look there too. This host contributes only the layout and error pages. *@
+﻿@using Xmip.Gui.Surface
+@inject BarOrderCookie Bar
+
+@* The pages live in Xmip.Gui, the shared library, so the router is told to
+   look there too. This host contributes only the layout and error pages,
+   and the order the browser keeps the bar in, handed from the request that
+   asked for the page to the circuit that draws it. *@
 <Router AppAssembly="typeof(Program).Assembly"
         AdditionalAssemblies="new[] { typeof(Xmip.Gui.Pages.Cluster).Assembly }"
         NotFoundPage="typeof(Pages.NotFound)">
@@ -8,3 +13,16 @@
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
+
+@code {
+    /// <summary>What the browser's cookie held when the page was asked for
+    /// (<see cref="BarOrder.Cookie"/>); null where it held nothing.</summary>
+    [Parameter]
+    public string? BarSaid { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Bar.Said = BarSaid;
+    }
+}

@@ -414,6 +414,23 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topnav-link:hover { background: rgba(117,201,59,0.14); color: var(--brand); }
 .topnav-link.active { background: var(--brand); color: var(--ink); }
 
+/* The operator's own order (ADR-0052, amendment 2026-11-12): a view dragged
+   onto another takes its place; Arrange shows a ‹ and a › beside each view
+   for the keyboard, and Reset. The buttons are the links' own color, warm
+   to lime on hover as they do, and Arrange pressed stays lime. */
+.topnav-tab { display: inline-flex; align-items: center; gap: 0.1rem; }
+.topnav-tab.dragged { opacity: 0.5; }
+.topnav-move, .topnav-arrange {
+    color: #cbd5e0; background: none; border: 1px solid transparent;
+    font: inherit; font-size: 0.85rem; cursor: pointer;
+    padding: 0.2rem 0.45rem; border-radius: 6px;
+}
+.topnav-move:hover:not(:disabled), .topnav-arrange:hover {
+    color: var(--brand); border-color: rgba(117,201,59,0.4);
+}
+.topnav-move:disabled { opacity: 0.3; cursor: default; }
+.topnav-arrange[aria-pressed="true"] { color: var(--brand); border-color: var(--brand); }
+
 /* The role concept (ADR-0009): who is at the keyboard shapes what is offered.
    Observer watches; Operator also configures; Developer also builds. */
 .role { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
@@ -963,7 +980,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     }
 
     .topnav { flex-wrap: nowrap; overflow-x: auto; padding: 0 0.5rem; }
-    .topnav-link, .role { flex: none; }
+    .topnav-link, .topnav-tab, .topnav-arrange, .role { flex: none; }
     .topnav-link { display: inline-flex; align-items: center; min-height: 44px; }
 
     .run-line, .scope-filter { padding-left: 1rem; padding-right: 1rem; }

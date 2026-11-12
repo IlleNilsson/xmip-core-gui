@@ -1,34 +1,58 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Xmip.Gui.Surface
 @inject RoleContext Role
+@inject IBarOrderStore Bar
 
-@* The bar every host shows, once: the nine views this library draws, most
-   wanted first (ADR-0052, amendment 2026-11-12; the owner, the same day:
-   "Monitor is the most desired view") — the Monitor; the Dead Message
-   Queue, the one view where something waits on a person; the
-   Subscriptions beside it, where a Message no Subscription took is
-   usually fixed; the Topology; the Configuration; the Event
-   subscriptions; the Audit; the Reports after it, every Report in one
-   list, for every role (ADR-0072, amendment 2026-11-10); and the Secrets
-   last, the least visited and the most sensitive — what the host adds
-   after them, and who is at the keyboard with the role
-   they hold — proven, and assigned, not chosen here (ADR-0009, amendment
+@* The bar every host shows, once: the nine views this library draws, in
+   the order the operator arranged them, else most wanted first (ADR-0052,
+   amendments 2026-11-12; BarOrder holds the views and the rule) — what the
+   host adds after them, and who is at the keyboard with the role they hold
+   — proven, and assigned, not chosen here (ADR-0009, amendment
    2026-10-06), by one rule for both hosts and the hub (RoleAssignment),
-   described in one set of words (Roles.Describe). The web host adds nothing; the desktop adds
-   Configure for a role that may configure. Until 2026-09-27 each host wrote
-   its own bar and worded the roles its own way. *@
+   described in one set of words (Roles.Describe). The web host adds
+   nothing; the desktop adds Configure for a role that may configure.
+
+   An operator drags a view onto another to put it there, or presses
+   Arrange for a ‹ and a › beside each view, the keyboard's way, and Reset
+   for the default; the order is kept by the host's store (IBarOrderStore),
+   a cookie for a browser, a local TOML file for the desktop, and the first
+   view is where the bare address opens. Arranging is a view of one's own,
+   no act on Xmip, so every role may. *@
 <nav class="topnav">
     <img class="logo" src="_content/Xmip.Gui/xmip-logo.png" alt="Xmip" />
-    <NavLink class="topnav-link" href="/" Match="NavLinkMatch.All">Monitor</NavLink>
-    <NavLink class="topnav-link" href="/dead-messages">Dead Message Queue</NavLink>
-    <NavLink class="topnav-link" href="/subscriptions">Subscriptions</NavLink>
-    <NavLink class="topnav-link" href="/topology">Topology</NavLink>
-    <NavLink class="topnav-link" href="/configuration">Configuration</NavLink>
-    <NavLink class="topnav-link" href="/event-subscriptions">Event subscriptions</NavLink>
-    <NavLink class="topnav-link" href="/audit">Audit</NavLink>
-    <NavLink class="topnav-link" href="/reports">Reports</NavLink>
-    <NavLink class="topnav-link" href="/secrets">Secrets</NavLink>
+    @foreach ((BarTab tab, int at) in Order.Select((tab, at) => (tab, at)))
+    {
+        <span class="topnav-tab @(dragged == tab.Word ? "dragged" : string.Empty)"
+              draggable="true"
+              @ondragstart="() => dragged = tab.Word"
+              @ondragend="() => dragged = null"
+              @ondragover:preventDefault="true"
+              @ondrop:preventDefault="true"
+              @ondrop="() => Dropped(at)">
+            @if (arranging)
+            {
+                <button type="button" class="topnav-move" disabled="@(at == 0)"
+                        aria-label="@($"Move {tab.Name} left")"
+                        @onclick="() => Keep(BarOrder.Moved(Order, tab.Word, at - 1))">‹</button>
+            }
+            <NavLink class="topnav-link" href="@tab.Href">@tab.Name</NavLink>
+            @if (arranging)
+            {
+                <button type="button" class="topnav-move" disabled="@(at == Order.Count - 1)"
+                        aria-label="@($"Move {tab.Name} right")"
+                        @onclick="() => Keep(BarOrder.Moved(Order, tab.Word, at + 1))">›</button>
+            }
+        </span>
+    }
     @ChildContent
+    <button type="button" class="topnav-arrange" aria-pressed="@(arranging ? "true" : "false")"
+            title="Arrange the views; drag one onto another, or move it with ‹ and ›"
+            @onclick="() => arranging = !arranging">Arrange</button>
+    @if (arranging)
+    {
+        <button type="button" class="topnav-arrange" title="The default order"
+                @onclick="() => Keep(null)">Reset</button>
+    }
     <div class="role">
         <span class="role-label">role</span>
         <span class="role-pick active" title="@Role.Role.Describe()">@Role.Role</span>
@@ -37,7 +61,35 @@
 </nav>
 
 @code {
+    // The view being dragged, by its word; null where none is.
+    private string? dragged;
+
+    private bool arranging;
+
     /// <summary>What the host adds after the nine views.</summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private IReadOnlyList<BarTab> Order => Bar.Order;
+
+    // A dragged view dropped on the view at a place: it takes that place.
+    private void Dropped(int at)
+    {
+        if (dragged is { } word)
+        {
+            dragged = null;
+            Keep(BarOrder.Moved(Order, word, at));
+        }
+    }
+
+    // An order that changes nothing is not kept: the Web host's keeping
+    // loads the page again.
+    private void Keep(IReadOnlyList<BarTab>? order)
+    {
+        if (BarOrder.Say(order ?? BarOrder.Default) != BarOrder.Say(Order))
+        {
+            Bar.Keep(order);
+            StateHasChanged();
+        }
+    }
 }

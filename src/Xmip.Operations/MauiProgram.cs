@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Hosting;
+using Xmip.Gui.Surface;
 
 namespace Xmip.Operations;
 
@@ -29,6 +30,12 @@ public static partial class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
+
+        // The order of the bar's views is the operator's own, kept in a
+        // local TOML file in the app's data folder (ADR-0052, amendment
+        // 2026-11-12).
+        builder.Services.AddSingleton<IBarOrderStore>(
+            new BarOrderFile(Path.Combine(FileSystem.AppDataDirectory, BarOrderFile.Name)));
 
         // The platform's part reads its document and registers the role and
         // the surfaces every screen reads; it answers where this host audits.
