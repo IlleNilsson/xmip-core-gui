@@ -297,22 +297,49 @@
         List<(string From, string To)> within = [
             .. edges.Where(edge => !parties.Contains(edge.From) && !parties.Contains(edge.To)),
         ];
-        Dictionary<string, int> column =
-            nodes.ToDictionary(node => node.Id, _ => 0, StringComparer.Ordinal);
 
-        // Longest path among the things inside, bounded by their number so a
-        // cycle ends.
-        for (int pass = 0; pass < nodes.Count; pass++)
+        // A thing no drawn line reaches — a standby, a node whose role no
+        // traffic reaches — stands apart along the top, so no line between
+        // others seems to run into it (the owner, 2026-11-12: "I do not think
+        // we covered traffic directly to a processing node, but I see it").
+        HashSet<string> linked = [.. edges.SelectMany(edge => new[] { edge.From, edge.To })];
+        List<TopologyNode> inside = [
+            .. nodes.Where(node => !parties.Contains(node.Id) && linked.Contains(node.Id)),
+        ];
+        List<TopologyNode> apart = [
+            .. nodes.Where(node => !parties.Contains(node.Id) && !linked.Contains(node.Id)),
+        ];
+
+        // Each thing's column is how few links from where the streams enter
+        // reach it: first what a Party sends to, or what nothing inside feeds.
+        // The fewest, never the most, so a link back — a Storage node handing
+        // a node what it wrote — keeps its place instead of pushing every
+        // thing after it to the right.
+        Dictionary<string, int> column = new(StringComparer.Ordinal);
+        Queue<string> reached = new();
+
+        foreach (TopologyNode node in inside.Where(node =>
+            edges.Any(edge => edge.To == node.Id && parties.Contains(edge.From))
+            || !within.Any(edge => edge.To == node.Id)))
         {
-            foreach ((string from, string to) in within)
+            column[node.Id] = 0;
+            reached.Enqueue(node.Id);
+        }
+
+        while (reached.TryDequeue(out string? at))
+        {
+            foreach ((string _, string to) in within.Where(edge => edge.From == at))
             {
-                column[to] = Math.Max(column[to], Math.Min(column[from] + 1, nodes.Count));
+                if (column.TryAdd(to, column[at] + 1))
+                {
+                    reached.Enqueue(to);
+                }
             }
         }
 
-        List<TopologyNode> inside = [.. nodes.Where(node => !parties.Contains(node.Id))];
+        inside.ForEach(node => column.TryAdd(node.Id, 0));
         int columns = inside.Count == 0 ? 1 : inside.Max(node => column[node.Id]) + 1;
-        List<PlacedNode> placed = [];
+        List<PlacedNode> placed = [.. Apart(apart)];
 
         foreach (IGrouping<int, TopologyNode> group in inside.GroupBy(node => column[node.Id]))
         {
@@ -330,13 +357,21 @@
         return placed;
     }
 
-    // One column of things, spread about the middle of the canvas.
+    // One column of things, spread about the middle of what stays below the
+    // row of things apart.
     private static IEnumerable<PlacedNode> Stacked(IReadOnlyList<TopologyNode> nodes, double x)
     {
-        double spacing = nodes.Count <= 1 ? 0D : Math.Min(140D, 480D / (nodes.Count - 1));
+        double spacing = nodes.Count <= 1 ? 0D : Math.Min(130D, 400D / (nodes.Count - 1));
 
         return nodes.Select((node, index) =>
-            new PlacedNode(node, x, 320D + (index - (nodes.Count - 1) / 2D) * spacing));
+            new PlacedNode(node, x, 350D + (index - (nodes.Count - 1) / 2D) * spacing));
+    }
+
+    // The things apart, in a row along the top of the frame.
+    private IEnumerable<PlacedNode> Apart(IReadOnlyList<TopologyNode> nodes)
+    {
+        return nodes.Select((node, index) => new PlacedNode(
+            node, Frame.Left + Frame.Width * (index + 0.5D) / nodes.Count, 75D));
     }
 
     // The drawn thing that holds a node: itself, or its nearest ancestor that
