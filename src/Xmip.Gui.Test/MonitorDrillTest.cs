@@ -36,20 +36,26 @@ public sealed class MonitorDrillTest : BunitContext
     {
         // Until 2026-09-26 a card summed the cluster and called every leaf
         // beneath its stage, each contract and identity step, configured.
+        // Until 2026-11-11 the middle card was titled Process and called a
+        // Subscription a work process.
         IRenderedComponent<Cluster> page = Render<Cluster>();
-        List<(string Value, string Items)> cards =
+        List<(string Name, string Value, string Items)> cards =
         [
             .. page.FindAll("section.stages .stage").Select(card => (
+                card.QuerySelector(".name")?.TextContent.Trim() ?? string.Empty,
                 card.QuerySelector(".value")?.TextContent ?? string.Empty,
                 card.QuerySelector(".items")?.TextContent ?? string.Empty)),
         ];
 
+        Assert.Equal(["Receive", "Work Process", "Send"], cards.Select(card => card.Name));
         Assert.Equal("6", cards[0].Value);
-        Assert.StartsWith("receive location ×2 ", cards[0].Items, StringComparison.Ordinal);
+        Assert.StartsWith("Receive Location ×2 ", cards[0].Items, StringComparison.Ordinal);
         Assert.Equal("6", cards[1].Value);
-        Assert.StartsWith("work process ×1 ", cards[1].Items, StringComparison.Ordinal);
+        Assert.StartsWith("Subscription ×1 ", cards[1].Items, StringComparison.Ordinal);
         Assert.Equal("5", cards[2].Value);
-        Assert.StartsWith("send location ×2 ", cards[2].Items, StringComparison.Ordinal);
+        // A Subscription routes to a Send Port, never a Send Location
+        // (ADR-0027, amendment 2026-11-11).
+        Assert.StartsWith("Send Port ×2 ", cards[2].Items, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -93,7 +99,9 @@ public sealed class MonitorDrillTest : BunitContext
         Assert.Contains(
             "2/3 rounds passed, 1 failed", record.TextContent, StringComparison.Ordinal);
         Assert.Contains("severity 40", record.TextContent, StringComparison.Ordinal);
-        Assert.Equal([Names.Name, "node", Sender, "send", "tcp", "json"], Crumbs(bottom));
+        // A stage's crumb reads by its title (ScopeIndex.Label; ADR-0052,
+        // amendment 2026-11-11): until 2026-11-11 it said the word, send.
+        Assert.Equal([Names.Name, "node", Sender, "Send", "tcp", "json"], Crumbs(bottom));
     }
 
     [Fact]
