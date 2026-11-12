@@ -49,51 +49,70 @@ public sealed class BarOrderTest : IDisposable
     }
 
     [Fact]
-    public void TheWebHostKeepsAnOrderOnlyForAPathOnItself()
+    public void TheWebHostKeepsAChoiceAndSendsBackOnlyToAPathOnItself()
     {
-        // Every view is kept, the ones the order named first.
-        Assert.Equal((BarOrder.Say(BarOrder.Read("audit,monitor")), "/topology?cluster=C1"),
-            Kept(BarOrder.Asked("audit,monitor", "/topology?cluster=C1")));
-        Assert.Null(BarOrder.Asked(BarOrder.Say(BarOrder.Default), "/").Kept);
-        Assert.Null(BarOrder.Asked(string.Empty, "/").Kept);
+        // Every view is kept, the ones the order named first; the default
+        // and the system's theme delete their cookies.
+        Assert.Equal(BarOrder.Say(BarOrder.Read("audit,monitor")), BarOrder.Kept("audit,monitor"));
+        Assert.Null(BarOrder.Kept(BarOrder.Say(BarOrder.Default)));
+        Assert.Null(BarOrder.Kept(string.Empty));
+        Assert.Equal("dark", ThemeChoice.Kept("dark"));
+        Assert.Null(ThemeChoice.Kept("system"));
+        Assert.Null(ThemeChoice.Kept("purple"));
 
+        Assert.Equal("/topology?cluster=C1", PreferenceCookie.Back("/topology?cluster=C1"));
         string?[] elsewhere = ["https://elsewhere.example", "//elsewhere", "/\\x", "", null];
 
         foreach (string? back in elsewhere)
         {
-            Assert.Equal("/", BarOrder.Asked("audit", back).Back);
+            Assert.Equal("/", PreferenceCookie.Back(back));
         }
     }
 
     [Fact]
-    public void TheDesktopsFileKeepsAnOrderBesideWhatElseItHolds()
+    public void AThemeIsReadByOneRuleAndTheButtonGoesRound()
     {
-        string path = Path.Combine(folder, BarOrderFile.Name);
+        Assert.Equal(
+            [Theme.System, Theme.Light, Theme.Dark, Theme.System],
+            [ThemeChoice.Read(null), ThemeChoice.Read("light"), ThemeChoice.Read(" dark "),
+                ThemeChoice.Read("unknown")]);
+        Assert.Equal(Theme.Light, ThemeChoice.Next(Theme.System));
+        Assert.Equal(Theme.Dark, ThemeChoice.Next(Theme.Light));
+        Assert.Equal(Theme.System, ThemeChoice.Next(Theme.Dark));
+        Assert.All(Enum.GetValues<Theme>(), theme =>
+            Assert.Equal(theme, ThemeChoice.Read(ThemeChoice.Word(theme))));
+    }
+
+    [Fact]
+    public void TheDesktopsFileKeepsAnOrderAndAThemeBesideWhatElseItHolds()
+    {
+        string path = Path.Combine(folder, PreferenceFile.Name);
         Directory.CreateDirectory(folder);
         File.WriteAllText(path, "# the operator's own\n[other]\nkept = \"yes\"\n");
 
-        new BarOrderFile(path).Keep(BarOrder.Moved(BarOrder.Default, "audit", 0));
+        new PreferenceFile(path).Keep(BarOrder.Moved(BarOrder.Default, "audit", 0));
 
-        Assert.Equal("audit", Word(new BarOrderFile(path).Order[0]));
+        Assert.Equal("audit", Word(new PreferenceFile(path).Order[0]));
         string written = File.ReadAllText(path);
         Assert.Contains("kept = \"yes\"", written, StringComparison.Ordinal);
         Assert.Contains("# the operator's own", written, StringComparison.Ordinal);
 
-        new BarOrderFile(path).Keep(null);
-        Assert.Equal(BarOrder.Default, new BarOrderFile(path).Order);
+        new PreferenceFile(path).Keep(Theme.Dark);
+        Assert.Equal(Theme.Dark, new PreferenceFile(path).Theme);
+        Assert.Equal("audit", Word(new PreferenceFile(path).Order[0]));
+
+        new PreferenceFile(path).Keep(null);
+        new PreferenceFile(path).Keep(Theme.System);
+        Assert.Equal(BarOrder.Default, new PreferenceFile(path).Order);
+        Assert.Equal(Theme.System, new PreferenceFile(path).Theme);
 
         File.WriteAllText(path, "this is [not toml");
-        Assert.Equal(BarOrder.Default, new BarOrderFile(path).Order);
+        Assert.Equal(BarOrder.Default, new PreferenceFile(path).Order);
+        Assert.Equal(Theme.System, new PreferenceFile(path).Theme);
     }
 
     private static string Word(BarTab tab)
     {
         return tab.Word;
-    }
-
-    // The two parts of what the host answers, the cookie's value non-null.
-    private static (string Kept, string Back) Kept((string? Kept, string Back) asked)
-    {
-        return (asked.Kept ?? "(deleted)", asked.Back);
     }
 }

@@ -5,23 +5,6 @@ namespace Xmip.Gui.Surface;
 public sealed record BarTab(string Word, string Href, string Name);
 
 /// <summary>
-/// Where an operator keeps the order of the bar's views: a cookie for the
-/// Web host's browser, a local TOML file for the Desktop (ADR-0052,
-/// amendment 2026-11-12). Both keep what <see cref="BarOrder.Say"/> writes
-/// and give it back to <see cref="BarOrder.Read"/>.
-/// </summary>
-public interface IBarOrderStore
-{
-    /// <summary>The order kept, as the operator arranged it, or the
-    /// default.</summary>
-    public IReadOnlyList<BarTab> Order { get; }
-
-    /// <summary>Keep <paramref name="order"/>; null goes back to the
-    /// default.</summary>
-    public void Keep(IReadOnlyList<BarTab>? order);
-}
-
-/// <summary>
 /// The bar's nine views and the one rule for their order (ADR-0052,
 /// amendment 2026-11-12; the owner, the same day: "An operator has to be
 /// able to rearrange the major tabs"). The default is most wanted first; an
@@ -105,22 +88,12 @@ public static class BarOrder
         return order.Count > 0 ? order[0].Href : Default[0].Href;
     }
 
-    /// <summary>
-    /// What the Web host answers when a browser asks to keep an order: the
-    /// cookie's value — null to delete it, where the order is the default —
-    /// and where to go back to, a path on this host only, never another
-    /// host's address.
-    /// </summary>
-    public static (string? Kept, string Back) Asked(string? order, string? back)
+    /// <summary>What the Web host keeps for an order a browser asked for:
+    /// null, to delete the cookie, where it is the default.</summary>
+    public static string? Kept(string? asked)
     {
-        string said = Say(Read(order));
-        string? kept = said == Say(Default) ? null : said;
-        bool local = back is { Length: > 0 }
-            && back[0] == '/'
-            && !back.StartsWith("//", StringComparison.Ordinal)
-            && !back.StartsWith("/\\", StringComparison.Ordinal)
-            && !back.Contains("://", StringComparison.Ordinal);
+        string said = Say(Read(asked));
 
-        return (kept, local ? back! : "/");
+        return said == Say(Default) ? null : said;
     }
 }

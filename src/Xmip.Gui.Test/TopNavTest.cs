@@ -20,12 +20,12 @@ public sealed class TopNavTest : BunitContext
     private readonly string folder =
         Path.Combine(Path.GetTempPath(), $"xmip-bar-{Guid.NewGuid():n}");
 
-    private readonly BarOrderFile store;
+    private readonly PreferenceFile store;
 
     public TopNavTest()
     {
-        store = new BarOrderFile(Path.Combine(folder, BarOrderFile.Name));
-        Services.AddSingleton<IBarOrderStore>(store);
+        store = new PreferenceFile(Path.Combine(folder, PreferenceFile.Name));
+        Services.AddSingleton<IPreferenceStore>(store);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public sealed class TopNavTest : BunitContext
 
         Assert.Equal("/topology", Hrefs(bar)[0]);
         Assert.Equal("/monitor", Hrefs(bar)[1]);
-        Assert.Equal("/topology", BarOrder.Start(new BarOrderFile(Kept).Order));
+        Assert.Equal("/topology", BarOrder.Start(new PreferenceFile(Kept).Order));
         Assert.Contains(
             "order = \"topology,monitor,", File.ReadAllText(Kept), StringComparison.Ordinal);
     }
@@ -93,6 +93,24 @@ public sealed class TopNavTest : BunitContext
         bar.FindAll("button.topnav-arrange")[1].Click();
         Assert.Equal(BarOrder.Default.Select(tab => tab.Href), Hrefs(bar));
         Assert.DoesNotContain("order", File.ReadAllText(Kept), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheThemeButtonTurnsThePaintAndTheFrameFollowsAtOnce()
+    {
+        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
+        IRenderedComponent<Themed> page = Render<Themed>(parameters => parameters
+            .AddChildContent<TopNav>());
+        Assert.Equal("system", page.Find(".themed").GetAttribute("data-theme"));
+
+        page.Find("button.topnav-theme").Click();
+        Assert.Equal("light", page.Find(".themed").GetAttribute("data-theme"));
+        page.Find("button.topnav-theme").Click();
+
+        page.WaitForAssertion(() =>
+            Assert.Equal("dark", page.Find(".themed").GetAttribute("data-theme")));
+        Assert.Equal("Dark", page.Find("button.topnav-theme").TextContent);
+        Assert.Contains("choice = \"dark\"", File.ReadAllText(Kept), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -128,7 +146,7 @@ public sealed class TopNavTest : BunitContext
         base.Dispose(disposing);
     }
 
-    private string Kept => Path.Combine(folder, BarOrderFile.Name);
+    private string Kept => Path.Combine(folder, PreferenceFile.Name);
 
     private static string?[] Hrefs(IRenderedComponent<TopNav> bar)
     {

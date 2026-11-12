@@ -22,10 +22,12 @@
 <body>
     @* Interactive on the server: this host's decision, not the shared pages'.
        A MAUI host renders the same pages with no render mode at all. *@
-    @* The order the browser keeps the bar in, from its cookie, handed to
-       the circuit so the bar is drawn in it from the first paint. *@
+    @* The operator's own view the browser keeps, from its cookies — the
+       bar's order and the theme — handed to the circuit so the page is drawn
+       in them from the first paint. *@
     <Routes @rendermode="InteractiveServer"
-            BarSaid="@HttpContext.Request.Cookies[Xmip.Gui.Surface.BarOrder.Cookie]" />
+            BarSaid="@HttpContext.Request.Cookies[Xmip.Gui.Surface.BarOrder.Cookie]"
+            ThemeSaid="@HttpContext.Request.Cookies[Xmip.Gui.Surface.ThemeChoice.Cookie]" />
     @* The estate's own reconnect element, styled by xmip.css; without it
        blazor.web.js draws a box of its own (the owner, 2026-09-14). *@
     <ReconnectModal />
