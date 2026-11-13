@@ -28,7 +28,7 @@ public sealed class AuditViewTest : BunitContext, IDisposable
 
     /// <summary>The second cluster, as its fixture's publication names it.</summary>
     private static readonly string Second = ClusterSurfaces.NameOf(new SnapshotOperator(
-        Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster-c2.xmip")));
+        Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster-cl2.xmip")));
 
     /// <summary>The machine the records were written on.</summary>
     private static readonly string Host = Environment.MachineName.ToLowerInvariant();

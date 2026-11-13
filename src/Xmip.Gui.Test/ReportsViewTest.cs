@@ -56,7 +56,7 @@ public sealed class ReportsViewTest : BunitContext, IDisposable
     {
         SnapshotOperator first = new(Fixture("cluster.xmip"));
         Services.AddSingleton(two
-            ? ClusterSurfaces.Over([first, new SnapshotOperator(Fixture("cluster-c2.xmip"))])
+            ? ClusterSurfaces.Over([first, new SnapshotOperator(Fixture("cluster-cl2.xmip"))])
             : ClusterSurfaces.Over(first));
 
         if (desktop)
@@ -161,7 +161,7 @@ public sealed class ReportsViewTest : BunitContext, IDisposable
     public void AQuickEntryOpensAtTheViewThatPresentsItOnTheClusterInView()
     {
         Hosting(desktop: false, two: true);
-        string second = ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-c2.xmip")));
+        string second = ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-cl2.xmip")));
         ReportListing listing = ReportCatalog.List(Audit);
         ReportEntry audit = listing.Entries.Single(
             entry => entry.ReadBy == OperateAbi.AuditReadEntrypoint);

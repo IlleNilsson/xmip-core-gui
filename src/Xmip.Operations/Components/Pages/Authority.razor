@@ -90,9 +90,9 @@
             <button disabled="@_busy" @onclick="BackUp">Back up</button>
 
             <h2>A request carried across an air gap</h2>
-            <label>The request <input @bind="_request" placeholder="E:\R1\node.csr" /></label>
-            <label>Its names <input @bind="_names" placeholder="R1, R1.xmip.test" /></label>
-            <label>The chain to <input @bind="_chain" placeholder="E:\R1\node.pem" /></label>
+            <label>The request <input @bind="_request" placeholder="E:\RX1\node.csr" /></label>
+            <label>Its names <input @bind="_names" placeholder="RX1, RX1.xmip.test" /></label>
+            <label>The chain to <input @bind="_chain" placeholder="E:\RX1\node.pem" /></label>
             <button class="primary" disabled="@_busy" @onclick="Sign">Sign</button>
         }
     }

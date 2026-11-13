@@ -28,7 +28,7 @@ public sealed class TwoClustersTest : BunitContext
     public TwoClustersTest()
     {
         ClusterSurfaces surfaces = ClusterSurfaces.Over(
-            [Snapshot("cluster.xmip"), Snapshot("cluster-c2.xmip")]);
+            [Snapshot("cluster.xmip"), Snapshot("cluster-cl2.xmip")]);
         second = surfaces.Clusters.Single(name => name != First);
         Services.AddSingleton(surfaces);
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));

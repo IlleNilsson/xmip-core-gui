@@ -23,7 +23,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
 
     /// <summary>The second cluster, as its fixture's publication names it.</summary>
     private static readonly string Second =
-        ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-c2.xmip")));
+        ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-cl2.xmip")));
 
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(), $"xmip-gui-hidden-{Environment.ProcessId}-{Guid.NewGuid():N}");
@@ -53,7 +53,7 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     // The second cluster's fixture, its run declaring itself hidden or not.
     private string Published(bool hidden)
     {
-        string text = File.ReadAllText(Fixture("cluster-c2.xmip"));
+        string text = File.ReadAllText(Fixture("cluster-cl2.xmip"));
 
         if (hidden)
         {

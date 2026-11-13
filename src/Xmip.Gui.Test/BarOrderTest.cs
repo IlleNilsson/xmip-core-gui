@@ -60,7 +60,8 @@ public sealed class BarOrderTest : IDisposable
         Assert.Null(ThemeChoice.Kept("system"));
         Assert.Null(ThemeChoice.Kept("purple"));
 
-        Assert.Equal("/topology?cluster=C1", PreferenceCookie.Back("/topology?cluster=C1"));
+        string topology = $"/topology?cluster={TestCluster.Read().Name}";
+        Assert.Equal(topology, PreferenceCookie.Back(topology));
         string?[] elsewhere = ["https://elsewhere.example", "//elsewhere", "/\\x", "", null];
 
         foreach (string? back in elsewhere)
