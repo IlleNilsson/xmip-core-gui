@@ -49,7 +49,7 @@ Node = "edge-01"
 # <cluster>-snapshot.xmip, named for whatever the roll's cluster was called;
 # name the file yours writes. A path with no file behind it is said so on the
 # page, not silently replaced.
-# Snapshot = "D:/Repos/Xmip/.local-work/essentials/C1-snapshot.xmip"
+# Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip"
 
 # The node to follow when Surface = "remote", at its operate address,
 # host:port (ADR-0067). gRPC inside Xmip's mutual TLS, always: presenting

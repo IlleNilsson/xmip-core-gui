@@ -71,7 +71,7 @@ that explains it and links to that leaf's row, with the way to it standing
 open. The Topology is always what is configured and what is observed,
 together; there is no switch between them. It opens on the cluster's nodes and
 the traffic between them, and the drill is in the address
-(`/topology?focus=node/R1`): every node on the canvas is a link, open where
+(`/topology?focus=node/RX1`): every node on the canvas is a link, open where
 something is beneath it and its configuration where nothing is, so cluster to
 node to stage to endpoint is a chain of addresses. Every line says what passes
 over it — its volume and rate, or `configured · no traffic observed` on a path
@@ -149,7 +149,7 @@ time (UTC), node, program, action, phase, severity and summary, newest first,
 a column's head sorting by it and again the other way. The filters are the
 scope pattern box every view has — the one wildcard, `observe::wildcard`,
 over each record's location — and severity, action and a time range beside
-it. Everything is in the address (`/audit?location=xmip:///C1/node/R1&
+it. Everything is in the address (`/audit?location=xmip:///CL1/node/RX1&
 severity=error&sort=action&order=ascending`), so a link reproduces the view;
 a page draws 200 rows and links the next and the previous (no `Virtualize`,
 which prerendered a blank spacer). A record opens whole, every property with
@@ -180,7 +180,7 @@ mood, painted as the Monitor paints it and said in words. It drills cluster →
 node → one Subscription by name, a column's head orders by it and again the
 other way, and the pattern box narrows over each one's node and name — all
 `SubscriptionQuery`'s, all in the address (`/subscriptions?location=
-xmip:///C1/node/R1&name=edi`). The one opened shows its configuration exactly
+xmip:///CL1/node/RX1&name=edi`). The one opened shows its configuration exactly
 as the TOML says it, the file it comes from, the Xmip Application that draws
 it, and who paused it while it is paused. An Operator is offered Pause while
 it picks up — what it matches is held, not picked up, and nothing is lost —
@@ -204,7 +204,7 @@ failed Message never goes there, so an entry is no mood and its row is not
 painted. It drills cluster → node → one Message, a column's head orders by
 it and again the other way, and the pattern box narrows over each one's node
 and Message — all `DeadMessageQuery`'s, all in the address
-(`/dead-messages?location=xmip:///C1/node/R1&message=<id>`). The one opened
+(`/dead-messages?location=xmip:///CL1/node/RX1&message=<id>`). The one opened
 shows its gate verdicts in the order they ran, its promoted properties and
 every Subscription asked and why it declined, in the order asked. An Operator
 is offered Replay on every row and on the one opened — once a Subscription is
@@ -252,14 +252,14 @@ hears, for it hears the matching Events of every node of the cluster (ADR-0065,
 amendment 2026-10-02), and the links that carry them between nodes are the
 cluster's and never listed; the action it subscribes to; then its state, queued
 against capacity, delivered, missed and since. Above them, read-only, one line
-for each member a node there does not hear — *R1: not hearing `<node>`
+for each member a node there does not hear — *RX1: not hearing `<node>`
 since `<time>`: `<why>`*, `EventSubscriptionQuery.Line` — with no act, so no
 Event is missing silently. A paused one is the Paused
 mood, painted as the Monitor paints it and said in words. It drills cluster →
 node → one Event subscription, a column's head orders by it and again the
 other way, and the pattern box narrows over each one's node and reach — all
 `EventSubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
-xmip:///C1/node/R1&id=2`). An Operator is offered Pause or Resume, and Remove,
+xmip:///CL1/node/RX1&id=2`). An Operator is offered Pause or Resume, and Remove,
 on every row and on the one opened; each act goes through `IOperatorSurface.Act`
 — applied in the node's process, or over a snapshot left where its publication
 says its publisher takes orders — and is recorded in the host's audit as
@@ -278,7 +278,7 @@ shown where the person is, in the zone and the culture of the machine the
 view is drawn for, its offset from UTC beside it and the UTC in its title
 (`PersonTime`); every record keeps UTC. A secret is a node's, so the view
 stands at one node: the one the surface reaches, or the one the address
-names (`/secrets?location=xmip:///C1/node/R1`), and where the publisher draws
+names (`/secrets?location=xmip:///CL1/node/RX1`), and where the publisher draws
 more than one each is a link. An Operator sets a secret, or replaces one of
 the same name, by its name, its kind and its value — typed into a password
 field or read from a chosen file, a key's or a certificate's PEM, a mebibyte
@@ -369,7 +369,7 @@ moved through it and is still where nothing did — `Motion` is the one rule,
 and the inspector says what moved in words, never a percent. Paused, or where
 the reader's system asks for reduced motion, the pulses stand along the line
 and a busy node keeps its ring, so where traffic is still shows; the Desktop
-and the Web load the one stylesheet. An Essentials roll of real nodes, C1
+and the Web load the one stylesheet. An Essentials roll of real nodes, CL1
 among them, draws no line yet: no node publishes what it hands another, and
 the roll matches its Parties to endpoints by transport while a real node
 names its endpoints by Location, so there only the nodes move (open problem
