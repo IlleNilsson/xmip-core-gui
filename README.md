@@ -373,9 +373,43 @@ and the Web load the one stylesheet. An Essentials roll of real nodes, CL1
 among them, draws no line yet: no node publishes what it hands another, and
 the roll matches its Parties to endpoints by transport while a real node
 names its endpoints by Location, so there only the nodes move (open problem
-62); a node read on its own draws its `any-party` lines and moves on them. A
+62). The Essentials' stand-in Parties are one per node facing outside:
+`TX-Party 1`, `2`, … send into the receiving nodes and `RX-Party 1`, … are
+delivered to by the sending nodes (the owner, 2026-11-13), numbered per side
+in the order the nodes they face stand on the map; each label is the
+runtime's, which the canvas draws and never writes. A node read on its own
+draws its Party lines and moves on them. A
 band drawn holds while the rate stays within a fifth of its edges, so a
 steady rate read a little each side of one keeps its pulses and its ring.
+
+The map focuses on roles (ADR-0052 and ADR-0056, amendments 2026-11-13; the
+owner, 2026-11-12: *We got to straighten out the map. It has to focus on
+roles*). Every node stands where the runtime's layout puts it —
+`observe::topology::layout`, read through `TopologySnapshot.PlacesAt` for the
+node the canvas is open at — by the roles it declares and the order of
+`[storage] nodes`, never by traffic and never by a name: the TX-Parties at
+the left edge and the RX-Parties at the right, outside the open node's
+frame, receiving, Storage and sending across the path, processing over
+Storage, the operation band on top, a standby below its primary and
+executing in a lane of its own. The canvas scales the unit square into its
+view box (`TopologyGraph.Place.cs`): across from 78 to 922, down from 110 to
+760, so the layout's clearance of 0.05 is more than half a node's height and
+a line clears every node it does not join; a thing given no place stands in
+a row along the frame's bottom, in snapshot order. Until 2026-11-13 the
+canvas set its nodes in a ring, or in columns by how few links reached each,
+sorted by label. A line says how its two ends are related (*Related by its
+role in the cluster, not by name*): `writes into`, `hands work to`, `copies
+to`, `operates`, `monitors`, `operates and monitors`, each the runtime's
+name, before its figure — `copies to · 48,213 · 310/s` — and traffic no
+relation explains says its figure alone; operating and monitoring lines are
+thin and muted, so the path reads first. The legend names the patterns and
+every relation but that traffic, and the inspector's Traffic list says each
+link's relation, what passed, its origin and its evidence. Every node of the
+cluster says on hover what it is for, each role it declares with its
+meaning, a line each (`English.Purpose`, the runtime's
+`node::NodeRole::purpose`), on the Topology in its title and on the Monitor's
+node rows, Web and Desktop alike (*There has to be a tooltip, regardless of
+Web or MAUI. what are nodes purpose*).
 The snapshot surface reads this model, and an Essentials roll publishes it: the cluster, its nodes, the
 stages of the message path each node runs — receive, process, send — one
 endpoint per transport beneath a receive or a send stage, and the handoffs

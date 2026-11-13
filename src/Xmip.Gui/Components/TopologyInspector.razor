@@ -2,11 +2,12 @@
    selected, else the node the topology is open at. Beneath it every thing
    the canvas draws, each a link to its drill and to the same scope in the
    other two views (ADR-0052, ruling 4), and every link that runs within or
-   out of the open node with what passes over it — configured, observed or
-   both, and a path configured and never used named as such (ADR-0052, amendment
-   2026-09-25). The lists are what a page prerendered without a circuit, a
-   reader of the page, and a test can all follow; each link's ends are a
-   button that selects it, the canvas's line by keyboard and as text. *@
+   out of the open node with how its ends are related and what passes over it
+   — configured, observed or both, and a path configured and never used named
+   as such (ADR-0052, amendments 2026-09-25 and 2026-11-13). The lists are
+   what a page prerendered without a circuit, a reader of the page, and a test
+   can all follow; each link's ends are a button that selects it, the canvas's
+   line by keyboard and as text. *@
 @using Xmip.Gui.Surface
 
 <aside class="topology-inspector">
@@ -17,9 +18,11 @@
             <dt>From</dt><dd>@NodeLabel(SelectedLink.From)</dd>
             <dt>To</dt><dd>@NodeLabel(SelectedLink.To)</dd>
             <dt>Protocol</dt><dd>@English.Value(SelectedLink.Protocol)</dd>
-            <dt>State</dt><dd class="@MoodClass.Of(SelectedLink.State)">@English.Mood(SelectedLink.State)</dd>
+            <dt>State</dt>
+            <dd class="@MoodClass.Of(SelectedLink.State)">@English.Mood(SelectedLink.State)</dd>
             <dt>Origin</dt><dd>@English.Name(SelectedLink.Origin)</dd>
-            <dt>Traffic</dt><dd>@English.Traffic(SelectedLink)</dd>
+            <dt>Relation</dt><dd>@English.Name(SelectedLink.Relation)</dd>
+            <dt>Traffic</dt><dd>@English.Passed(SelectedLink)</dd>
             <dt>Volume</dt><dd>@English.Figure(SelectedLink.Volume)</dd>
             <dt>Rate</dt><dd>@English.Rate(SelectedLink.Rate)</dd>
             <dt>Latency</dt><dd>@($"{SelectedLink.LatencyMilliseconds:0.##} ms")</dd>
@@ -34,7 +37,8 @@
         <h2>@FocusNode.Label</h2>
         <dl>
             <dt>Kind</dt><dd>@English.Name(FocusNode.Kind)</dd>
-            <dt>State</dt><dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
+            <dt>State</dt>
+            <dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
             <dt>Evidence</dt><dd>@English.Value(FocusNode.Evidence)</dd>
             @* From and to, as the runtime says them for this drawn thing
                (observe::topology::from_to; ADR-0052, amendment 2026-11-11). *@
@@ -127,6 +131,9 @@
         </ul>
     }
 
+    @* Each link its ends, how they are related by their roles, what passed,
+       where the fact came from and the publisher's evidence (ADR-0052,
+       amendment 2026-11-13). *@
     @if (Traffic.Count > 0)
     {
         <h3>Traffic</h3>
@@ -134,12 +141,14 @@
             @foreach (CommunicationLink link in Traffic)
             {
                 CommunicationLink held = link;
-                <li class="@English.Word(link.Origin) @MoodClass.Of(link.State)" title="@link.Evidence">
+                <li class="@TrafficClass(link)" title="@link.Evidence">
                     <button type="button" class="ends"
                             aria-pressed="@(held == SelectedLink ? "true" : "false")"
-                            @onclick="() => OnSelectLink.InvokeAsync(held)">@Within(link.From) → @Within(link.To)</button>
-                    <span class="figure">@English.Traffic(link)</span>
+                            @onclick="() => OnSelectLink.InvokeAsync(held)">@Ends(link)</button>
+                    <span class="relation">@English.Name(link.Relation)</span>
+                    <span class="figure">@English.Passed(link)</span>
                     <span class="origin">@English.Name(link.Origin)</span>
+                    <span class="evidence">@English.Value(link.Evidence)</span>
                 </li>
             }
         </ul>
@@ -238,6 +247,14 @@
     [
         .. Snapshot.Links.Where(link => Inside(link.From) || Inside(link.To)),
     ];
+
+    // A link of the Traffic list: its origin, its mood and its relation, each
+    // a class the stylesheet paints by.
+    private static string TrafficClass(CommunicationLink link) =>
+        $"{English.Word(link.Origin)} {MoodClass.Of(link.State)} {English.Word(link.Relation)}";
+
+    // A link's ends as they read from the open node.
+    private string Ends(CommunicationLink link) => $"{Within(link.From)} → {Within(link.To)}";
 
     private bool Inside(string id)
     {

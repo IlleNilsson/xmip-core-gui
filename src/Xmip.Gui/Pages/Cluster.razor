@@ -199,10 +199,14 @@
     }
     else
     {
+        @* Hovering a node's row says what the node is for, by the roles it
+           declares, Web and Desktop alike (the owner, 2026-11-12: "There has
+           to be a tooltip, regardless of Web or MAUI. what are nodes
+           purpose"). *@
         @foreach (string nodeScope in ShownNodes)
         {
             IReadOnlyList<HealthRecord> onNode = OnNode(nodeScope);
-            <div class="row @Class(onNode)">
+            <div class="row @Class(onNode)" title="@Purpose(nodeScope)">
                 <span class="dot"></span>
                 <a class="scope" href="@ScopeLink.Monitor(nodeScope, Carried)">
                     @ScopeTree.Parts(nodeScope).LastOrDefault()
@@ -281,6 +285,16 @@
     private IReadOnlyList<string> ShownNodes =>
         [.. Nodes.Where(Filter.Shows)];
 
+    // What each node is for, by its scope, as the surface says it declares —
+    // published, else what the run started it with (NodeCapability.Purpose);
+    // read once per publication.
+    private IReadOnlyDictionary<string, string> Purposes { get; set; } =
+        new Dictionary<string, string>(StringComparer.Ordinal);
+
+    // A node row's title: its purpose, or no title where nothing is said.
+    private string? Purpose(string nodeScope) =>
+        Purposes.GetValueOrDefault(nodeScope) is { Length: > 0 } said ? said : null;
+
     // Where the drill starts: the scope the publisher publishes at, the
     // cluster, and never the root above it (IOperatorSurface.Root).
     private string Top { get; set; } = ScopeTree.Root;
@@ -302,6 +316,10 @@
         ByNode = Nodes.ToDictionary(
             node => node,
             node => Index.Health(node),
+            StringComparer.Ordinal);
+        Purposes = Nodes.ToDictionary(
+            node => node,
+            node => Surface.Capability(ScopeTree.Node(node)).Purpose(),
             StringComparer.Ordinal);
         ByStage = ScopeTree.Stages.ToDictionary(
             stage => stage,
