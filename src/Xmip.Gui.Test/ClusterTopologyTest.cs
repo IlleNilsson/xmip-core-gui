@@ -28,9 +28,10 @@ public sealed class ClusterTopologyTest : BunitContext
     private static readonly string Sender = Names.WithRole("sending");
     private static readonly string Nodes = $"{Names.Scope}/node";
 
-    /// <summary>The fixture's three nodes as every view lists them: by name.</summary>
-    private static readonly string[] Listed =
-        [.. new[] { Receiver, Processor, Sender }.Order(StringComparer.Ordinal)];
+    /// <summary>The fixture's three nodes as the canvas draws them: in the
+    /// order its snapshot holds them, where each stands the runtime's layout
+    /// and never a sort of the labels (ADR-0052, amendment 2026-11-13).</summary>
+    private static readonly string[] Drawn = [Receiver, Processor, Sender];
 
     public ClusterTopologyTest()
     {
@@ -45,7 +46,7 @@ public sealed class ClusterTopologyTest : BunitContext
     {
         IRenderedComponent<Topology> page = Render<Topology>();
 
-        Assert.Equal([.. Listed, "party-x", "party-x"], Labels(page));
+        Assert.Equal([.. Drawn, "party-x", "party-x"], Labels(page));
         Assert.Equal(
             ["node", "node", "node", "party", "party"],
             page.FindAll("g.topology-node .node-kind").Select(kind => kind.TextContent));
@@ -69,7 +70,7 @@ public sealed class ClusterTopologyTest : BunitContext
 
         Assert.Equal(
             [
-                .. Listed.Select(name => ScopeLink.TopologyAt($"node/{name}")),
+                .. Drawn.Select(name => ScopeLink.TopologyAt($"node/{name}")),
                 ScopeLink.TopologyAt("party/sending/party-x"),
                 ScopeLink.TopologyAt("party/receiving/party-x"),
             ],
@@ -220,7 +221,7 @@ public sealed class ClusterTopologyTest : BunitContext
         Address(ScopeLink.TopologyAt("party/receiving/party-x"));
         IRenderedComponent<Topology> party = Render<Topology>();
 
-        Assert.Equal([.. Listed, "party-x", "party-x"], Labels(party));
+        Assert.Equal([.. Drawn, "party-x", "party-x"], Labels(party));
         IElement selected = party.Find("g.topology-node.selected");
         Assert.Equal("party", selected.QuerySelector(".node-kind")?.TextContent);
         Assert.Equal("party-x", party.Find(".topology-inspector h2").TextContent);

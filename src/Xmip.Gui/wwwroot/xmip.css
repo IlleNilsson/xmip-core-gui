@@ -596,6 +596,14 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link .link-line { fill: none; stroke: var(--brand); stroke-width: 2.5; opacity: 0.85; }
 .topology-link.configured .link-line { stroke-dasharray: 7 5; opacity: 0.52; }
 .topology-link.observed .link-line { stroke-width: 3.5; }
+/* How a line's two ends are related, by their roles (ADR-0052, amendment
+   2026-11-13), and said in words on the line: the path's relations — writes
+   into, hands work to, copies to — keep the line their pattern gives them;
+   operating and monitoring, which fan from the operation band to every member,
+   are thin and muted, so the path reads first. A mood still paints over. */
+.topology-link:is(.operates, .monitors, .operates-and-monitors) .link-line {
+    stroke: var(--muted); stroke-width: 1.5;
+}
 .topology-link:is(.done, .stressed) .link-line { stroke: var(--mood); }
 .topology-link.done .link-line { stroke-dasharray: 9 6; }
 .topology-link.retry .link-line { stroke: var(--red); stroke-dasharray: 4 7; }
@@ -639,7 +647,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-beneath .kind, .topology-traffic .origin { color: var(--muted); font-size: 0.75rem; }
 /* A Party stands outside the cluster: a pill, not a box; the one opened is
    outlined in the accent. */
-.topology-node.party .node-body { rx: 34px; }
+.topology-node.party .node-body { rx: 30px; }
 .topology-node.selected .node-body { stroke: var(--brand); stroke-width: 3.5; }
 .topology-inspector h4.topology-facing { font-size: 0.8rem; margin: 0.6rem 0 0.25rem; }
 .topology-traffic .ends {
@@ -652,6 +660,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-link .link-hit:focus { outline: none; }
 .topology-link .link-hit:focus-visible { stroke: var(--brand); stroke-opacity: 0.35; }
 .topology-traffic li.configured .figure { color: var(--muted); font-style: italic; }
+.topology-traffic .relation { font-weight: 600; }
+.topology-traffic .evidence { flex-basis: 100%; color: var(--muted); font-size: 0.75rem; }
 /* What moved over a line: pulses from its sender to its receiver, as often
    as its rate says and none where nothing moved, each outlined in the paper
    so it stands off the line it rides (ADR-0052, amendment 2026-11-10). */
@@ -689,6 +699,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .topology-legend .session i { border-color: #805ad5; }
 .topology-legend .retry i { border-color: var(--red); border-top-style: dashed; }
 .topology-legend .streaming i { border-top-width: 5px; }
+.topology-legend :is(.operates, .monitors, .operates-and-monitors) i {
+    border-top: 1.5px solid var(--muted);
+}
 
 @media (max-width: 850px) {
     .topology-layout { grid-template-columns: 1fr; }
