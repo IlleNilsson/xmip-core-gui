@@ -12,12 +12,12 @@ namespace Xmip.Gui.Test;
 /// all subscriptions per cluster, with pause and resume, but not remove. That
 /// is handled with the TOML configuration files*; ADR-0013, amendment of the
 /// same date). Rendered over a publication of the test cluster whose receiving
-/// and sending nodes route by three Subscriptions and whose publisher takes
-/// orders: the list,
+/// and sending nodes route by three Subscriptions: the list,
 /// the drill to a node and to one Subscription with its configuration as the
-/// file says it, the acts an Operator takes — Pause and Resume, never Remove —
-/// the list an Observer is shown without them, and every act in the host's
-/// audit as <c>subscription.&lt;act&gt;</c>.
+/// file says it, the acts an Operator asks — Pause and Resume, never Remove —
+/// declined by the snapshot, which is never acted on (ADR-0014, amendment
+/// 2026-11-13), the list an Observer is shown without them, and every act in
+/// the host's audit as <c>subscription.&lt;act&gt;</c>.
 /// </summary>
 public sealed class SubscriptionsViewTest : BunitContext, IDisposable
 {
@@ -42,15 +42,12 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Entry(Receiver, "structured", "active", 12, 0)
             + Entry(Receiver, "edi", "paused", 3, 9)
             + Entry(Sender, "flat", "active", 40, 0));
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
-
-    private string Orders => Path.Combine(_place, "orders");
 
     private string Audited => Path.Combine(_place, "audit");
 
@@ -161,7 +158,7 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         IRenderedComponent<Subscriptions> one = Render<Subscriptions>();
         Assert.Single(one.FindAll(".subs-detail"));
         Assert.Empty(one.FindAll("button"));
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Receiver, "subscription"));
     }
 
     [Fact]
@@ -185,10 +182,11 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
         page.FindAll("button")[0].Click();
 
         Assert.Equal(
-            ["subscription structured pause", "subscription edi resume"],
-            OrdersLeft.For(Orders, Receiver));
+            ["subscription.pause structured", "subscription.resume edi"],
+            ActsAsked.Of(Audited, Receiver, "subscription"));
         Assert.Contains(
-            $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
+            SnapshotOperator.NotActed, page.Find(".subs-said").TextContent,
+            StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"subscription.pause\"", audit, StringComparison.Ordinal);
@@ -207,7 +205,8 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
 
         page.Find(".subs-detail button").Click();
 
-        Assert.Equal(["subscription edi resume"], OrdersLeft.For(Orders, Receiver));
+        Assert.Equal(
+            ["subscription.resume edi"], ActsAsked.Of(Audited, Receiver, "subscription"));
     }
 
     [Fact]

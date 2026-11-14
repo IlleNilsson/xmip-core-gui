@@ -11,10 +11,11 @@ namespace Xmip.Gui.Test;
 /// event subscriptions. Subscriber, Cluster, Node, Action. One should be able
 /// to pause, resume and remove event subscriptions*; ADR-0065, amendment of
 /// the same date). Rendered over a publication of the test cluster whose
-/// receiving and sending nodes hold three Event subscriptions and whose
-/// publisher takes orders: the list, the drill, the order, the acts an
-/// Operator takes and the list an Observer is shown without them — and every
-/// act in the host's audit as <c>event.&lt;act&gt;</c>, the action
+/// receiving and sending nodes hold three Event subscriptions: the list, the
+/// drill, the order, the acts an Operator asks — declined by the snapshot,
+/// which is never acted on (ADR-0014, amendment 2026-11-13) — and the list an
+/// Observer is shown without them, and every act in the host's audit as
+/// <c>event.&lt;act&gt;</c>, the action
 /// <c>observe::Noun::EventSubscription</c> gives it.
 /// </summary>
 public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
@@ -38,7 +39,6 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Entry(Receiver, 1, "every Event", "active", 3)
             + Entry(Receiver, 2, "every Event ending failure", "paused", 9)
             + Entry(Sender, 1, "every Event", "active", 0)
@@ -47,8 +47,6 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
-
-    private string Orders => Path.Combine(_place, "orders");
 
     private string Audited => Path.Combine(_place, "audit");
 
@@ -139,7 +137,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         Assert.Contains(
             "0199a0a0-0000-7000-8000-000000000002", detail, StringComparison.Ordinal);
         Assert.Empty(page.FindAll("button.act"));
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Receiver, "event_subscription"));
     }
 
     [Fact]
@@ -156,11 +154,12 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
         page.FindAll("button.act")[5].Click();
 
         Assert.Equal(
-            ["event-subscription 1 pause", "event-subscription 2 resume"],
-            OrdersLeft.For(Orders, Receiver));
-        Assert.Equal(["event-subscription 1 remove"], OrdersLeft.For(Orders, Sender));
+            ["event.pause 1", "event.resume 2"],
+            ActsAsked.Of(Audited, Receiver, "event_subscription"));
+        Assert.Equal(["event.remove 1"], ActsAsked.Of(Audited, Sender, "event_subscription"));
         Assert.Contains(
-            $"left for {Sender}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
+            SnapshotOperator.NotActed, page.Find(".subs-said").TextContent,
+            StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         foreach (string act in new[] { "pause", "resume", "remove" })

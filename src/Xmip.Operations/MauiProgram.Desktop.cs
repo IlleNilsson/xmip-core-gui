@@ -60,9 +60,10 @@ public static partial class MauiProgram
 
         // The surfaces every screen reads, chosen in gui.toml and never
         // guessed (ADR-0052 clause 3), by the web host's one rule: one
-        // snapshot per cluster where several are named, so the desktop moves
-        // between clusters as the web does (the owner, 2026-10-02: "make it so
-        // that the desktop version opens multiple clusters too"). Nothing is
+        // surface per cluster, each of its own kind, where Clusters names
+        // several, so the desktop moves between clusters as the web does (the
+        // owner, 2026-10-02: "make it so that the desktop version opens
+        // multiple clusters too"; ADR-0052, amendment 2026-11-13). Nothing is
         // planned at launch: nothing starts itself, and a node is planned only
         // when an operator presses Plan on the Configure page.
         // A remote node is reached presenting a key Windows CNG keeps — the

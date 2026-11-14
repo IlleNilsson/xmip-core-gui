@@ -34,9 +34,7 @@
                     : null)" />
 
     <ActNotes Refusal="@Refusal" Answer="@Answer" Counted="@Counted"
-              Where="@ActSaid.Where(Surface, Listed.Orders,
-                  "the node that routes by the Subscription",
-                  "the node that routes by the Subscription")" />
+              Where="@ActSaid.Where(Surface, "the node that routes by the Subscription")" />
 
     <p class="subs-configured">@SubscriptionOperation.Configured</p>
 
@@ -182,8 +180,8 @@
             .Act(subscription, act, who, Role.Caller);
         Audited.Record(
             $"subscription.{word}",
-            done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
-            done.Applied ? AuditSeverity.Information : AuditSeverity.Warning,
+            ActSaid.Recorded(done.Outcome).Phase,
+            ActSaid.Recorded(done.Outcome).Severity,
             done.Result,
             new Dictionary<string, string>
             {
@@ -192,7 +190,7 @@
                 ["application"] = subscription.Application,
                 ["who"] = who,
             });
-        Answer = ActSaid.Answer(done.Applied, done.Result);
+        Answer = ActSaid.Answer(done.Outcome, done.Result);
         Read();
     }
 }

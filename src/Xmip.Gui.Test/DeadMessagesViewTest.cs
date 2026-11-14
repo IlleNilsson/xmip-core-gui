@@ -12,12 +12,12 @@ namespace Xmip.Gui.Test;
 /// cluster and node, opens one to show its promoted properties and every
 /// Subscription's decline, and offers Replay as an Operator act*). Rendered
 /// over a publication of the test cluster whose receiving and processing
-/// nodes keep three Messages no Subscription matched, and whose publisher
-/// takes orders: the list grouped by node, the drill to a node and to one
-/// Message with its gate verdicts, promoted properties and declines in the
-/// order written, Replay for an Operator, the list an Observer is shown
-/// without it, and every Replay in the host's audit as
-/// <c>dead-message.replay</c>.
+/// nodes keep three Messages no Subscription matched: the list grouped by
+/// node, the drill to a node and to one Message with its gate verdicts,
+/// promoted properties and declines in the order written, Replay for an
+/// Operator, declined by the snapshot, which is never acted on (ADR-0014,
+/// amendment 2026-11-13), the list an Observer is shown without it, and
+/// every Replay in the host's audit as <c>dead-message.replay</c>.
 /// </summary>
 public sealed class DeadMessagesViewTest : BunitContext, IDisposable
 {
@@ -39,7 +39,6 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Entry(Receiver, "m-1", 1, "declines = [[\"structured\", \"no MessageType\"]]\n")
             + Entry(
                 Receiver, "m-2", 2,
@@ -51,8 +50,6 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
-
-    private string Orders => Path.Combine(_place, "orders");
 
     private string Audited => Path.Combine(_place, "audit");
 
@@ -152,7 +149,7 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
         IRenderedComponent<DeadMessages> one = Render<DeadMessages>();
         Assert.Single(one.FindAll(".dead-detail"));
         Assert.Empty(one.FindAll("button"));
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Receiver, "message"));
     }
 
     [Fact]
@@ -168,9 +165,10 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
 
         page.FindAll("button")[1].Click();
 
-        Assert.Equal(["dead-message m-2 replay"], OrdersLeft.For(Orders, Receiver));
+        Assert.Equal(["dead-message.replay m-2"], ActsAsked.Of(Audited, Receiver, "message"));
         Assert.Contains(
-            $"left for {Receiver}", page.Find(".subs-said").TextContent, StringComparison.Ordinal);
+            SnapshotOperator.NotActed, page.Find(".subs-said").TextContent,
+            StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
         Assert.Contains("action = \"dead-message.replay\"", audit, StringComparison.Ordinal);
@@ -188,7 +186,7 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
 
         page.Find(".dead-detail button").Click();
 
-        Assert.Equal(["dead-message m-1 replay"], OrdersLeft.For(Orders, Receiver));
+        Assert.Equal(["dead-message.replay m-1"], ActsAsked.Of(Audited, Receiver, "message"));
     }
 
     [Fact]
