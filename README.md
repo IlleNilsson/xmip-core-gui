@@ -97,7 +97,11 @@ the publisher draws as nodes (`IOperatorSurface.NodeScopes`), and its crumb at
 the root leads to the tree from its top. What a topology kind, origin or
 pattern is called — its word, which styles it, and its name, which a person
 reads — is `observe::topology`'s, asked of the runtime through `English`;
-the view keeps no word list of its own.
+the view keeps no word list of its own. A node's membership of its cluster
+is a record beneath it like any other, `<node>/membership`, so a node whose
+save is not its peers' is Stressed there, in the runtime's words naming the
+members on another save, and stands under *Needs attention*, Web and
+Desktop alike (ADR-0031 and ADR-0056, amendments 2026-11-13).
 
 **Every view drills to the problem, and the drill is in the address** (the
 owner, 2026-09-26: *it is all about solving the problem*). The Monitor's drill
@@ -119,7 +123,14 @@ publications, the prompt's own, and written by `English.Flow`; until
 above its data — the
 cluster chooser, what the run was started with, and the source — beneath the
 navigation, which carries the logo; the bar that named the view a second time
-is gone. The navigation is one component for both hosts, `TopNav`: the nine
+is gone. Each cluster in the chooser is read through a surface of its own
+kind, and where it is local or remote at a node that gathers its cluster's
+view — a node declaring the monitoring role — the source says, after where
+that node is reached, what the view says of itself: the cluster, gathered by
+which node, and how many of its nodes it reached, the runtime's words and
+never the GUI's (`GatheredClusterViewTest`), on the Web and the Desktop
+alike. A cluster whose node has not answered yet is named in the chooser
+when it first publishes. The navigation is one component for both hosts, `TopNav`: the nine
 views, what the host adds after them — the desktop's Configure, for a role
 that may configure — and the role it runs as, described once
 (`Roles.Describe`). The filter box and what it narrows are the views'
@@ -147,7 +158,7 @@ under its host; nothing is read out of a program's name. Each level lists the
 groups one step down with their counts, errors and warnings, then the records:
 time (UTC), node, program, action, phase, severity and summary, newest first,
 a column's head sorting by it and again the other way. The filters are the
-scope pattern box every view has — the one wildcard, `observe::wildcard`,
+scope pattern box every view has — the one wildcard, `node::wildcard`,
 over each record's location — and severity, action and a time range beside
 it. Everything is in the address (`/audit?location=xmip:///CL1/node/RX1&
 severity=error&sort=action&order=ascending`), so a link reproduces the view;
@@ -188,9 +199,11 @@ and Resume while it holds — what it held is picked up, oldest first — on eve
 row and on the one opened; there is no Remove anywhere, and the view says so
 in words (`SubscriptionOperation.Configured`): a Subscription is added and
 removed in the TOML configuration of the Xmip Application that draws it. Each
-act goes through `IOperatorSurface.Act` — applied in the node's process, or
-over a snapshot left where its publication says its publisher takes orders —
-and is recorded in the host's audit as `subscription.<act>`. An Observer is
+act goes through `IOperatorSurface.Act` — asked at a node's door and taken
+by the node that routes by the Subscription, written to Xmip Storage
+between (ADR-0014, amendment 2026-11-13), and declined over a snapshot,
+which is never acted on — and is recorded in the host's audit as
+`subscription.<act>`. An Observer is
 shown the list and no act (ADR-0013, amendment 2026-09-30).
 
 **The Dead Message Queue view** (`/dead-messages`; ADR-0052, amendment
@@ -211,9 +224,9 @@ is offered Replay on every row and on the one opened — once a Subscription is
 added or fixed, the Message is routed again against the node's Subscriptions
 of now, a Journey opened for each match and the entry taken out; one that
 still matches nothing stays. The Replay goes through `IOperatorSurface.Act`
-— applied in the node's process, or over a snapshot left where its
-publication says its publisher takes orders — and is recorded in the host's
-audit as `dead-message.replay`. An Observer is shown the list and no act.
+— asked at a node's door and taken by the node whose queue keeps the
+Message, and declined over a snapshot, which is never acted on — and is
+recorded in the host's audit as `dead-message.replay`. An Observer is shown the list and no act.
 
 **The Messages that failed** (runtime-model.md section 13; ADR-0013) are
 listed and acted on where the Monitor shows them: a Send Port's own record,
@@ -237,10 +250,10 @@ Message the evidence names as the last that failed
 the queue now (`MessageOperation.FailingIn`). Where the surface asked and
 Xmip Storage did not answer (`FailedMessageList.Unanswered`), the view says
 the `FAILED:` sentence and offers nothing.
-The act goes through `IOperatorSurface.Act` — applied in the node's process,
-or over a snapshot left where its publication says its publisher takes
-orders — and is recorded in the host's audit as `message.retry` or
-`message.dismiss`. An Observer is shown the Messages and no act.
+The act goes through `IOperatorSurface.Act` — asked at a node's door and
+taken by the node that sends the Port, and declined over a snapshot, which
+is never acted on — and is recorded in the host's audit as `message.retry`
+or `message.dismiss`. An Observer is shown the Messages and no act.
 
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
@@ -261,8 +274,8 @@ other way, and the pattern box narrows over each one's node and reach — all
 `EventSubscriptionQuery`'s, all in the address (`/event-subscriptions?location=
 xmip:///CL1/node/RX1&id=2`). An Operator is offered Pause or Resume, and Remove,
 on every row and on the one opened; each act goes through `IOperatorSurface.Act`
-— applied in the node's process, or over a snapshot left where its publication
-says its publisher takes orders — and is recorded in the host's audit as
+— applied by the node that holds the Event subscription, and declined over
+a snapshot, which is never acted on — and is recorded in the host's audit as
 `event.<act>`. An Observer is shown the list and no act (ADR-0065,
 amendment 2026-09-29). The three views share their pieces — the drill's crumbs
 (`DrillTrail`), the nodes one step down (`NodeGroups`), the sortable head
@@ -339,9 +352,9 @@ that is none, a cluster's file with no node — is the runtime's sentence.
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
 over an audit file in the capability's shape, and the Subscriptions, the
-Dead Message Queue and the Event subscriptions views over a publication
-whose publisher takes orders, so what is asserted is what an operator sees
-and no surface is faked. The Secrets view and the failed Messages' paging
+Dead Message Queue and the Event subscriptions views over a publication,
+each act they ask read back from the host's audit (`ActsAsked`), so what is
+asserted is what an operator sees and no surface is faked. The Secrets view and the failed Messages' paging
 are rendered over a surface the test composes (`ScriptedSurface`), since no
 publication carries a node's secrets. The Reports view is rendered over the
 runtime's own list, and its Quests probe the estate's test cluster,
@@ -655,7 +668,11 @@ a node's local endpoint on this machine, when the surface is local — left
 out, the page says no node is named — `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
 the page — `Address = <host:port>`, a node's operate address, when the surface
-is remote, `Role`, and, on the
+is remote, `Clusters`, one surface per cluster, each of its own kind —
+`Clusters = [{ Surface = "local", Local = "xmip-<node>" }, { Surface =
+"snapshot", Snapshot = <path> }]`, which wins over `Surface`, the one a
+cluster local at the node that gathers its view (the design approved
+2026-11-12, section 3.4) — `Role`, and, on the
 desktop only, `ClusterConfiguration` (`cluster.xmip`, else
 `xmip/cluster.xmip` under the app's data), `Node` (the node of it configured
 here, planned only by Plan; none when unset) and `SliceDirectory` (where each node's slice is

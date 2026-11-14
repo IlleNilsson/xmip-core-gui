@@ -249,8 +249,8 @@
             .Act(Record.Scope, journey, act, who, Role.Caller);
         Audited.Record(
             action,
-            done.Applied ? AuditPhase.Execute : AuditPhase.Failure,
-            done.Applied ? AuditSeverity.Information : AuditSeverity.Warning,
+            ActSaid.Recorded(done.Outcome).Phase,
+            ActSaid.Recorded(done.Outcome).Severity,
             done.Result,
             new Dictionary<string, string>
             {
@@ -258,7 +258,7 @@
                 ["journey"] = journey,
                 ["who"] = who,
             });
-        Answer = ActSaid.Answer(done.Applied, done.Result);
+        Answer = ActSaid.Answer(done.Outcome, done.Result);
         await Acted.InvokeAsync().ConfigureAwait(true);
     }
 }

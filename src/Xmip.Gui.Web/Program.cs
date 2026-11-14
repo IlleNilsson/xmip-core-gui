@@ -97,10 +97,12 @@ try
         services => services.GetRequiredService<PreferenceCookie>());
 
     // The surfaces every screen reads, chosen in gui.toml and never guessed
-    // (ADR-0052 clause 3): native over the runtime's library, or a snapshot at a
-    // path — or, since the amendment of 2026-09-20, one snapshot per cluster, so
-    // one host serves two rolls and the views move between them. This host loads
-    // no node and starts nothing — a node is started from the desktop or the CLI.
+    // (ADR-0052 clause 3): a node local or remote, or a snapshot at a path —
+    // or one per cluster, each of its own kind, under Clusters (amendments
+    // 2026-09-20 and 2026-11-13), so one host serves several clusters and the
+    // views move between them: one cluster local at the node that gathers its
+    // view, another a snapshot. This host loads no node and starts nothing —
+    // a node is started from the desktop or the CLI.
     // Relative paths in the file resolve against basePath, above.
     builder.Services.AddSingleton(services =>
     {
@@ -133,8 +135,7 @@ try
     // the runtime library this host was told to load.
     ProcessDeclaration.Declare(
         Name,
-        Located(SurfaceChoice.Snapshots(app.Configuration))
-            ?? app.Configuration[SurfaceChoice.AddressKey]
+        Located(SurfaceChoice.Places(app.Configuration))
             ?? app.Configuration[SurfaceChoice.SurfaceKey]
             ?? ScopeTree.Root,
         ProcessDeclaration.PurposeOf(app.Configuration),
@@ -210,7 +211,7 @@ try
         {
             ["urls"] = string.Join(", ", app.Services.GetRequiredService<SecureTransport>()
                 .Shown(app.Urls)),
-            ["surface"] = Located(SurfaceChoice.Snapshots(app.Configuration))
+            ["surface"] = Located(SurfaceChoice.Places(app.Configuration))
                 ?? app.Configuration[SurfaceChoice.SurfaceKey] ?? ScopeTree.Root,
             ["purpose"] = ProcessDeclaration.PurposeOf(app.Configuration),
         }));
@@ -240,11 +241,11 @@ catch (Exception failure) when (failure is not HostAbortedException)
     throw;
 }
 
-// Where this host reads: the one snapshot it follows, or every one of them
-// where it holds several clusters (ADR-0052, amendment 2026-09-20).
-static string? Located(IReadOnlyList<string> snapshots)
+// Where this host reads: each cluster's endpoint, address or snapshot
+// (ADR-0052, amendments 2026-09-20 and 2026-11-13).
+static string? Located(IReadOnlyList<string> places)
 {
-    return snapshots.Count == 0 ? null : string.Join(", ", snapshots);
+    return places.Count == 0 ? null : string.Join(", ", places);
 }
 
 // One of the operator's choices kept in its cookie, or the cookie deleted

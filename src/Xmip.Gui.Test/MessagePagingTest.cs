@@ -175,7 +175,6 @@ public sealed class MessagePagingTest : BunitContext, IDisposable
                 pages.Single(page => page.From == from);
 
             return new FailedMessageList(
-                string.Empty,
                 [
                     new FailedMessagePort(
                         Node,

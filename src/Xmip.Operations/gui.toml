@@ -51,6 +51,16 @@ Node = "edge-01"
 # page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip"
 
+# One surface per cluster, each of its own kind, as the web host's gui.toml
+# names them: a table each, its Surface and the Local, Address or Snapshot
+# that word reads. A cluster local at the node that gathers its view — a node
+# declaring the monitoring role — is the whole cluster as that node sees it.
+# The list wins over Surface; Configure plans on the first.
+# Clusters = [
+#   { Surface = "local", Local = "xmip-<node>" },
+#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL2-snapshot.xmip" },
+# ]
+
 # The node to follow when Surface = "remote", at its operate address,
 # host:port (ADR-0067). gRPC inside Xmip's mutual TLS, always: presenting
 # Certificate with PrivateKey and taking the node only where its certificate

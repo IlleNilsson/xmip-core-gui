@@ -14,9 +14,10 @@ namespace Xmip.Gui.Test;
 /// Retry and Dismiss on each (runtime-model.md section 13; ADR-0013): the
 /// Monitor's drill at the Port, over a publication of the test cluster whose
 /// sending node published one Port with two failed Messages, one whose
-/// evidence names a Journey the publication lists none for, and one without,
-/// and whose publisher takes orders. Each Message listed with why and both
-/// acts for an Operator, each left for the sending node; the Messages and no
+/// evidence names a Journey the publication lists none for, and one without.
+/// Each Message listed with why and both acts for an Operator, each asked
+/// and declined by the snapshot, which is never acted on (ADR-0014,
+/// amendment 2026-11-13); the Messages and no
 /// act for an Observer; nothing where the publication lists none, whatever
 /// Journey the evidence names; nothing at a Port with no failed Message; and
 /// every act in the host's audit as <c>message.retry</c> or
@@ -51,7 +52,6 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Record(
                 Failing,
                 "Send Port; sent 4, failed 2, waiting 0, failed in its queue 2; the Message of the "
@@ -70,8 +70,6 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(snapshot)));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
-
-    private string Orders => Path.Combine(_place, "orders");
 
     private string Audited => Path.Combine(_place, "audit");
 
@@ -132,10 +130,10 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         page.Find(".message-confirm button.dismiss-confirm").Click();
 
         Assert.Equal(
-            [$"message {First} retry", $"message {Second} dismiss"],
-            OrdersLeft.For(Orders, Sender));
+            [$"message.retry {First}", $"message.dismiss {Second}"],
+            ActsAsked.Of(Audited, Sender, "journey"));
         Assert.Contains(
-            $"left for {Sender}", page.Find(".message-acts .subs-said").TextContent,
+            SnapshotOperator.NotActed, page.Find(".message-acts .subs-said").TextContent,
             StringComparison.Ordinal);
 
         string audit = File.ReadAllText(Path.Combine(Audited, "audit.toml"));
@@ -146,11 +144,6 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
         Assert.Equal(
             [InToml(Proven)],
             WhoSaid().Matches(audit).Select(said => said.Groups[1].Value).Distinct());
-        Assert.All(
-            Directory.GetFiles(Orders, "*.toml", SearchOption.AllDirectories),
-            order => Assert.Contains(
-                Proven, File.ReadAllText(order).Replace("\\\\", "\\", StringComparison.Ordinal),
-                StringComparison.Ordinal));
     }
 
     [Fact]
@@ -168,7 +161,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
 
         Assert.False(refused.Applied);
         Assert.StartsWith("REFUSED. Nothing proved", refused.Result, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Sender, "journey"));
     }
 
     [GeneratedRegex("^\"who\" = \"([^\"]*)\"$", RegexOptions.Multiline)]
@@ -181,7 +174,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
 
         Assert.Equal([First, Second], Listed(page));
         Assert.Empty(page.FindAll(".message-acts button"));
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Sender, "journey"));
     }
 
     [Fact]
@@ -191,7 +184,7 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
 
         Assert.Empty(Listed(page));
         Assert.Empty(page.FindAll(".message-acts"));
-        Assert.False(Directory.Exists(Orders));
+        Assert.Empty(ActsAsked.Of(Audited, Sender, "journey"));
     }
 
     [Fact]

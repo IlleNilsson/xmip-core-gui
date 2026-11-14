@@ -56,13 +56,20 @@ RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
 # .local-work/essentials at the estate root; name the same file here. A path
 # with no file behind it is said so on the page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip"
-#
-# A list is one cluster per file, and the three views say which cluster they
-# are on and move between them (ADR-0052, amendment 2026-09-20). Two files
-# publishing one cluster are REFUSED, because a cluster rolls once.
-# Snapshot = [
-#   "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip",
-#   "D:/Repos/Xmip/.local-work/essentials/CL2-snapshot.xmip",
+
+# Several clusters, one surface each, each of its own kind: a table each,
+# naming its Surface and the Local, Address or Snapshot that word reads, the
+# Certificate, PrivateKey and TrustAnchor below shared (ADR-0052, amendments
+# 2026-09-20 and 2026-11-13). The three views say which cluster they are on
+# and move between them; two surfaces publishing one cluster are REFUSED,
+# because a cluster rolls once. A cluster local at the node that gathers its
+# view — a node declaring the monitoring role — is the whole cluster as that
+# node sees it, and the views' source line says who gathered it and how many
+# of its nodes it reached. The list wins over Surface;
+# Start-XmipOperationWeb -Local and -Snapshot name its entries.
+# Clusters = [
+#   { Surface = "local", Local = "xmip-<node>" },
+#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL2-snapshot.xmip" },
 # ]
 
 # The node to follow when Surface = "remote", at its operate address,
