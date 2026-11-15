@@ -36,7 +36,7 @@ public sealed class GatheredClusterViewTest : BunitContext
         using HeldCaller me = RuntimeLibrary.Rules.SecurityRoles.Process(out string refused)
             ?? throw new InvalidOperationException(refused);
         using ServedNode served = RuntimeLibrary.Rules.Remotes.ServeLocal(
-            $"xmip-gathered-view-test-{Guid.NewGuid():n}", [me.Name], [], [], "gathered-view",
+            TestEndpoint.Named("gathered-view"), [me.Name], [], [], "gathered-view",
             out string reason) ?? throw new InvalidOperationException(reason);
         served.Post(File.ReadAllText(Fixture("snapshot.xmip")));
         served.PostCluster(Gathered());
