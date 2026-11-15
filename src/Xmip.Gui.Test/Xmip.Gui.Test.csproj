@@ -45,6 +45,11 @@
          shares (ADR-0056, amendment 2026-10-03). -->
     <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"
              Link="TestCluster.cs" />
+    <!-- A local endpoint's name, by the one rule every .NET test shares, so
+         it fits where the runtime places it (ADR-0014, amendment
+         2026-11-15). -->
+    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestEndpoint.cs"
+             Link="TestEndpoint.cs" />
     <Using Include="Xmip.Surface.Test" />
   </ItemGroup>
 
