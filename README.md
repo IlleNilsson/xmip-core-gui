@@ -20,16 +20,16 @@ Started 2026-09-04.
 
 **The screens are all this repository holds** (ADR-0052). The surface they
 read, the scope tree and its rollup, the worst leaf beneath a scope, runtime
-discovery and the English live in `Xmip.Surface` beside the binding in
-xmip-core-abi (`dotnet/Xmip.Surface`), shared with the cli and the PowerShell
+discovery and the English live in `Xmip.Surface` beside the Operate model in
+xmip-core-operate (`dotnet/Xmip.Surface`), shared with the cli and the PowerShell
 module; `Xmip.Gui` keeps the Razor and the role. There is no sample surface: a
 host reads a node over gRPC at its operate listener — on this machine at its
 local endpoint (`LocalOperator`), on another at its operate address
 (`RemoteOperator`; ADR-0014, amendments 2026-10-12 and 2026-10-13) — or a
 snapshot a node published (`SnapshotOperator`), and which one is stated in
 its `gui.toml`, never guessed. What each answers — topology, the failed Messages, and whether an
-act applies at once or is submitted as an order — is xmip-core-abi's README,
-*What each source answers* (`module/foundation/abi/README.md`). A scope that is Holding says why beside the
+act applies at once or is submitted as an order — is xmip-core-operate's README,
+*What each source answers* (`module/core/operation/operate/README.md`). A scope that is Holding says why beside the
 word — the worst leaf beneath it and that leaf's evidence — at the banner, the
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
@@ -599,8 +599,9 @@ write and the audited Validate, Save and Plan (`RuntimeCommands`) are
 `Xmip.Surface`'s, and so is the rule that reads `ClusterConfiguration`,
 `Node` and `SliceDirectory` from `gui.toml` (`SliceDelivery.From`).
 Every view, edit and slice is the
-runtime's, through `xmip_operate.h` section 10, bound once in `Xmip.Abi`'s
-`RuntimeDesign` (`RuntimeRules.Design`) and read in `Xmip.Surface` as
+runtime's, through `xmip_operate.h` section 10, called once in
+`Xmip.Operate`'s `RuntimeDesign` (`RuntimeRules.Design`) and read in
+`Xmip.Surface` as
 `ConfigurationViews` (`ArtifactView`, `ArtifactEntry`, `ArtifactField`,
 `ArtifactPlace`), `ClusterEdit` and `NodeSlice` — the views and edits the VS
 Code designer's language server asks for (`vscode/README.md`). An edit is

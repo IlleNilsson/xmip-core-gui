@@ -2,6 +2,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Components;
+using Xmip.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Gui.Test;

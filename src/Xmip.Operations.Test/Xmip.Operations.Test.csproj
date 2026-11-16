@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
     <Content Include="..\Xmip.Operations\Components\Editing\*.razor"
              Link="Components\Editing\%(Filename)%(Extension)" />
     <Content Include="..\Xmip.Operations\Components\Pages\Configure.razor"
@@ -57,11 +57,11 @@
              Link="Platforms\Windows\CngKeeper.cs" />
     <!-- The test cluster's names, read by the one helper every .NET test
          shares (ADR-0056, amendment 2026-10-03). -->
-    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\TestCluster.cs"
+    <Compile Include="..\..\..\operate\dotnet\Xmip.Surface.Test\TestCluster.cs"
              Link="TestCluster.cs" />
     <!-- The runtime and a written cluster, shared with the configuration's
          own tests in Xmip.Surface.Test. -->
-    <Compile Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Test\Estate.cs"
+    <Compile Include="..\..\..\operate\dotnet\Xmip.Surface.Test\Estate.cs"
              Link="Estate.cs" />
     <Using Include="Xmip.Surface" />
     <Using Include="Xmip.Surface.Test" />
