@@ -30,12 +30,12 @@
     <!-- The surface, its choice and the TOML reader (ADR-0052). Xmip
          configures nothing in JSON, so the template's appsettings files are
          gone and gui.toml is read through Xmip.Surface instead. -->
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
 
     <!-- Where this host binds and how, and who each browser's request
          proved (ADR-0063; ADR-0009, amendment 2026-10-06). Only a web host
          references it. -->
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface.Relay\Xmip.Surface.Relay.csproj" />
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface.Relay\Xmip.Surface.Relay.csproj" />
   </ItemGroup>
 
   <ItemGroup>

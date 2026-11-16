@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
+using Xmip.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Gui.Test;

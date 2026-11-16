@@ -88,7 +88,7 @@
 
     <!-- The surface, its choice, runtime discovery and the TOML reader
          (ADR-0052): the same selection as the web host, from the same keys. -->
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -122,8 +122,8 @@
     <MauiAsset Include="$(XmipPhoneDocument)" LogicalName="gui.toml" Condition="'$(XmipPhoneDocument)' != ''" />
   </ItemGroup>
 
-  <!-- The runtime's native library for each platform, from xmip-core-abi,
-       where it is said once. -->
-  <Import Project="..\..\..\..\..\foundation\abi\dotnet\build\Xmip.Abi.Native.props" />
+  <!-- The runtime's native library for each platform, from xmip-core-operate,
+       where it is said once, beside the NativeRuntime that loads it. -->
+  <Import Project="..\..\..\operate\dotnet\build\Xmip.Operate.Native.props" />
 
 </Project>

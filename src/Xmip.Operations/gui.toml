@@ -21,7 +21,7 @@ Surface = "local"
 # here, so a library built into the shared build directory and named by
 # XMIP_RUNTIME_LIBRARY is the one loaded, never a stale one in a module's
 # own target directory.
-# RuntimeLibrary = "<path to xmip_core_runtime.dll>"
+# RuntimeLibrary = "<path to xmip_core_operate.dll>"
 
 # cluster.xmip the Configure page edits: the one configuration
 # anyone edits, a node's own file never (ADR-0031, amendment 2026-10-05).

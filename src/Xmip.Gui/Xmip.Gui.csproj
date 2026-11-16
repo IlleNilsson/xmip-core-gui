@@ -29,10 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- What every .NET surface shares, beside the binding in xmip-core-abi
-         (ADR-0052 clause 1). A sibling in the estate, not vendored: the path
-         is the estate's layout, five levels up. -->
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <!-- What every .NET surface shares, in xmip-core-operate over the binding
+         in xmip-core-abi (ADR-0052, amendment 2026-11-16). A sibling in the
+         estate, not vendored: the path is the estate's layout. -->
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

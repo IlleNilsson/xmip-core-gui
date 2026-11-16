@@ -426,13 +426,19 @@
           "Xmip.Surface": "[1.0.0, )"
         }
       },
+      "xmip.operate": {
+        "type": "Project",
+        "dependencies": {
+          "Xmip.Abi": "[1.0.0, )"
+        }
+      },
       "xmip.surface": {
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "[11.0.0, )",
           "System.Diagnostics.EventLog": "[11.0.0, )",
           "Tomlyn.Extensions.Configuration": "[2.0.1, )",
-          "Xmip.Abi": "[1.0.0, )"
+          "Xmip.Operate": "[1.0.0, )"
         }
       }
     }

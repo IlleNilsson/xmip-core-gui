@@ -1,6 +1,6 @@
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
-using Xmip.Abi.Operate;
+using Xmip.Operate;
 
 namespace Xmip.Operations.Test;
 

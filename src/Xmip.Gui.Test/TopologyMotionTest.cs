@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using Bunit;
 using Xmip.Abi.Operate;
 using Xmip.Gui.Components;
+using Xmip.Operate;
 
 namespace Xmip.Gui.Test;
 

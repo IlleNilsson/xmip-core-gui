@@ -1,4 +1,4 @@
-using Xmip.Abi.Operate;
+using Xmip.Operate;
 
 namespace Xmip.Gui.Components;
 

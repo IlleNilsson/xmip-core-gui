@@ -49,7 +49,7 @@ Surface = "local"
 # calls the runtime through, the gRPC client a local or remote surface follows
 # its node with among it. Found by one rule: this key, else
 # XMIP_RUNTIME_LIBRARY, else the library beside the executable.
-RuntimeLibrary = "module/platform/runtime/target/debug/xmip_core_runtime.dll"
+RuntimeLibrary = "module/core/operation/operate/target/debug/xmip_core_operate.dll"
 
 # The file to read when Surface = "snapshot". The Essentials writes
 # <cluster>-snapshot.xmip, named for the cluster a roll was started as, under
