@@ -22,12 +22,11 @@ public static partial class MauiProgram
         // shares: the estate root in a development build, the app's own
         // directory once packaged.
         string basePath = TomlDocument.BasePath(here);
-        string library = RuntimeLibrary.Find(builder.Configuration, basePath);
 
         // What this process says of itself while it runs (ADR-0053), through
-        // the runtime library this desktop was told to load. The desktop
-        // configures and monitors a real node: runtime.
-        ProcessDeclaration.Declare(Name, ScopeTree.Root, ProcessDeclaration.Runtime, library);
+        // the runtime library that read gui.toml. The desktop configures and
+        // monitors a real node: runtime.
+        ProcessDeclaration.Declare(Name, ScopeTree.Root, ProcessDeclaration.Runtime);
 
         // Into the directory gui.toml names, else where the capability
         // decides (ADR-0062).
@@ -82,9 +81,10 @@ public static partial class MauiProgram
             services.GetRequiredService<ClusterSurfaces>().First);
 
         // Validate, Save and Plan on the Configure page have no node behind
-        // them: the runtime found by the one rule is loaded for them alone
-        // (ADR-0014, amendment 2026-10-13).
-        builder.Services.AddSingleton(new RuntimeCommands(library, audit, delivery));
+        // them: the runtime found by the one rule, the library that read
+        // gui.toml, is loaded for them alone (ADR-0014, amendment 2026-10-13).
+        builder.Services.AddSingleton(
+            new RuntimeCommands(RuntimeLibrary.Rules.Source, audit, delivery));
 
         return audit;
     }

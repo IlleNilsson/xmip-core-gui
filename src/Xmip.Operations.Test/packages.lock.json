@@ -324,29 +324,10 @@
         "resolved": "5.0.0",
         "contentHash": "dDoKi0PnDz31yAyETfRntsLArTlVAVzUzCIvvEDsDsucrl33Dl8pIJG06ePTJTI3tGpeyHS9Cq7Foc/s4EeKcg=="
       },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "11.0.0",
-        "contentHash": "lKore9DXE1q8o6ss6/M7++xBpn2FMS0axaAypBspYLqY5OT1ZRPLzFGwF18l61aXfXTPpwkx5tYh4zMUHoAv/g=="
-      },
       "System.Security.AccessControl": {
         "type": "Transitive",
         "resolved": "6.0.1",
         "contentHash": "IQ4NXP/B3Ayzvw0rDQzVTYsCKyy0Jp9KI6aYcK7UnGVlR9+Awz++TIPCQtPYfLJfOpm8ajowMR09V7quD3sEHw=="
-      },
-      "Tomlyn": {
-        "type": "Transitive",
-        "resolved": "2.10.1",
-        "contentHash": "ykjOY3IpYmC4SpPcAZRTl/w2jTmhPMDydHq8xcV7tTBAQ22nKBsOkPqauIrZlMjHm03cmKfV23UOPscKp+J4Og=="
-      },
-      "Tomlyn.Extensions.Configuration": {
-        "type": "Transitive",
-        "resolved": "2.0.1",
-        "contentHash": "yfYfQnXpVWSNCQzR/YfwDrs5rg0po1FagBbK5Ke3/QHGPyvJOA0YfbePxVG6nBPEFjCJuQYi9M3kZYxkOXh0Ig==",
-        "dependencies": {
-          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.6",
-          "Tomlyn": "2.10.1"
-        }
       },
       "xunit.analyzers": {
         "type": "Transitive",
@@ -429,8 +410,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "[11.0.0, )",
-          "System.Diagnostics.EventLog": "[11.0.0, )",
-          "Tomlyn.Extensions.Configuration": "[2.0.1, )",
+          "Microsoft.Extensions.Configuration.FileExtensions": "[11.0.0, )",
           "Xmip.Operate": "[1.0.0, )"
         }
       }

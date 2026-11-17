@@ -428,29 +428,10 @@
           "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.1.8"
         }
       },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "11.0.0",
-        "contentHash": "lKore9DXE1q8o6ss6/M7++xBpn2FMS0axaAypBspYLqY5OT1ZRPLzFGwF18l61aXfXTPpwkx5tYh4zMUHoAv/g=="
-      },
       "System.Numerics.Tensors": {
         "type": "Transitive",
         "resolved": "9.0.0",
         "contentHash": "hyJB4UlpAi19Xr9AXzu2NuagKC4lPfHObNMEAA0HmqFz2rX7wKgzeYzO/jM/eBHDhnUGFFEjk5cOoJaxqg5J4A=="
-      },
-      "Tomlyn": {
-        "type": "Transitive",
-        "resolved": "2.10.1",
-        "contentHash": "ykjOY3IpYmC4SpPcAZRTl/w2jTmhPMDydHq8xcV7tTBAQ22nKBsOkPqauIrZlMjHm03cmKfV23UOPscKp+J4Og=="
-      },
-      "Tomlyn.Extensions.Configuration": {
-        "type": "Transitive",
-        "resolved": "2.0.1",
-        "contentHash": "yfYfQnXpVWSNCQzR/YfwDrs5rg0po1FagBbK5Ke3/QHGPyvJOA0YfbePxVG6nBPEFjCJuQYi9M3kZYxkOXh0Ig==",
-        "dependencies": {
-          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.6",
-          "Tomlyn": "2.10.1"
-        }
       },
       "xmip.abi": {
         "type": "Project"
@@ -472,8 +453,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.Configuration": "[11.0.0, )",
-          "System.Diagnostics.EventLog": "[11.0.0, )",
-          "Tomlyn.Extensions.Configuration": "[2.0.1, )",
+          "Microsoft.Extensions.Configuration.FileExtensions": "[11.0.0, )",
           "Xmip.Operate": "[1.0.0, )"
         }
       }
@@ -508,11 +488,6 @@
           "Microsoft.WindowsAppSDK.Base": "2.0.4",
           "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.1.8"
         }
-      },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "11.0.0",
-        "contentHash": "lKore9DXE1q8o6ss6/M7++xBpn2FMS0axaAypBspYLqY5OT1ZRPLzFGwF18l61aXfXTPpwkx5tYh4zMUHoAv/g=="
       }
     }
   }

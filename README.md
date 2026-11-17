@@ -662,9 +662,11 @@ changed is not held, Discard changes is offered only while there are edits,
 a stale save offers a reload, the node is planned and never said to start,
 and every control has its accessible name.
 
-Configuration is each host's `gui.toml`, with the same keys under
-`[Xmip]`: `Surface = "local" | "snapshot" | "remote"`, `RuntimeLibrary`
-(else `XMIP_RUNTIME_LIBRARY`, else beside the executable), `Local = <endpoint>`,
+Configuration is each host's `gui.toml`, read by the runtime's one reader
+through `xmip_operate.h` section 27 — so it names no runtime library, which
+is `XMIP_RUNTIME_LIBRARY`, else the library beside the executable (ADR-0052,
+amendment 2026-11-17) — with the same keys under
+`[Xmip]`: `Surface = "local" | "snapshot" | "remote"`, `Local = <endpoint>`,
 a node's local endpoint on this machine, when the surface is local — left
 out, the page says no node is named — `Snapshot = <path>`
 when the surface is a snapshot — a path with no file behind it is said so on
