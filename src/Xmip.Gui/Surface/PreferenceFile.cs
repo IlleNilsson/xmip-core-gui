@@ -1,4 +1,3 @@
-using Tomlyn.Syntax;
 using Xmip.Surface;
 
 namespace Xmip.Gui.Surface;
@@ -9,9 +8,10 @@ namespace Xmip.Gui.Surface;
 /// owner, 2026-11-12: "The Desktop version can have a local TOML file, like
 /// for cookies") — the <c>[bar]</c> table's <c>order</c> and the
 /// <c>[theme]</c> table's <c>choice</c>, each holding the words the rules
-/// write. The file is edited in place, so anything else in it stays as
-/// written; a file that is not TOML is read as the defaults and replaced
-/// when something is kept.
+/// write. The file is read and edited in place by the runtime's one reader
+/// (<see cref="TomlDocument"/>), so anything else in it stays as written; a
+/// file that is not TOML is read as the defaults and replaced when something
+/// is kept.
 /// </summary>
 public sealed class PreferenceFile(string path) : IPreferenceStore
 {
@@ -65,22 +65,20 @@ public sealed class PreferenceFile(string path) : IPreferenceStore
     {
         lock (guard)
         {
-            DocumentSyntax document = Document() ?? TomlDocument.Parse(string.Empty);
-            TableSyntax? found = TomlDocument.Tables<TableSyntax>(document, table).FirstOrDefault();
+            string text = File.Exists(path) ? File.ReadAllText(path) : string.Empty;
+            string written;
 
-            if (found is null && value is not null)
+            try
             {
-                found = new TableSyntax();
-                TomlDocument.Insert(document, found, table);
+                written = TomlDocument.Set(text, [table], key, value);
             }
-
-            if (found is not null)
+            catch (FormatException)
             {
-                TomlDocument.Set(found, key, value);
+                written = TomlDocument.Set(string.Empty, [table], key, value);
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            File.WriteAllText(path, document.ToString());
+            File.WriteAllText(path, written);
         }
 
         Changed?.Invoke();
@@ -90,19 +88,13 @@ public sealed class PreferenceFile(string path) : IPreferenceStore
     // the key is absent, or the file is not TOML.
     private string? Kept(string table, string key)
     {
-        return Document() is { } document
-            && TomlDocument.Tables<TableSyntax>(document, table).FirstOrDefault() is { } found
-            ? TomlDocument.Text(found, key)
-            : null;
-    }
-
-    private DocumentSyntax? Document()
-    {
         try
         {
-            return File.Exists(path) ? TomlDocument.Parse(File.ReadAllText(path)) : null;
+            return File.Exists(path)
+                ? TomlDocument.Read(Path.GetFullPath(path))[$"{table}:{key}"]
+                : null;
         }
-        catch (FormatException)
+        catch (InvalidDataException)
         {
             return null;
         }

@@ -14,14 +14,11 @@
 Surface = "local"
 # Local = "xmip-node1"
 
-# The runtime's native library, for the work with no node behind it: the
+# The runtime's native library, for the work with no node behind it - the
 # cluster's views, edit, slices, validate and plan (xmip_operate.h section
-# 10). Found by one rule for every surface: this key, else
-# XMIP_RUNTIME_LIBRARY, else the library beside the executable. Left unset
-# here, so a library built into the shared build directory and named by
-# XMIP_RUNTIME_LIBRARY is the one loaded, never a stale one in a module's
-# own target directory.
-# RuntimeLibrary = "<path to xmip_core_operate.dll>"
+# 10) - reads this file too, so it is not named here: found by one rule for
+# every surface, XMIP_RUNTIME_LIBRARY, else the library beside the
+# executable.
 
 # cluster.xmip the Configure page edits: the one configuration
 # anyone edits, a node's own file never (ADR-0031, amendment 2026-10-05).

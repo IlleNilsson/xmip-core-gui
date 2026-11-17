@@ -132,14 +132,13 @@ try
     // What this process says of itself while it runs (ADR-0053): the surface it
     // reads, and the purpose what started it stated. Start-XmipOperationWeb says
     // test where it follows an Essentials roll. Declared through the node, in
-    // the runtime library this host was told to load.
+    // the runtime library that read gui.toml.
     ProcessDeclaration.Declare(
         Name,
         Located(SurfaceChoice.Places(app.Configuration))
             ?? app.Configuration[SurfaceChoice.SurfaceKey]
             ?? ScopeTree.Root,
-        ProcessDeclaration.PurposeOf(app.Configuration),
-        RuntimeLibrary.Find(app.Configuration, basePath));
+        ProcessDeclaration.PurposeOf(app.Configuration));
 
     // Every response, an error page included, carries the Operation Web's
     // content security policy and a nonce of its own, which App.razor's

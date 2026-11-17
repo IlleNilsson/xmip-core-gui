@@ -45,11 +45,9 @@ Surface = "local"
 # names it for a host that follows an Essentials roll.
 # Tester = "CN=alice@example.org"
 
-# The runtime's native library, exporting xmip_operate_v1: what every surface
-# calls the runtime through, the gRPC client a local or remote surface follows
-# its node with among it. Found by one rule: this key, else
-# XMIP_RUNTIME_LIBRARY, else the library beside the executable.
-RuntimeLibrary = "module/core/operation/operate/target/debug/xmip_core_operate.dll"
+# The runtime's native library, exporting xmip_operate_v1, is what every
+# surface calls the runtime through and what reads this file, so it is not
+# named here: XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 
 # The file to read when Surface = "snapshot". The Essentials writes
 # <cluster>-snapshot.xmip, named for the cluster a roll was started as, under
