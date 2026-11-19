@@ -19,7 +19,7 @@ namespace Xmip.Gui.Test;
 /// the listing is an Operator's and shown neither it nor the act; and a
 /// surface that reaches no node said in words.
 /// </summary>
-public sealed class SecretsViewTest : BunitContext, IDisposable
+public sealed class SecretsViewTest : BunitContext
 {
     private const string Value = "a-value-never-shown-4711";
 
@@ -28,8 +28,7 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
     // The caller the runtime proved, this process's account: who sets.
     private static readonly string Tester = RoleAssignment.ProcessCaller()?.Name ?? "nobody";
 
-    private readonly string _place =
-        Path.Combine(Path.GetTempPath(), $"xmip-gui-secrets-{Guid.NewGuid():N}");
+    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-secrets-").FullName;
 
     private readonly ScriptedSurface _surface = new()
     {
@@ -38,15 +37,15 @@ public sealed class SecretsViewTest : BunitContext, IDisposable
 
     public SecretsViewTest()
     {
-        Directory.CreateDirectory(_place);
         Services.AddSingleton(ClusterSurfaces.Over(_surface));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private string Audit => File.ReadAllText(Path.Combine(_place, "audit.toml"));

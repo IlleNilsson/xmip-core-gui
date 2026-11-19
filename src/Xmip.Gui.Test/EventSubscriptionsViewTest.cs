@@ -18,7 +18,7 @@ namespace Xmip.Gui.Test;
 /// <c>event.&lt;act&gt;</c>, the action
 /// <c>observe::Noun::EventSubscription</c> gives it.
 /// </summary>
-public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
+public sealed class EventSubscriptionsViewTest : BunitContext
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Receiver = Names.WithRole("receiving");
@@ -29,12 +29,11 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
     /// <summary>The receiving node's address, escaped for a query.</summary>
     private static readonly string AtReceiver = Uri.EscapeDataString($"{Nodes}/{Receiver}");
 
-    private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-event-subscriptions-{Guid.NewGuid():N}");
+    private readonly string _place =
+        Directory.CreateTempSubdirectory("xmip-gui-event-subscriptions-").FullName;
 
     public EventSubscriptionsViewTest()
     {
-        Directory.CreateDirectory(_place);
         string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
@@ -59,10 +58,11 @@ public sealed class EventSubscriptionsViewTest : BunitContext, IDisposable
             + $"state = \"{state}\"\nqueued = {queued}\ncapacity = 64\n";
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private IRenderedComponent<EventSubscriptions> At(string address, Role role)

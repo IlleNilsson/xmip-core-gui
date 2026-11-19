@@ -16,29 +16,28 @@ namespace Xmip.Gui.Test;
 /// to the evidence's Journey, and not once the evidence says none wait; and a
 /// Dismiss is taken only once the Operator has confirmed it.
 /// </summary>
-public sealed class MessagePagingTest : BunitContext, IDisposable
+public sealed class MessagePagingTest : BunitContext
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Node = $"{Names.Scope}/node/{Names.WithRole("sending")}";
     private static readonly string Port = Node + "/send/invoices";
     private static readonly string Other = Node + "/send/orders";
 
-    private readonly string _place =
-        Path.Combine(Path.GetTempPath(), $"xmip-gui-paging-{Guid.NewGuid():N}");
+    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-paging-").FullName;
 
     private readonly ScriptedSurface _surface = new();
 
     public MessagePagingTest()
     {
-        Directory.CreateDirectory(_place);
         Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     [Fact]

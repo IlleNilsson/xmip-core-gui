@@ -23,12 +23,11 @@ namespace Xmip.Gui.Test;
 /// and every word compared is the runtime's, read through
 /// <see cref="ReportCatalog"/>.
 /// </summary>
-public sealed class ReportsViewTest : BunitContext, IDisposable
+public sealed class ReportsViewTest : BunitContext
 {
     private static readonly TestCluster Configured = TestCluster.Read();
 
-    private readonly string _place =
-        Directory.CreateTempSubdirectory("xmip-gui-reports-").FullName;
+    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-reports-").FullName;
 
     public ReportsViewTest()
     {
@@ -36,10 +35,11 @@ public sealed class ReportsViewTest : BunitContext, IDisposable
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private ProgramAudit Audit => Services.GetRequiredService<ProgramAudit>();

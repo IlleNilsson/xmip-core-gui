@@ -17,14 +17,14 @@ namespace Xmip.Gui.Test;
 /// </summary>
 public sealed class TopNavTest : BunitContext
 {
-    private readonly string folder =
-        Path.Combine(Path.GetTempPath(), $"xmip-bar-{Guid.NewGuid():n}");
+    // Made here; the store's own folder beneath it is the store's to make.
+    private readonly string folder = Directory.CreateTempSubdirectory("xmip-bar-").FullName;
 
     private readonly PreferenceFile store;
 
     public TopNavTest()
     {
-        store = new PreferenceFile(Path.Combine(folder, PreferenceFile.Name));
+        store = new PreferenceFile(Kept);
         Services.AddSingleton<IPreferenceStore>(store);
     }
 
@@ -136,17 +136,13 @@ public sealed class TopNavTest : BunitContext
     }
 
     /// <inheritdoc />
-    protected override void Dispose(bool disposing)
+    protected override async ValueTask DisposeAsyncCore()
     {
-        if (disposing && Directory.Exists(folder))
-        {
-            Directory.Delete(folder, recursive: true);
-        }
-
-        base.Dispose(disposing);
+        await base.DisposeAsyncCore();
+        Directory.Delete(folder, recursive: true);
     }
 
-    private string Kept => Path.Combine(folder, PreferenceFile.Name);
+    private string Kept => Path.Combine(folder, "desktop", PreferenceFile.Name);
 
     private static string?[] Hrefs(IRenderedComponent<TopNav> bar)
     {

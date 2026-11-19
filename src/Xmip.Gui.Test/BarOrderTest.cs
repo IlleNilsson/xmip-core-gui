@@ -11,15 +11,11 @@ namespace Xmip.Gui.Test;
 /// </summary>
 public sealed class BarOrderTest : IDisposable
 {
-    private readonly string folder =
-        Path.Combine(Path.GetTempPath(), $"xmip-bar-order-{Guid.NewGuid():n}");
+    private readonly string folder = Directory.CreateTempSubdirectory("xmip-bar-order-").FullName;
 
     public void Dispose()
     {
-        if (Directory.Exists(folder))
-        {
-            Directory.Delete(folder, recursive: true);
-        }
+        Directory.Delete(folder, recursive: true);
     }
 
     [Fact]
@@ -88,7 +84,6 @@ public sealed class BarOrderTest : IDisposable
     public void TheDesktopsFileKeepsAnOrderAndAThemeBesideWhatElseItHolds()
     {
         string path = Path.Combine(folder, PreferenceFile.Name);
-        Directory.CreateDirectory(folder);
         File.WriteAllText(path, "# the operator's own\n[other]\nkept = \"yes\"\n");
 
         new PreferenceFile(path).Keep(BarOrder.Moved(BarOrder.Default, "audit", 0));

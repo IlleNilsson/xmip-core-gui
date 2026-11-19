@@ -25,7 +25,7 @@ namespace Xmip.Gui.Test;
 /// host's account; a caller nothing proved is offered no act and the gate
 /// takes none.
 /// </summary>
-public sealed partial class MessageActsViewTest : BunitContext, IDisposable
+public sealed partial class MessageActsViewTest : BunitContext
 {
     private const string First = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0b";
     private const string Second = "01928f6e-7c1a-7d3e-9a4b-5c6d7e8f9a0c";
@@ -42,12 +42,10 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
     private static readonly string Evidenced = $"{Sending}/send/audit";
     private static readonly string Fine = $"{Sending}/send/orders";
 
-    private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-journey-{Guid.NewGuid():N}");
+    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-journey-").FullName;
 
     public MessageActsViewTest()
     {
-        Directory.CreateDirectory(_place);
         string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
@@ -79,10 +77,11 @@ public sealed partial class MessageActsViewTest : BunitContext, IDisposable
             + $"evidence = \"{evidence}\"\nobserved_unix_nanos = 1789111688000000000\n";
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private IRenderedComponent<Cluster> At(string scope, Role role, bool proven = true)
