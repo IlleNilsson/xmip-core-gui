@@ -14,7 +14,7 @@ namespace Xmip.Operations.Test;
 /// node configured here is planned and never said to start, and every
 /// control is named for what it edits.
 /// </summary>
-public sealed class ConfigurePageTest : BunitContext, IDisposable
+public sealed class ConfigurePageTest : BunitContext
 {
     private const string Elsewhere = "http://localhost/elsewhere";
 
@@ -179,9 +179,10 @@ public sealed class ConfigurePageTest : BunitContext, IDisposable
         page.InvokeAsync(() => Nav.NavigateTo(Elsewhere)).GetAwaiter().GetResult();
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
-        base.Dispose();
+        await base.DisposeAsyncCore();
         Directory.Delete(_directory, recursive: true);
     }
 }

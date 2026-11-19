@@ -17,7 +17,7 @@ namespace Xmip.Gui.Test;
 /// fixture, once declared hidden and once not. Off by default; in the
 /// address; on every view.
 /// </summary>
-public sealed class HiddenClusterTest : BunitContext, IDisposable
+public sealed class HiddenClusterTest : BunitContext
 {
     private static readonly string First = TestCluster.Read().Name;
 
@@ -25,12 +25,11 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
     private static readonly string Second =
         ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-cl2.xmip")));
 
-    private readonly string _directory = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-hidden-{Environment.ProcessId}-{Guid.NewGuid():N}");
+    private readonly string _directory =
+        Directory.CreateTempSubdirectory($"xmip-gui-hidden-{Environment.ProcessId}-").FullName;
 
     public HiddenClusterTest()
     {
-        Directory.CreateDirectory(_directory);
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
         File.WriteAllText(
@@ -39,10 +38,11 @@ public sealed class HiddenClusterTest : BunitContext, IDisposable
             + Record("02", $"{ScopeTree.Root}{Second}", hidden: true));
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_directory, recursive: true);
-        base.Dispose();
     }
 
     private static string Fixture(string name)

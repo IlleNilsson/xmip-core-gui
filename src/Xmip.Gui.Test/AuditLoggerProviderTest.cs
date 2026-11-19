@@ -11,13 +11,22 @@ namespace Xmip.Gui.Test;
 /// clause 4). The framework's own category and words are used here, so the
 /// test is the case that happened on 2026-09-25.
 /// </summary>
-public sealed class AuditLoggerProviderTest
+public sealed class AuditLoggerProviderTest : IDisposable
 {
     private const string Circuit = "Microsoft.AspNetCore.Components.Server.Circuits.CircuitHost";
 
-    private static string Scratch()
+    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-audit-").FullName;
+
+    public void Dispose()
     {
-        return Path.Combine(Path.GetTempPath(), $"xmip-gui-audit-{Guid.NewGuid():n}");
+        Directory.Delete(_place, recursive: true);
+    }
+
+    // Beneath the test's own folder and not made: the audit makes it when
+    // it records, and only then.
+    private string Scratch()
+    {
+        return Path.Combine(_place, "audit");
     }
 
     [Fact]
@@ -44,7 +53,6 @@ public sealed class AuditLoggerProviderTest
             "\"event\" = \"CircuitUnhandledException\"", text, StringComparison.Ordinal);
         Assert.Contains(
             "\"exception\" = \"System.InvalidOperationException\"", text, StringComparison.Ordinal);
-        Directory.Delete(directory, recursive: true);
     }
 
     [Fact]

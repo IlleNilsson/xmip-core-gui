@@ -12,27 +12,27 @@ namespace Xmip.Gui.Test;
 /// when it was selected: a new publication shows what passes over it now in
 /// the inspector, and the selection ends only when the link is gone.
 /// </summary>
-public sealed class TopologySelectionTest : BunitContext, IDisposable
+public sealed class TopologySelectionTest : BunitContext
 {
     private const string Links = "[[topology.links]]";
 
     private readonly string _place =
-        Path.Combine(Path.GetTempPath(), $"xmip-gui-topology-{Guid.NewGuid():N}");
+        Directory.CreateTempSubdirectory("xmip-gui-topology-").FullName;
 
     private readonly string _snapshot;
 
     public TopologySelectionTest()
     {
-        Directory.CreateDirectory(_place);
         _snapshot = Path.Combine(_place, "cluster.xmip");
         File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip"), _snapshot);
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(_snapshot)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
-        base.Dispose();
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
     }
 

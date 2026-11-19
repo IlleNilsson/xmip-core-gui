@@ -19,7 +19,7 @@ namespace Xmip.Gui.Test;
 /// amendment 2026-11-13), the list an Observer is shown without it, and
 /// every Replay in the host's audit as <c>dead-message.replay</c>.
 /// </summary>
-public sealed class DeadMessagesViewTest : BunitContext, IDisposable
+public sealed class DeadMessagesViewTest : BunitContext
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Receiver = Names.WithRole("receiving");
@@ -29,12 +29,11 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
     private static readonly string AtReceiver =
         Uri.EscapeDataString($"{Names.Scope}/node/{Receiver}");
 
-    private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-dead-messages-{Guid.NewGuid():N}");
+    private readonly string _place =
+        Directory.CreateTempSubdirectory("xmip-gui-dead-messages-").FullName;
 
     public DeadMessagesViewTest()
     {
-        Directory.CreateDirectory(_place);
         string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
@@ -60,10 +59,11 @@ public sealed class DeadMessagesViewTest : BunitContext, IDisposable
             + $"received_unix_nanos = {sequence * 1_000_000_000L}\n{rest}";
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private IRenderedComponent<DeadMessages> At(string address, Role role)

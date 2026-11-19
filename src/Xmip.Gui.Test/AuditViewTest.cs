@@ -17,7 +17,7 @@ namespace Xmip.Gui.Test;
 /// cluster that declared their locations, a node of the second cluster
 /// fixture's, and a cmdlet that declared none.
 /// </summary>
-public sealed class AuditViewTest : BunitContext, IDisposable
+public sealed class AuditViewTest : BunitContext
 {
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string First = Names.Name;
@@ -33,13 +33,12 @@ public sealed class AuditViewTest : BunitContext, IDisposable
     /// <summary>The machine the records were written on.</summary>
     private static readonly string Host = Environment.MachineName.ToLowerInvariant();
 
-    private readonly string _directory = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-audit-{Environment.ProcessId}-{Guid.NewGuid():N}");
+    private readonly string _directory =
+        Directory.CreateTempSubdirectory($"xmip-gui-audit-{Environment.ProcessId}-").FullName;
 
     public AuditViewTest()
     {
         string sender = Names.WithRole("sending");
-        Directory.CreateDirectory(_directory);
         File.WriteAllText(
             Path.Combine(_directory, "audit.toml"),
             Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
@@ -73,10 +72,11 @@ public sealed class AuditViewTest : BunitContext, IDisposable
             + "[record.properties]\n\"stress\" = \"calm\"\n\n";
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_directory, recursive: true);
-        base.Dispose();
     }
 
     private IRenderedComponent<Audit> At(string address)

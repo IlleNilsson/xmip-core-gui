@@ -19,7 +19,7 @@ namespace Xmip.Gui.Test;
 /// 2026-11-13), the list an Observer is shown without them, and every act in
 /// the host's audit as <c>subscription.&lt;act&gt;</c>.
 /// </summary>
-public sealed class SubscriptionsViewTest : BunitContext, IDisposable
+public sealed class SubscriptionsViewTest : BunitContext
 {
     private const string Edi = "[[subscriptions]]\nname = \"edi\"\n"
         + "filter = \"MessageType = 'edi'\"\nsend_port = \"RoundTripOut\"";
@@ -32,12 +32,11 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
     private static readonly string AtReceiver =
         Uri.EscapeDataString($"{Names.Scope}/node/{Receiver}");
 
-    private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-gui-subscriptions-{Guid.NewGuid():N}");
+    private readonly string _place =
+        Directory.CreateTempSubdirectory("xmip-gui-subscriptions-").FullName;
 
     public SubscriptionsViewTest()
     {
-        Directory.CreateDirectory(_place);
         string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
@@ -67,10 +66,11 @@ public sealed class SubscriptionsViewTest : BunitContext, IDisposable
             + $"state = \"{state}\"\npicked_up = {picked}\nheld = {held}\n";
     }
 
-    void IDisposable.Dispose()
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
+        await base.DisposeAsyncCore();
         Directory.Delete(_place, recursive: true);
-        base.Dispose();
     }
 
     private IRenderedComponent<Subscriptions> At(string address, Role role)
