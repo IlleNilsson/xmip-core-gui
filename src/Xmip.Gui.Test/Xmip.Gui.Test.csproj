@@ -50,6 +50,13 @@
          2026-11-15). -->
     <Compile Include="..\..\..\operate\dotnet\Xmip.Surface.Test\TestEndpoint.cs"
              Link="TestEndpoint.cs" />
+    <!-- A test's own folder, made and removed by the one helper every .NET
+         test shares, and the test that holds each test class's cleanup on
+         the path xUnit calls (ADR-0021, amendment 2026-11-20). -->
+    <Compile Include="..\..\..\operate\dotnet\Xmip.Surface.Test\TestFolder.cs"
+             Link="TestFolder.cs" />
+    <Compile Include="..\..\..\operate\dotnet\Xmip.Surface.Test\AsyncDisposalTest.cs"
+             Link="AsyncDisposalTest.cs" />
     <Using Include="Xmip.Surface.Test" />
   </ItemGroup>
 

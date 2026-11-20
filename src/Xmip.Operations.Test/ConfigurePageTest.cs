@@ -18,19 +18,18 @@ public sealed class ConfigurePageTest : BunitContext
 {
     private const string Elsewhere = "http://localhost/elsewhere";
 
-    private readonly string _directory =
-        Directory.CreateTempSubdirectory("xmip-configure-page-").FullName;
+    private readonly TestFolder _directory = new("configure-page");
 
     private readonly string _path;
 
     public ConfigurePageTest()
     {
-        _path = Estate.Written(_directory).Path;
+        _path = Estate.Written(_directory.Path).Path;
         Services.AddSingleton(new RuntimeCommands(
             Estate.Library(),
-            new ProgramAudit("xmip-operations", Path.Combine(_directory, "audit")),
+            new ProgramAudit("xmip-operations", _directory.Inside("audit")),
             new SliceDelivery(
-                _path, Path.Combine(_directory, "slices"), Estate.Cluster.Nodes[0])));
+                _path, _directory.Inside("slices"), Estate.Cluster.Nodes[0])));
         Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
     }
 
@@ -183,6 +182,6 @@ public sealed class ConfigurePageTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_directory, recursive: true);
+        _directory.Dispose();
     }
 }

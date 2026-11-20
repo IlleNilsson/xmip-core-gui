@@ -23,21 +23,21 @@ public sealed class MessagePagingTest : BunitContext
     private static readonly string Port = Node + "/send/invoices";
     private static readonly string Other = Node + "/send/orders";
 
-    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-paging-").FullName;
+    private readonly TestFolder _place = new("gui-paging");
 
     private readonly ScriptedSurface _surface = new();
 
     public MessagePagingTest()
     {
         Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
-        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place.Path));
     }
 
     /// <inheritdoc />
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     [Fact]

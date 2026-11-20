@@ -27,11 +27,11 @@ public sealed class ReportsViewTest : BunitContext
 {
     private static readonly TestCluster Configured = TestCluster.Read();
 
-    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-reports-").FullName;
+    private readonly TestFolder _place = new("gui-reports");
 
     public ReportsViewTest()
     {
-        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place.Path));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
     }
 
@@ -39,7 +39,7 @@ public sealed class ReportsViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     private ProgramAudit Audit => Services.GetRequiredService<ProgramAudit>();
@@ -62,7 +62,7 @@ public sealed class ReportsViewTest : BunitContext
         if (desktop)
         {
             ReportHosting.Add(
-                Services, new SliceDelivery(Configured.Path, Path.Combine(_place, "slices"), node));
+                Services, new SliceDelivery(Configured.Path, _place.Inside("slices"), node));
         }
     }
 
@@ -278,7 +278,7 @@ public sealed class ReportsViewTest : BunitContext
     // How many probes this host's audit holds: the runtime records each one.
     private int Probes()
     {
-        return File.ReadAllLines(Path.Combine(_place, "audit.toml"))
+        return File.ReadAllLines(_place.Inside("audit.toml"))
             .Count(line => line.Contains("\"quest.probe\"", StringComparison.Ordinal));
     }
 

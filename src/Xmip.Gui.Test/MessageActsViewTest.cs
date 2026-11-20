@@ -42,11 +42,11 @@ public sealed partial class MessageActsViewTest : BunitContext
     private static readonly string Evidenced = $"{Sending}/send/audit";
     private static readonly string Fine = $"{Sending}/send/orders";
 
-    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-journey-").FullName;
+    private readonly TestFolder _place = new("gui-journey");
 
     public MessageActsViewTest()
     {
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
+        string snapshot = _place.Inside($"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -69,7 +69,7 @@ public sealed partial class MessageActsViewTest : BunitContext
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
 
-    private string Audited => Path.Combine(_place, "audit");
+    private string Audited => _place.Inside("audit");
 
     private static string Record(string scope, string evidence)
     {
@@ -81,7 +81,7 @@ public sealed partial class MessageActsViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     private IRenderedComponent<Cluster> At(string scope, Role role, bool proven = true)

@@ -28,7 +28,7 @@ public sealed class SecretsViewTest : BunitContext
     // The caller the runtime proved, this process's account: who sets.
     private static readonly string Tester = RoleAssignment.ProcessCaller()?.Name ?? "nobody";
 
-    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-secrets-").FullName;
+    private readonly TestFolder _place = new("gui-secrets");
 
     private readonly ScriptedSurface _surface = new()
     {
@@ -38,17 +38,17 @@ public sealed class SecretsViewTest : BunitContext
     public SecretsViewTest()
     {
         Services.AddSingleton(ClusterSurfaces.Over(_surface));
-        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _place.Path));
     }
 
     /// <inheritdoc />
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
-    private string Audit => File.ReadAllText(Path.Combine(_place, "audit.toml"));
+    private string Audit => File.ReadAllText(_place.Inside("audit.toml"));
 
     private IRenderedComponent<Secrets> At(string address, Role role)
     {
