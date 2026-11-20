@@ -100,8 +100,10 @@ reads — is `observe::topology`'s, asked of the runtime through `English`;
 the view keeps no word list of its own. A node's membership of its cluster
 is a record beneath it like any other, `<node>/membership`, so a node whose
 save is not its peers' is Stressed there, in the runtime's words naming the
-members on another save, and stands under *Needs attention*, Web and
-Desktop alike (ADR-0031 and ADR-0056, amendments 2026-11-13).
+members on another save, and one whose node has a later start as its
+member is Done there, naming that start (ADR-0056, amendment 2026-11-20);
+either stands under *Needs attention*, Web and Desktop alike (ADR-0031 and
+ADR-0056, amendments 2026-11-13).
 
 **Every view drills to the problem, and the drill is in the address** (the
 owner, 2026-09-26: *it is all about solving the problem*). The Monitor's drill
