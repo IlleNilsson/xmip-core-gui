@@ -147,7 +147,8 @@ public sealed class MonitorDrillTest : BunitContext
     {
         // 2026-09-26: the drill's last step at a Done Send Location showed
         // only its fine identity step, and the cause was gone.
-        string path = Path.Combine(Path.GetTempPath(), $"xmip-own-{Guid.NewGuid():N}.xmip");
+        using TestFolder folder = new("own");
+        string path = folder.Inside("own.xmip");
         string location = $"{Names.Scope}/node/{Sender}/send/dns/regex";
         File.WriteAllText(path, $"""
             node = "{Names.Scope}"
@@ -174,7 +175,6 @@ public sealed class MonitorDrillTest : BunitContext
             page.Find("section.drill .drill-leaf").TextContent,
             StringComparison.Ordinal);
         Assert.Single(page.FindAll("section.drill a.branch"));
-        File.Delete(path);
     }
 
     [Fact]

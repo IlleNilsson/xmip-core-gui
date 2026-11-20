@@ -29,12 +29,11 @@ public sealed class DeadMessagesViewTest : BunitContext
     private static readonly string AtReceiver =
         Uri.EscapeDataString($"{Names.Scope}/node/{Receiver}");
 
-    private readonly string _place =
-        Directory.CreateTempSubdirectory("xmip-gui-dead-messages-").FullName;
+    private readonly TestFolder _place = new("gui-dead-messages");
 
     public DeadMessagesViewTest()
     {
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
+        string snapshot = _place.Inside($"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -50,7 +49,7 @@ public sealed class DeadMessagesViewTest : BunitContext
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
 
-    private string Audited => Path.Combine(_place, "audit");
+    private string Audited => _place.Inside("audit");
 
     private static string Entry(string node, string message, int sequence, string rest)
     {
@@ -63,7 +62,7 @@ public sealed class DeadMessagesViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     private IRenderedComponent<DeadMessages> At(string address, Role role)

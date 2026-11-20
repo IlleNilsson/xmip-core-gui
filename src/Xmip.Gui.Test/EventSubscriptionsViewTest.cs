@@ -29,12 +29,11 @@ public sealed class EventSubscriptionsViewTest : BunitContext
     /// <summary>The receiving node's address, escaped for a query.</summary>
     private static readonly string AtReceiver = Uri.EscapeDataString($"{Nodes}/{Receiver}");
 
-    private readonly string _place =
-        Directory.CreateTempSubdirectory("xmip-gui-event-subscriptions-").FullName;
+    private readonly TestFolder _place = new("gui-event-subscriptions");
 
     public EventSubscriptionsViewTest()
     {
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
+        string snapshot = _place.Inside($"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -47,7 +46,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
 
-    private string Audited => Path.Combine(_place, "audit");
+    private string Audited => _place.Inside("audit");
 
     private static string Entry(string node, int id, string action, string state, int queued)
     {
@@ -62,7 +61,7 @@ public sealed class EventSubscriptionsViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     private IRenderedComponent<EventSubscriptions> At(string address, Role role)

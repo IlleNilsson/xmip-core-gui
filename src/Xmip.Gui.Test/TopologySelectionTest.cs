@@ -16,14 +16,13 @@ public sealed class TopologySelectionTest : BunitContext
 {
     private const string Links = "[[topology.links]]";
 
-    private readonly string _place =
-        Directory.CreateTempSubdirectory("xmip-gui-topology-").FullName;
+    private readonly TestFolder _place = new("gui-topology");
 
     private readonly string _snapshot;
 
     public TopologySelectionTest()
     {
-        _snapshot = Path.Combine(_place, "cluster.xmip");
+        _snapshot = _place.Inside("cluster.xmip");
         File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip"), _snapshot);
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(_snapshot)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
@@ -33,7 +32,7 @@ public sealed class TopologySelectionTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     [Fact]

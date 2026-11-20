@@ -15,18 +15,18 @@ public sealed class AuditLoggerProviderTest : IDisposable
 {
     private const string Circuit = "Microsoft.AspNetCore.Components.Server.Circuits.CircuitHost";
 
-    private readonly string _place = Directory.CreateTempSubdirectory("xmip-gui-audit-").FullName;
+    private readonly TestFolder _place = new("gui-audit");
 
     public void Dispose()
     {
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     // Beneath the test's own folder and not made: the audit makes it when
     // it records, and only then.
     private string Scratch()
     {
-        return Path.Combine(_place, "audit");
+        return _place.Inside("audit");
     }
 
     [Fact]

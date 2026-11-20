@@ -368,6 +368,17 @@ a Quest probes, and a runtime that carries no Reports said in its words.
 The desktop's hosting is `ReportHosting.Add`, which the test hosts the view
 by.
 
+Every folder these tests and `src/Xmip.Operations.Test`'s write in is a
+`TestFolder`, the one helper every .NET test links from
+xmip-core-operate's `Xmip.Surface.Test`, disposed last in the page test's
+`DisposeAsyncCore`, the path xUnit calls; the folder no Observer's act
+writes in (`Unacted`) is the assembly's, an assembly fixture removed after
+the last test. Until 2026-11-19 the page tests removed their folders in
+their own `IDisposable.Dispose`, which xUnit never calls on a class it
+disposes asynchronously, and about 1,267 folders per label were left under
+the temporary directory; `AsyncDisposalTest`, linked into both projects,
+refuses that shape (ADR-0021, amendment 2026-11-20).
+
 The cluster board follows Xmip's
 Receive → Process → Send path. The communication topology aggregates configured
 and observed relationships between infrastructure endpoints, then drills through

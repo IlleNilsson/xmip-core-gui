@@ -20,11 +20,11 @@ public sealed class ServedWordsTest : BunitContext
     private static readonly TestCluster Names = TestCluster.Read();
     private static readonly string Processor = Names.WithRole("processing");
     private static readonly string Node = $"{Names.Scope}/node/{Processor}";
-    private readonly string path =
-        Path.Combine(Path.GetTempPath(), $"xmip-served-{Guid.NewGuid():N}.xmip");
+    private readonly TestFolder folder = new("served");
 
     public ServedWordsTest()
     {
+        string path = folder.Inside("served.xmip");
         File.WriteAllText(path, $$"""
             node = "{{Names.Scope}}"
 
@@ -120,9 +120,10 @@ public sealed class ServedWordsTest : BunitContext
             row.QuerySelector(".from-to")?.TextContent));
     }
 
-    protected override void Dispose(bool disposing)
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
     {
-        base.Dispose(disposing);
-        File.Delete(path);
+        await base.DisposeAsyncCore();
+        folder.Dispose();
     }
 }

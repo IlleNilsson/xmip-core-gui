@@ -25,15 +25,14 @@ public sealed class HiddenClusterTest : BunitContext
     private static readonly string Second =
         ClusterSurfaces.NameOf(new SnapshotOperator(Fixture("cluster-cl2.xmip")));
 
-    private readonly string _directory =
-        Directory.CreateTempSubdirectory($"xmip-gui-hidden-{Environment.ProcessId}-").FullName;
+    private readonly TestFolder _directory = new("gui-hidden");
 
     public HiddenClusterTest()
     {
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
-        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory.Path));
         File.WriteAllText(
-            Path.Combine(_directory, "audit.toml"),
+            _directory.Inside("audit.toml"),
             Record("01", $"{ScopeTree.Root}{First}", hidden: false)
             + Record("02", $"{ScopeTree.Root}{Second}", hidden: true));
     }
@@ -42,7 +41,7 @@ public sealed class HiddenClusterTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_directory, recursive: true);
+        _directory.Dispose();
     }
 
     private static string Fixture(string name)
@@ -60,7 +59,7 @@ public sealed class HiddenClusterTest : BunitContext
             text = text.Replace("\n[run]\n", "\n[run]\nhidden = true\n", StringComparison.Ordinal);
         }
 
-        string path = Path.Combine(_directory, $"{Second}-{hidden}.xmip");
+        string path = _directory.Inside($"{Second}-{hidden}.xmip");
         File.WriteAllText(path, text);
 
         return path;

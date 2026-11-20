@@ -32,12 +32,11 @@ public sealed class SubscriptionsViewTest : BunitContext
     private static readonly string AtReceiver =
         Uri.EscapeDataString($"{Names.Scope}/node/{Receiver}");
 
-    private readonly string _place =
-        Directory.CreateTempSubdirectory("xmip-gui-subscriptions-").FullName;
+    private readonly TestFolder _place = new("gui-subscriptions");
 
     public SubscriptionsViewTest()
     {
-        string snapshot = Path.Combine(_place, $"{Names.Name}-snapshot.xmip");
+        string snapshot = _place.Inside($"{Names.Name}-snapshot.xmip");
         File.WriteAllText(
             snapshot,
             $"node = \"{Names.Scope}\"\n"
@@ -48,7 +47,7 @@ public sealed class SubscriptionsViewTest : BunitContext
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Audited));
     }
 
-    private string Audited => Path.Combine(_place, "audit");
+    private string Audited => _place.Inside("audit");
 
     private static string Entry(string node, string name, string state, int picked, int held)
     {
@@ -70,7 +69,7 @@ public sealed class SubscriptionsViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_place, recursive: true);
+        _place.Dispose();
     }
 
     private IRenderedComponent<Subscriptions> At(string address, Role role)

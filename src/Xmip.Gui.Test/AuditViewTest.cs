@@ -33,14 +33,13 @@ public sealed class AuditViewTest : BunitContext
     /// <summary>The machine the records were written on.</summary>
     private static readonly string Host = Environment.MachineName.ToLowerInvariant();
 
-    private readonly string _directory =
-        Directory.CreateTempSubdirectory($"xmip-gui-audit-{Environment.ProcessId}-").FullName;
+    private readonly TestFolder _directory = new("gui-audit");
 
     public AuditViewTest()
     {
         string sender = Names.WithRole("sending");
         File.WriteAllText(
-            Path.Combine(_directory, "audit.toml"),
+            _directory.Inside("audit.toml"),
             Record("01", "2026-09-29T10:00:01.000000000Z", RollProgram,
                 Names.Scope, "start", "Begin", "Information", null)
             + Record("02", "2026-09-29T10:00:02.000000000Z", NodeProgram,
@@ -56,7 +55,7 @@ public sealed class AuditViewTest : BunitContext
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
-        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory));
+        Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", _directory.Path));
     }
 
     private static string Record(
@@ -76,7 +75,7 @@ public sealed class AuditViewTest : BunitContext
     protected override async ValueTask DisposeAsyncCore()
     {
         await base.DisposeAsyncCore();
-        Directory.Delete(_directory, recursive: true);
+        _directory.Dispose();
     }
 
     private IRenderedComponent<Audit> At(string address)
@@ -123,7 +122,7 @@ public sealed class AuditViewTest : BunitContext
     {
         // ADR-0070 clause 5, built 2026-10-12: the next append seals an
         // interrupted record, which is in no chain.
-        File.AppendAllText(Path.Combine(_directory, "audit.toml"), "[[record]]\naudit_id = \"0");
+        File.AppendAllText(_directory.Inside("audit.toml"), "[[record]]\naudit_id = \"0");
 
         IRenderedComponent<Audit> open = At("/audit?verify=yes");
         Assert.StartsWith("UNFINISHED: ",
