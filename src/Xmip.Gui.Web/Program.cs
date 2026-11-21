@@ -135,9 +135,7 @@ try
     // the runtime library that read gui.toml.
     ProcessDeclaration.Declare(
         Name,
-        Located(SurfaceChoice.Places(app.Configuration))
-            ?? app.Configuration[SurfaceChoice.SurfaceKey]
-            ?? ScopeTree.Root,
+        SurfaceChoice.Declared(app.Configuration),
         ProcessDeclaration.PurposeOf(app.Configuration));
 
     // Every response, an error page included, carries the Operation Web's
@@ -210,8 +208,7 @@ try
         {
             ["urls"] = string.Join(", ", app.Services.GetRequiredService<SecureTransport>()
                 .Shown(app.Urls)),
-            ["surface"] = Located(SurfaceChoice.Places(app.Configuration))
-                ?? app.Configuration[SurfaceChoice.SurfaceKey] ?? ScopeTree.Root,
+            ["surface"] = SurfaceChoice.Declared(app.Configuration),
             ["purpose"] = ProcessDeclaration.PurposeOf(app.Configuration),
         }));
     // The one exception, said where it is made (ADR-0063 clause 1): a log
@@ -238,13 +235,6 @@ catch (Exception failure) when (failure is not HostAbortedException)
     // audit, not only on a console nobody kept (ADR-0062 clause 4).
     audit.Failed("host", failure);
     throw;
-}
-
-// Where this host reads: each cluster's endpoint, address or snapshot
-// (ADR-0052, amendments 2026-09-20 and 2026-11-13).
-static string? Located(IReadOnlyList<string> places)
-{
-    return places.Count == 0 ? null : string.Join(", ", places);
 }
 
 // One of the operator's choices kept in its cookie, or the cookie deleted

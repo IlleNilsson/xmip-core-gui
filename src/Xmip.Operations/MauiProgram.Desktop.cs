@@ -24,9 +24,13 @@ public static partial class MauiProgram
         string basePath = TomlDocument.BasePath(here);
 
         // What this process says of itself while it runs (ADR-0053), through
-        // the runtime library that read gui.toml. The desktop configures and
-        // monitors a real node: runtime.
-        ProcessDeclaration.Declare(Name, ScopeTree.Root, ProcessDeclaration.Runtime);
+        // the runtime library that read gui.toml: what it reads, by the one
+        // rule the web host declares by, so the location Get-XmipProcess shows
+        // names the snapshot or node it opened (ADR-0028, amendment
+        // 2026-11-21). The desktop configures and monitors a real node:
+        // runtime.
+        ProcessDeclaration.Declare(
+            Name, SurfaceChoice.Declared(builder.Configuration), ProcessDeclaration.Runtime);
 
         // Into the directory gui.toml names, else where the capability
         // decides (ADR-0062).
