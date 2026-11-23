@@ -7,7 +7,7 @@
 [Xmip]
 # Which surface the board reads (ADR-0052 clause 3): "local", a node on this
 # machine followed over gRPC at its local endpoint, "snapshot", a file a node
-# or the Essentials publishes, or "remote", a node on another machine followed
+# or the System Tests publish, or "remote", a node on another machine followed
 # over gRPC at its operate Address (ADR-0014, amendment 2026-10-13). Chosen
 # here and never guessed from a file in a temp directory. The same keys as the
 # web host's gui.toml. Local left out, the board says no node is named.
@@ -42,11 +42,11 @@ Node = "edge-01"
 # under the app's data.
 # SliceDirectory = ".local-work/slices"
 
-# The file to read when Surface = "snapshot". The Essentials writes
+# The file to read when Surface = "snapshot". The System Tests write
 # <cluster>-snapshot.xmip, named for whatever the roll's cluster was called;
 # name the file yours writes. A path with no file behind it is said so on the
 # page, not silently replaced.
-# Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip"
+# Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL1-snapshot.xmip"
 
 # One surface per cluster, each of its own kind, as the web host's gui.toml
 # names them: a table each, its Surface and the Local, Address or Snapshot
@@ -55,7 +55,7 @@ Node = "edge-01"
 # The list wins over Surface; Configure plans on the first.
 # Clusters = [
 #   { Surface = "local", Local = "xmip-<node>" },
-#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL2-snapshot.xmip" },
+#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL2-snapshot.xmip" },
 # ]
 
 # The node to follow when Surface = "remote", at its operate address,
@@ -84,6 +84,6 @@ Node = "edge-01"
 # Role = "operator"
 
 # The directory asked where no role is stated. The one kind built is
-# "tester", the Essentials' fake directory: it allows the user this program
+# "tester", the System Tests' fake directory: it allows the user this program
 # runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
 # Directory = "tester"

@@ -395,11 +395,11 @@ moved through it and is still where nothing did — `Motion` is the one rule,
 and the inspector says what moved in words, never a percent. Paused, or where
 the reader's system asks for reduced motion, the pulses stand along the line
 and a busy node keeps its ring, so where traffic is still shows; the Desktop
-and the Web load the one stylesheet. An Essentials roll of real nodes, CL1
+and the Web load the one stylesheet. A Systems Tests roll of real nodes, CL1
 among them, draws no line yet: no node publishes what it hands another, and
 the roll matches its Parties to endpoints by transport while a real node
 names its endpoints by Location, so there only the nodes move (open problem
-62). The Essentials' stand-in Parties are one per node facing outside:
+62). The System Tests' stand-in Parties are one per node facing outside:
 `TX-Party 1`, `2`, … send into the receiving nodes and `RX-Party 1`, … are
 delivered to by the sending nodes (the owner, 2026-11-13), numbered per side
 in the order the nodes they face stand on the map; each label is the
@@ -436,7 +436,7 @@ meaning, a line each (`English.Purpose`, the runtime's
 `node::NodeRole::purpose`), on the Topology in its title and on the Monitor's
 node rows, Web and Desktop alike (*There has to be a tooltip, regardless of
 Web or MAUI. what are nodes purpose*).
-The snapshot surface reads this model, and an Essentials roll publishes it: the cluster, its nodes, the
+The snapshot surface reads this model, and a System Tests roll publishes it: the cluster, its nodes, the
 stages of the message path each node runs — receive, process, send — one
 endpoint per transport beneath a receive or a send stage, and the handoffs
 between the nodes, receive to process to send — every pair the roster
@@ -487,9 +487,9 @@ by one rule, `RoleAssignment` (in `Xmip.Surface`):
 `Role` in `gui.toml`, else `XMIP_ROLE`, is every proven caller's, and a
 word that is no role is Observer; stated by neither, the directory named by
 `Directory` answers, and with none the role is Observer. The one directory
-built is `tester`, the Essentials' fake directory, which allows the user the
+built is `tester`, the System Tests' fake directory, which allows the user the
 host runs as — as the runtime read it from the operating system — every role;
-`Start-XmipOperationWeb` names it for a host over an Essentials roll. Every
+`Start-XmipOperationWeb` names it for a host over a System Tests roll. Every
 act — pause, resume, remove, replay, retry, dismiss — from a browser or the
 desktop passes one gate, `GatedOperator` over the runtime's
 `xmip_act_admitted_v1` — the gate a node's operate listener asks of an act
@@ -521,8 +521,8 @@ security policy with a nonce of its own (`UseXmipContentSecurity`,
 the import map `App.razor` marks with that nonce, styles only from
 `xmip.css`, never an inline `style=` (the topology's node activity is a
 class), never framed. Over a
-Essentials roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
-under the Essentials' authority and `-Tester <person>` names the tester's
+System Tests roll, `Start-XmipOperationWeb` serves `https://127.0.0.1:5087`
+under the System Tests' authority and `-Tester <person>` names the tester's
 operator certificate (`Xmip:Tester`).
 
 **Desktop** — `dotnet run --project src/Xmip.Operations -f net11.0-windows10.0.19041.0`.

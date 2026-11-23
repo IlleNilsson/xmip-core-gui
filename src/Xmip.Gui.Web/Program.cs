@@ -131,7 +131,7 @@ try
 
     // What this process says of itself while it runs (ADR-0053): the surface it
     // reads, and the purpose what started it stated. Start-XmipOperationWeb says
-    // test where it follows an Essentials roll. Declared through the node, in
+    // test where it follows a System Tests roll. Declared through the node, in
     // the runtime library that read gui.toml.
     ProcessDeclaration.Declare(
         Name,

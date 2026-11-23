@@ -51,7 +51,7 @@
     private ScopeIndex Index { get; set; } = ScopeIndex.Empty("nothing read yet");
 
     // Levels that stand open without a click: the cluster, its nodes and the
-    // stage beneath each; the essentials puts its nodes under a `node`
+    // stage beneath each; the System Tests put their nodes under a `node`
     // segment, so one more level than a configured cluster would need.
     private const int OpenDepth = 4;
 
@@ -204,7 +204,7 @@
     // node the run reads — a Location, a Subscription, a Send Port of a node
     // started as xmip-service or on a machine of its own — only what the
     // publisher's topology names, so a test's own verdict beneath a Receive
-    // Location (the Essentials' delivery) is no configuration; the Monitor
+    // Location (the System Tests' delivery) is no configuration; the Monitor
     // still drills to it. A simulated node's technology beneath its endpoint
     // stays (ADR-0052, amendment 2026-11-11).
     private bool Configured(string scope, string? above) =>
@@ -230,7 +230,7 @@
     // a leaf's name. Then what the publisher's topology says the thing is —
     // cluster, node, stage, endpoint — and beneath an endpoint, the
     // technology. Until 2026-09-25 the kind was read from the depth alone,
-    // which an Essentials cluster, its nodes beneath a `node` segment, put one
+    // which a System Tests cluster, its nodes beneath a `node` segment, put one
     // level off: the rollup branch said NODE, the node said SCOPE and the
     // receive stage said RECEIVE LOCATION. Where no topology is published the
     // depth is all there is: the record names cluster, node and the three

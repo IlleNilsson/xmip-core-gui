@@ -75,7 +75,7 @@ public sealed class ClusterViewsTest : BunitContext
     [Fact]
     public void AConfigurationRowSaysWhatThePublisherSaysItIs()
     {
-        // The depth alone read an Essentials cluster one level off: the
+        // The depth alone read a System Tests cluster one level off: the
         // nodes' rollup branch said node, a node said scope, a stage said
         // receive location. The publisher's topology says what each is.
         IRenderedComponent<Configuration> tree = Render<Configuration>();

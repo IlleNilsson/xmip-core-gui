@@ -23,8 +23,8 @@ public sealed class AuditViewTest : BunitContext
     private static readonly string First = Names.Name;
     private static readonly string Receiver = Names.WithRole("receiving");
     private static readonly string Node = $"{Names.Scope}/node/{Receiver}";
-    private static readonly string NodeProgram = $"xmip-essentials-{First}-node-{Receiver}";
-    private static readonly string RollProgram = $"xmip-essentials-{First}-roll";
+    private static readonly string NodeProgram = $"xmip-system-test-{First}-node-{Receiver}";
+    private static readonly string RollProgram = $"xmip-system-test-{First}-roll";
 
     /// <summary>The second cluster, as its fixture's publication names it.</summary>
     private static readonly string Second = ClusterSurfaces.NameOf(new SnapshotOperator(
@@ -47,7 +47,7 @@ public sealed class AuditViewTest : BunitContext
             + Record("03", "2026-09-29T10:00:03.000000000Z", NodeProgram,
                 Node, "publish", "Failure", "Error", "could not write")
             + Record("04", "2026-09-29T10:00:04.000000000Z",
-                $"xmip-essentials-{Second}-node-{sender}",
+                $"xmip-system-test-{Second}-node-{sender}",
                 $"{ScopeTree.Root}{Second}/node/{sender}", "start", "Begin", "Information", null)
             + Record("05", "2026-09-29T10:00:05.000000000Z", "Xmip", null,
                 "Start-XmipTest", "Begin", "Warning", null));

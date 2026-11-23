@@ -11,7 +11,7 @@
 # machine followed over gRPC at the local endpoint Local names — a named pipe
 # on Windows, a Unix domain socket elsewhere, the name its [operate] local
 # gives (ADR-0014, amendment 2026-10-13) — "snapshot", a file a node or the
-# Essentials publishes, or "remote", a node on another machine followed over
+# System Tests publish, or "remote", a node on another machine followed over
 # gRPC at its operate Address. Chosen here and never guessed from a file in a
 # temp directory. Local left out, the page says no node is named.
 Surface = "local"
@@ -30,9 +30,9 @@ Surface = "local"
 # Role = "observer"
 
 # The directory asked where no role is stated. The one kind built is
-# "tester", the Essentials' fake directory: it allows the user this host
+# "tester", the System Tests' fake directory: it allows the user this host
 # runs as every role, and no one else (ADR-0009, amendment 2026-09-14).
-# Start-XmipOperationWeb names it for a host that follows an Essentials roll.
+# Start-XmipOperationWeb names it for a host that follows a System Tests roll.
 # A browser is never that user for reaching loopback, so on a web host the
 # tester acts only once a certificate proves them; the desktop host's caller
 # is the user running it.
@@ -42,18 +42,18 @@ Surface = "local"
 # New-XmipCertificate -Operator names it, which the tester directory allows
 # beside the user this host runs as (ADR-0009, amendment 2026-10-21): a
 # browser presenting it acts as the tester. Start-XmipOperationWeb -Tester
-# names it for a host that follows an Essentials roll.
+# names it for a host that follows a System Tests roll.
 # Tester = "CN=alice@example.org"
 
 # The runtime's native library, exporting xmip_operate_v1, is what every
 # surface calls the runtime through and what reads this file, so it is not
 # named here: XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 
-# The file to read when Surface = "snapshot". The Essentials writes
+# The file to read when Surface = "snapshot". The System Tests write
 # <cluster>-snapshot.xmip, named for the cluster a roll was started as, under
-# .local-work/essentials at the estate root; name the same file here. A path
+# .local-work/system-test at the estate root; name the same file here. A path
 # with no file behind it is said so on the page, not silently replaced.
-# Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL1-snapshot.xmip"
+# Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL1-snapshot.xmip"
 
 # Several clusters, one surface each, each of its own kind: a table each,
 # naming its Surface and the Local, Address or Snapshot that word reads, the
@@ -67,7 +67,7 @@ Surface = "local"
 # Start-XmipOperationWeb -Local and -Snapshot name its entries.
 # Clusters = [
 #   { Surface = "local", Local = "xmip-<node>" },
-#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/essentials/CL2-snapshot.xmip" },
+#   { Surface = "snapshot", Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL2-snapshot.xmip" },
 # ]
 
 # The node to follow when Surface = "remote", at its operate address,
