@@ -532,8 +532,8 @@ for Android (the maui-android workload, the Android SDK and NDK and
 Microsoft's OpenJDK 21), and `Build-XmipService -Remote Android -Package apk -Address <host:port>`,
 at the estate's root, makes the APK a person side-loads, signed with the
 Android SDK's debug key (ADR-0014, amendment 2026-10-22); and
-`net11.0-ios` is a target only on macOS — built by the estate's CI on macOS
-for the simulator (`Build-XmipService -Remote iOS` makes the runtime's
+`net11.0-ios` is a target only on macOS — built by hand there alone, for
+the simulator (`Build-XmipService -Remote iOS` makes the runtime's
 xcframework first), not signed, not run. On a phone it
 reads `Resources/Raw/gui.toml`, shipped inside the app, follows one
 node remotely (`Surface = "remote"`, nothing else) with its certificate
