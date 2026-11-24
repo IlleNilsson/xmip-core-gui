@@ -97,7 +97,7 @@ public sealed class TwoClustersTest : BunitContext
         Assert.Equal(second, Current(page));
         Assert.Contains(
             $"RoundTrip · {second} · nodes {Receiver}=receiving {Sender}=sending"
-                + $" · online {Receiver} · harsh",
+                + $" · Node capabilities {Receiver}=online · harsh",
             page.Find("p.run-line").TextContent,
             StringComparison.Ordinal);
 

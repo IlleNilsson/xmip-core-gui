@@ -31,7 +31,8 @@ public sealed class ClusterViewsTest : BunitContext
 
     private static readonly string RunLine =
         $"RoundTrip · {Names.Name} · nodes {Receiver}=receiving "
-        + $"{Processor}=processing+sending {Sender}=sending · online {Receiver} · realistic";
+        + $"{Processor}=processing+sending {Sender}=sending · Node capabilities "
+        + $"{Receiver}=online · realistic";
 
     public ClusterViewsTest()
     {
@@ -142,8 +143,8 @@ public sealed class ClusterViewsTest : BunitContext
         IElement row = tree.Find($"#{ScopeLink.Anchor($"{Nodes}/{Sender}/capability")}");
         Assert.Equal("capability", row.QuerySelector(".kind")?.TextContent);
         Assert.Equal(
-            "declares sending; offline; authentication and runtime capability are "
-                + "not modeled",
+            "declares sending; no Node capability; authentication and runtime capability "
+                + "are not modeled",
             row.QuerySelector(".evidence")?.TextContent);
     }
 

@@ -445,7 +445,7 @@ its hops and its rate their rise per second over the roll's window of the
 last thirty seconds; the shared store
 is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
 ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
-started with — tests, cluster, nodes, which are online, the level — in one line
+started with — tests, cluster, nodes, their Node capabilities, the level — in one line
 at the top of every view.
 The native operator boundary does not publish topology yet, so over that
 surface the view says so plainly; a node run from configuration is queue item
