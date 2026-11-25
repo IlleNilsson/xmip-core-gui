@@ -126,21 +126,33 @@ and names the Locations configured there (`Locations`), never the cluster's
 sum or the leaves beneath it. What a card says a stage is moving is the rate
 per second the one `FigureWatch` in `Xmip.Surface` gives between two
 publications, the prompt's own, and written by `English.Flow`; until
-2026-09-27 the board kept its own last value and delta. Each view has one line
-above its data — the
-cluster chooser, what the run was started with, and the source — beneath the
-navigation, which carries the logo; the bar that named the view a second time
-is gone. Each cluster in the chooser is read through a surface of its own
+2026-09-27 the board kept its own last value and delta. Above a view's data
+stand only what the operator acts on: the cluster chooser, where the host
+holds more than one cluster (`ClusterChooser`), and the filter; the bar that
+named the view a second time is gone. **What a view stands on is the status
+bar's**, fixed at the window's foot on every view, Web and Desktop alike,
+whatever is scrolled or opened (`StatusBar`; ADR-0052, amendment
+2026-11-25; the owner, the same day: *that should be on a status bar at the
+bottom of the page*): who is signed in, as the runtime's gate proved them,
+or *nobody proven*; the role they were assigned, described once
+(`Roles.Describe`); the cluster in view; the source; and what the run was
+started with, where its publisher says. It reads the cluster the address
+names and follows its change feed as the views do (`ClusterView`); a fact
+too long for the window scrolls the bar sideways, and the page keeps the
+bar's height clear at its foot, so nothing stands behind it. Until
+2026-11-25 a run line above every view said the run and the source, and the
+navigation said the role. Each cluster in the chooser is read through a surface of its own
 kind, and where it is local or remote at a node that gathers its cluster's
 view — a node declaring the monitoring role — the source says, after where
 that node is reached, what the view says of itself: the cluster, gathered by
 which node, and how many of its nodes it reached, the runtime's words and
 never the GUI's (`GatheredClusterViewTest`), on the Web and the Desktop
 alike. A cluster whose node has not answered yet is named in the chooser
-when it first publishes. The navigation is one component for both hosts, `TopNav`: the nine
+when it first publishes. Both hosts draw their views in one frame, `Frame`:
+the theme over it, the navigation above, the view and the status bar. The
+navigation is one component for both hosts, `TopNav`: the nine
 views, what the host adds after them — the desktop's Configure, for a role
-that may configure — the role it runs as, described once
-(`Roles.Describe`), and the Settings cog. The filter box and what it narrows are the views'
+that may configure — and the Settings cog. The filter box and what it narrows are the views'
 base, `ClusterView`, once. Every link a view writes carries the cluster
 (`Carry`, `ScopeLink`), so a link reproduces the view.
 
@@ -446,7 +458,7 @@ last thirty seconds; the shared store
 is drawn when a node ran a test over it (ADR-0052, amendments 2026-09-14,
 ruling 3, and 2026-09-19). A snapshot that carries `[run]` says what the run was
 started with — tests, cluster, nodes, their Node capabilities, the level — in one line
-at the top of every view.
+on the status bar beneath every view.
 The native operator boundary does not publish topology yet, so over that
 surface the view says so plainly; a node run from configuration is queue item
 1. Xmip draws what is configured and what is observed and infers nothing from

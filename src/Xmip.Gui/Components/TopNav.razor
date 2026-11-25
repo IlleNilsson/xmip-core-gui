@@ -1,16 +1,14 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Xmip.Gui.Surface
-@inject RoleContext Role
 @inject IPreferenceStore Bar
 
 @* The bar every host shows, once: the nine views this library draws, in
    the order the operator arranged them, else most wanted first (ADR-0052,
-   amendments 2026-11-12; BarOrder holds the views and the rule) — what the
-   host adds after them, and who is at the keyboard with the role they hold
-   — proven, and assigned, not chosen here (ADR-0009, amendment
-   2026-10-06), by one rule for both hosts and the hub (RoleAssignment),
-   described in one set of words (Roles.Describe). The web host adds
-   nothing; the desktop adds Configure for a role that may configure.
+   amendments 2026-11-12; BarOrder holds the views and the rule) — and what
+   the host adds after them. The web host adds nothing; the desktop adds
+   Configure for a role that may configure. Who is at the keyboard and the
+   role they hold are the status bar's since 2026-11-25 (StatusBar; ADR-0052,
+   amendment of that date).
 
    An operator drags a view onto another to put it there, or presses
    Arrange for a ‹ and a › beside each view, the keyboard's way, and Reset
@@ -55,11 +53,6 @@
         <button type="button" class="topnav-arrange" title="The default order"
                 @onclick="() => Keep(null)">Reset</button>
     }
-    <div class="role">
-        <span class="role-label">role</span>
-        <span class="role-pick active" title="@Role.Role.Describe()">@Role.Role</span>
-        <span class="role-who">@(Role.Who ?? "nobody proven")</span>
-    </div>
     <Settings />
 </nav>
 

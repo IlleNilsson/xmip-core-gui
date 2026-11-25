@@ -6,26 +6,27 @@
    assigned, not chosen here: an Observer watches and is not shown Configure
    at all. A real identity will gate this (ADR-0022/ADR-0027); until then the
    role is assigned at launch. *@
-<Themed>
-<TopNav>
-    @if (Role.MayConfigure())
-    {
-        <NavLink class="topnav-link" href="/configure">Configure</NavLink>
-    }
-    @* The person's own certificate, its key in this device's keeper
-       (ADR-0034, amendment 2026-10-15): every role, for it is the person's
-       own key and grants nothing. *@
-    <NavLink class="topnav-link" href="/certificate">Certificate</NavLink>
-    @* The cluster's own authority kept on this machine (ADR-0034, amendment
-       2026-10-22): configuring, and the desktop's alone. *@
-    @if (Role.MayConfigure() && !(OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()))
-    {
-        <NavLink class="topnav-link" href="/authority">Authority</NavLink>
-    }
-</TopNav>
-
-@Body
-</Themed>
+<Frame>
+    <Links>
+        @if (Role.MayConfigure())
+        {
+            <NavLink class="topnav-link" href="/configure">Configure</NavLink>
+        }
+        @* The person's own certificate, its key in this device's keeper
+           (ADR-0034, amendment 2026-10-15): every role, for it is the
+           person's own key and grants nothing. *@
+        <NavLink class="topnav-link" href="/certificate">Certificate</NavLink>
+        @* The cluster's own authority kept on this machine (ADR-0034,
+           amendment 2026-10-22): configuring, and the desktop's alone. *@
+        @if (Role.MayConfigure() && !(OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()))
+        {
+            <NavLink class="topnav-link" href="/authority">Authority</NavLink>
+        }
+    </Links>
+    <ChildContent>
+        @Body
+    </ChildContent>
+</Frame>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

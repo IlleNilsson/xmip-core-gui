@@ -2,6 +2,7 @@ using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Xmip.Abi.Operate;
+using Xmip.Gui.Components;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Operate;
@@ -105,20 +106,18 @@ public sealed class ThreeViewsTest : BunitContext
     }
 
     [Fact]
-    public void ASurfaceThatSaysNothingOfItsRunShowsNoRunLine()
+    public void ASurfaceThatSaysNothingOfItsRunShowsNoRunOnTheStatusBar()
     {
-        // The line is the run's (the owner, 2026-09-19); a snapshot with no
-        // [run] table reads as it always did, and no view invents one.
-        Assert.Empty(Render<Cluster>().FindAll("p.run-line .run-said"));
-        Assert.Empty(Render<Configuration>().FindAll("p.run-line .run-said"));
-        Assert.Empty(Render<Topology>().FindAll("p.run-line .run-said"));
+        // The run is the publisher's to say (the owner, 2026-09-19); a
+        // snapshot with no [run] table reads as it always did, and the status
+        // bar invents none.
+        IRenderedComponent<StatusBar> bar = Render<StatusBar>();
+        Assert.Empty(bar.FindAll(".status-run"));
 
-        // The line itself stays: where the records come from is always said
-        // (ADR-0052 clause 3), and since 2026-09-26 it is said there.
+        // Where the records come from is always said (ADR-0052 clause 3),
+        // and since 2026-11-25 it is said there.
         Assert.Contains(
-            "SNAPSHOT",
-            Render<Cluster>().Find("p.run-line .source").TextContent,
-            StringComparison.Ordinal);
+            "SNAPSHOT", bar.Find(".status-source").TextContent, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -82,31 +82,45 @@ body {
 .topnav { align-items: center; }
 .topnav .logo { height: 1.5rem; width: auto; display: block; margin-right: 0.5rem; }
 
-/* The one line above every view's data: the cluster in view, what the run
-   was started with, and where the records come from, at its end. */
-.run-line {
-    margin: 0;
-    padding: 0.35rem 1.5rem;
-    color: var(--muted);
-    font-size: 0.85rem;
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
-}
-.run-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 0.6rem; }
-.run-line .source { margin-left: auto; }
-
 /* Which cluster the view is on, and the way to the others (ADR-0052,
-   amendment 2026-09-20). It sits at the head of the run line rather than on a
-   line of its own: the views are crowded (the owner, twice), and what a view
-   is showing belongs beside what that run was started with. A host with one
-   cluster draws none of this. */
-.run-clusters {
-    display: inline-flex;
-    gap: 0.25rem;
-    margin-right: 0.6rem;
-    padding-right: 0.6rem;
-    border-right: 1px solid var(--line);
+   amendment 2026-09-20): one line above the view's data where the host holds
+   more than one cluster, and none where it holds one. Until 2026-11-25 it
+   was the run line, which said what the status bar says now. */
+.cluster-chooser {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem;
+    margin: 0; padding: 0.35rem 1.5rem;
+    color: var(--muted); font-size: 0.85rem;
+    background: var(--paper); border-bottom: 1px solid var(--line);
 }
+
+/* The status bar (ADR-0052, amendment 2026-11-25): what a view stands on —
+   who is signed in, the role, the cluster, where the records come from and
+   what the run was started with — fixed at the window's foot on every view,
+   whatever is scrolled or opened, in the page's own paper and text with its
+   labels muted. It keeps one height: a line too long for the window scrolls
+   sideways rather than wrapping. The frame keeps that height and the safe
+   area clear beneath the view, so nothing of a page ever stands behind it;
+   the Settings sheet, the error banner and the reconnect panel stand over
+   it. */
+.themed { --status-bar: 2rem; }
+.themed { padding-bottom: calc(var(--status-bar) + env(safe-area-inset-bottom)); }
+.status-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: flex; align-items: center;
+    height: calc(var(--status-bar) + env(safe-area-inset-bottom));
+    padding: 0 1rem env(safe-area-inset-bottom);
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; white-space: nowrap;
+    color: var(--text); background: var(--paper);
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+}
+.status-facts { display: flex; align-items: center; gap: 0 1.25rem; margin: 0; }
+.status-fact { display: flex; align-items: baseline; gap: 0.35rem; flex: none; }
+.status-fact dt {
+    color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.status-fact dd { margin: 0; }
+.status-role { font-weight: 600; }
 
 .cluster-pick {
     padding: 0.05rem 0.4rem;
@@ -123,7 +137,8 @@ body {
    cluster never disappears from under the operator's hand. */
 .cluster-pick.ended { opacity: 0.55; font-style: italic; }
 
-/* The filter: one line under the run line, on every view. The views are
+/* The filter: one line above the view's data, under the cluster chooser
+   where there is one, on every view that filters. The views are
    crowded (the owner, twice), so this reduces noise and must not add to it —
    a label, a box and what came of it, and nothing else. */
 .scope-filter {
@@ -161,7 +176,7 @@ body {
 
 .scope-filter-said.refused { color: var(--red); font-weight: 600; }
 
-/* Close under the run line. It was 1.5rem, which read as the page starting
+/* Close under the filter line. It was 1.5rem, which read as the page starting
    over rather than continuing (the owner, 2026-09-19). */
 .cluster {
     display: flex;
@@ -446,7 +461,9 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
    panel is the page's own paper and text in either theme, and the choice in
    force is outlined lime. A press outside the panel lands on its backdrop,
    which closes it; the backdrop shows nothing but on a phone. */
-.settings { position: relative; z-index: 30; display: flex; align-items: center; }
+.settings {
+    position: relative; z-index: 30; display: flex; align-items: center; margin-left: auto;
+}
 .settings-cog { display: inline-flex; align-items: center; justify-content: center; }
 .settings-icon { width: 1.25rem; height: 1.25rem; }
 .settings-backdrop { position: fixed; inset: 0; }
@@ -475,19 +492,6 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 .settings-choice[aria-pressed="true"] {
     border-color: var(--brand); background: var(--brand-tint); font-weight: 700;
 }
-
-/* The role concept (ADR-0009): who is at the keyboard shapes what is offered.
-   Observer watches; Operator also configures; Developer also builds. */
-.role { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
-.role-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
-.role-who { color: #94a3b8; font-size: 0.75rem; }
-.role-pick {
-    color: #cbd5e0; background: none; border: 1px solid transparent;
-    font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
-    padding: 0.25rem 0.7rem; border-radius: 6px;
-}
-.role-pick:hover { background: rgba(117,201,59,0.14); color: var(--brand); }
-.role-pick.active { border-color: var(--brand); color: var(--brand); cursor: default; }
 
 .cfg { padding: 1.5rem; display: grid; gap: 1.5rem; }
 .cfg .path { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
@@ -1042,7 +1046,7 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     }
 
     .topnav { flex-wrap: nowrap; overflow-x: auto; padding: 0 0.5rem; }
-    .topnav-link, .topnav-tab, .topnav-arrange, .role, .settings { flex: none; }
+    .topnav-link, .topnav-tab, .topnav-arrange, .settings { flex: none; }
     .topnav-link { display: inline-flex; align-items: center; min-height: 44px; }
 
     /* The Settings cog stays at the bar's right edge while the bar scrolls
@@ -1058,8 +1062,8 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     }
     .settings-choice { min-height: 44px; }
 
-    .run-line, .scope-filter { padding-left: 1rem; padding-right: 1rem; }
-    .run-line .source { margin-left: 0; overflow-wrap: anywhere; }
+    .cluster-chooser, .scope-filter { padding-left: 1rem; padding-right: 1rem; }
+    .status-bar { padding-left: 0.75rem; padding-right: 0.75rem; }
     .scope-filter { flex-wrap: wrap; }
     .scope-filter-input { flex: 1 1 100%; min-height: 44px; }
     .cluster-pick, .crumbs .crumb-btn, .crumb-link {

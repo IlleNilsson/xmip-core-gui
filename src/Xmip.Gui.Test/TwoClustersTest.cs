@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Xmip.Gui.Components;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Surface;
@@ -58,17 +59,16 @@ public sealed class TwoClustersTest : BunitContext
     [Fact]
     public void EveryViewSaysWhichClusterItIsOnAndOffersTheOther()
     {
-        // The owner has said twice the views are crowded, and there is a run
-        // line and a filter line already: the chooser is on the run line, not
-        // on a line of its own, and every view carries the same one.
+        // The owner has said twice the views are crowded: the chooser is the
+        // one line above the filter, and every view carries the same one; the
+        // run line it stood on until 2026-11-25 is the status bar's now.
         foreach (IRenderedComponent<IComponent> page in
             (IRenderedComponent<IComponent>[])
                 [Render<Cluster>(), Render<Configuration>(), Render<Topology>()])
         {
             Assert.Equal([First, second], Picked(page));
             Assert.Equal(First, Current(page));
-            Assert.Single(page.FindAll("p.run-line"));
-            Assert.Single(page.FindAll("p.run-line span.run-clusters"));
+            Assert.Single(page.FindAll("nav.cluster-chooser"));
         }
     }
 
@@ -95,11 +95,14 @@ public sealed class TwoClustersTest : BunitContext
         IRenderedComponent<Configuration> page = Render<Configuration>();
 
         Assert.Equal(second, Current(page));
-        Assert.Contains(
+
+        // The status bar follows the cluster the address names, as the view does.
+        IRenderedComponent<StatusBar> bar = Render<StatusBar>();
+        Assert.Equal(second, bar.Find(".status-cluster").TextContent.Trim());
+        Assert.Equal(
             $"RoundTrip · {second} · nodes {Receiver}=receiving {Sender}=sending"
                 + $" · Node capabilities {Receiver}=online · harsh",
-            page.Find("p.run-line").TextContent,
-            StringComparison.Ordinal);
+            bar.Find(".status-run").TextContent.Trim());
 
         // The second's tree, and nothing of the first's: two clusters are two
         // scope trees.

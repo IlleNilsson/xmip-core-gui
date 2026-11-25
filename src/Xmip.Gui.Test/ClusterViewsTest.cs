@@ -9,8 +9,9 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// The surface library's cluster fixture across the three views: every view
-/// says what the run was started with; the Configuration tree has one cluster
+/// The surface library's cluster fixture across the three views (what the
+/// run was started with is the status bar's, <see cref="StatusBarTest"/>):
+/// the Configuration tree has one cluster
 /// row, heading it, and says of each row what its publisher says it is; the
 /// Monitor counts the cluster's nodes; what a node declares is visible where
 /// an operator looks at that node; and every level of the topology drills to
@@ -29,27 +30,12 @@ public sealed class ClusterViewsTest : BunitContext
     private static readonly string[] Listed =
         [.. new[] { Receiver, Processor, Sender }.Order(StringComparer.Ordinal)];
 
-    private static readonly string RunLine =
-        $"RoundTrip · {Names.Name} · nodes {Receiver}=receiving "
-        + $"{Processor}=processing+sending {Sender}=sending · Node capabilities "
-        + $"{Receiver}=online · realistic";
-
     public ClusterViewsTest()
     {
         string fixture = Path.Combine(AppContext.BaseDirectory, "Fixture", "cluster.xmip");
         Services.AddSingleton(ClusterSurfaces.Over(new SnapshotOperator(fixture)));
         Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         Services.AddSingleton(new ProgramAudit("Xmip.Gui.Test", Unacted.Audit));
-    }
-
-    [Fact]
-    public void EveryViewSaysWhatTheRunWasStartedWith()
-    {
-        const string Said = "p.run-line .run-said";
-
-        Assert.Equal(RunLine, Render<Cluster>().Find(Said).TextContent.Trim());
-        Assert.Equal(RunLine, Render<Configuration>().Find(Said).TextContent.Trim());
-        Assert.Equal(RunLine, Render<Topology>().Find(Said).TextContent.Trim());
     }
 
     [Fact]

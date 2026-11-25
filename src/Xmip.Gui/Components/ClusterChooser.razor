@@ -1,0 +1,48 @@
+@using Xmip.Gui.Surface
+@inject ClusterSurfaces Surfaces
+@inject NavigationManager Nav
+
+@* Which cluster the view is on, and the way to the others, above the view's
+   data where the host holds more than one (ADR-0052, amendment 2026-09-20).
+   An act, so it stays with the view; what the view stands on — the cluster
+   in view, where the records come from, what the run was started with — is
+   the status bar's (ADR-0052, amendment 2026-11-25). Until 2026-11-25 this
+   was the run line, which said those facts here on every view. A host with
+   one cluster draws none of this. *@
+@if (Surfaces.Several)
+{
+    <nav class="cluster-chooser" aria-label="Clusters">
+        @foreach (string held in Surfaces.Clusters)
+        {
+            <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
+               title="@Title(held)"
+               href="@ScopeLink.Cluster(Path, held)">@held</a>
+        }
+    </nav>
+}
+
+@code {
+    /// <summary>Which cluster the view is on, so the chooser marks it.</summary>
+    [Parameter]
+    public string? Cluster { get; set; }
+
+    // The address the operator is on, without its query: switching cluster
+    // keeps the view and starts the drill and the filter over (ScopeLink).
+    private string Path => Nav.ToBaseRelativePath(Nav.Uri);
+
+    private bool Showing(string held) =>
+        string.Equals(held, Surfaces.Showing(Cluster), StringComparison.Ordinal);
+
+    private string Mark(string held) =>
+        (Showing(held) ? "current" : string.Empty)
+        + (Surfaces.Publishing(held) ? string.Empty : " ended");
+
+    // Blazor leaves out an attribute whose value is null, so a pick that is
+    // not the one in view carries no aria-current at all.
+    private string? Here(string held) => Showing(held) ? "page" : null;
+
+    private string Title(string held) =>
+        Surfaces.Publishing(held)
+            ? $"cluster {held}"
+            : $"cluster {held} — nothing published; its roll has ended";
+}

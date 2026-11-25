@@ -1,0 +1,60 @@
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject RoleContext Role
+
+@* The status bar at the window's foot, on every view, Web and Desktop alike
+   (ADR-0052, amendment 2026-11-25; the owner, the same day: "that should be
+   on a status bar at the bottom of the page. It should be on the bottom of
+   the page regardless of the user's navigation, scrolling"): the facts a
+   view stands on, said once here and nowhere at a page's top — who is signed
+   in, as the runtime's gate proved them, and the role they were assigned
+   (ADR-0009, amendment 2026-10-06), described in one set of words; the
+   cluster in view; where the records come from, so nobody mistakes a stale
+   file for a node (ADR-0052 clause 3), with what a gathered view says of
+   itself; and what the run was started with (the owner, 2026-09-19), where
+   its publisher says. It reads the cluster the address names and follows
+   that cluster's change feed as every view does (ClusterView), so it moves
+   with the operator's navigation. Nothing on it is an act: the cluster
+   chooser, the filters and the buttons stay with the view. *@
+<footer class="status-bar" role="contentinfo" aria-label="Status">
+    <dl class="status-facts">
+        <div class="status-fact">
+            <dt>signed in</dt>
+            <dd class="status-who">@(Role.Who ?? "nobody proven")</dd>
+        </div>
+        <div class="status-fact">
+            <dt>role</dt>
+            <dd class="status-role" title="@Role.Role.Describe()">@Role.Role</dd>
+        </div>
+        @if (Cluster.Length > 0)
+        {
+            <div class="status-fact">
+                <dt>cluster</dt>
+                <dd class="status-cluster">@Cluster</dd>
+            </div>
+        }
+        <div class="status-fact">
+            <dt>source</dt>
+            <dd class="status-source">@Surface.Source</dd>
+        </div>
+        @if (Said.Length > 0)
+        {
+            <div class="status-fact">
+                <dt>run</dt>
+                <dd class="status-run">@Said</dd>
+            </div>
+        }
+    </dl>
+</footer>
+
+@code {
+    // What the publisher says of its run; empty where it says nothing, and a
+    // node run from configuration has no run to say.
+    private string Said => Surface.Run() is { Said: true } run ? run.Line() : string.Empty;
+
+    /// <inheritdoc />
+    protected override void Read()
+    {
+        // Every fact is read as the bar is drawn; nothing is kept between.
+    }
+}

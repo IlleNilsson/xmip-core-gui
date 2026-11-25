@@ -1,0 +1,20 @@
+@* What every host draws its views in, written once for both (ADR-0052,
+   amendment 2026-11-25): the operator's theme over all of it (Themed), the
+   bar above with what the host adds to it (TopNav), the view, and the
+   status bar fixed at the window's foot (StatusBar), so every view of
+   either host has the one bar. *@
+<Themed>
+    <TopNav>@Links</TopNav>
+    @ChildContent
+    <StatusBar />
+</Themed>
+
+@code {
+    /// <summary>What the host adds to the bar after the nine views.</summary>
+    [Parameter]
+    public RenderFragment? Links { get; set; }
+
+    /// <summary>The view.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

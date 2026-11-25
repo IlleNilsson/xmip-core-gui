@@ -11,9 +11,11 @@ namespace Xmip.Gui.Test;
 
 /// <summary>
 /// One navigation for both hosts: the nine views in the operator's own
-/// order, what a host adds after them, and the role described in one set of
-/// words. Until 2026-09-27 the web host and the desktop each wrote the bar
-/// and worded the Observer differently; since 2026-11-12 an operator
+/// order and what a host adds after them; every role is described in one
+/// set of words, which the status bar shows since 2026-11-25
+/// (<see cref="StatusBarTest"/>). Until 2026-09-27 the web host and the
+/// desktop each wrote the bar and worded the Observer differently; since
+/// 2026-11-12 an operator
 /// arranges the views (ADR-0052, amendment of that date), kept here by the
 /// desktop's store, a local TOML file; and since 2026-11-25 the bar's cog
 /// opens the operator's Settings, where the theme is chosen (ADR-0052,
@@ -36,10 +38,8 @@ public sealed class TopNavTest : BunitContext
     }
 
     [Fact]
-    public void TheBarLinksTheNineViewsInOrderAndDescribesTheRoleOnce()
+    public void TheBarLinksTheNineViewsInOrder()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
-
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         // Most wanted first (ADR-0052, amendment 2026-11-12): the Monitor,
@@ -59,15 +59,11 @@ public sealed class TopNavTest : BunitContext
                 "Event subscriptions", "Audit", "Reports", "Secrets",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.TextContent.Trim()));
-        IElement role = bar.Find(".role-pick");
-        Assert.Equal("Observer", role.TextContent);
-        Assert.Equal(Role.Observer.Describe(), role.GetAttribute("title"));
     }
 
     [Fact]
     public void AViewDraggedOntoAnotherTakesItsPlaceAndIsKept()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         // The Topology dropped on the Monitor: first, and the bare address's.
@@ -84,7 +80,6 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void ArrangeMovesAViewByTheKeyboardAndResetGoesBackToTheDefault()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         IRenderedComponent<TopNav> bar = Render<TopNav>();
         Assert.Empty(bar.FindAll(".topnav-move"));
 
@@ -105,7 +100,6 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void TheCogOpensSettingsWhereTheThemeIsChosenAndKept()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         IRenderedComponent<Themed> page = Render<Themed>(parameters => parameters
             .AddChildContent<TopNav>());
         Assert.Equal("system", page.Find(".themed").GetAttribute("data-theme"));
@@ -147,7 +141,6 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void SettingsCloseByTheCogByEscapeAndByAPressOutside()
     {
-        Services.AddSingleton(new RoleContext(Role.Observer, RoleAssignment.ProcessCaller()));
         IRenderedComponent<TopNav> bar = Render<TopNav>();
         // The cog's reference, as the first render marks it: a later render
         // keeps the element and no longer marks it.
@@ -176,15 +169,12 @@ public sealed class TopNavTest : BunitContext
     [Fact]
     public void AHostAddsItsOwnLinksAfterTheViews()
     {
-        Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
-
         IRenderedComponent<TopNav> bar = Render<TopNav>(parameters => parameters
             .AddChildContent("<a class=\"topnav-link\" href=\"/configure\">Configure</a>"));
 
         Assert.Equal(
             "/configure",
             bar.FindAll("a.topnav-link")[^1].GetAttribute("href"));
-        Assert.Equal("also acts and configures", bar.Find(".role-pick").GetAttribute("title"));
     }
 
     [Fact]

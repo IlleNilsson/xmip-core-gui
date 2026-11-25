@@ -181,13 +181,16 @@ public sealed class MonitorDrillTest : BunitContext
     public void EveryViewHasOneLineAboveItsDataAndNamesItselfOnce()
     {
         // Until 2026-09-26 each view had a bar of its own under the navigation
-        // that named the view a second time.
+        // that named the view a second time; until 2026-11-25 a run line stood
+        // above the filter, saying what the status bar says now. A host with
+        // one cluster draws no chooser, so the filter is the one line.
         foreach (IRenderedComponent<IComponent> page in
             (IRenderedComponent<IComponent>[])
                 [Render<Cluster>(), Render<Configuration>(), Render<Topology>()])
         {
             Assert.Empty(page.FindAll("header.bar"));
-            Assert.Single(page.FindAll("p.run-line"));
+            Assert.Empty(page.FindAll("nav.cluster-chooser"));
+            Assert.Single(page.FindAll(".scope-filter"));
         }
     }
 

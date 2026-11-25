@@ -1,6 +1,7 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Xmip.Gui.Components;
 using Xmip.Gui.Pages;
 using Xmip.Gui.Surface;
 using Xmip.Operate;
@@ -11,11 +12,12 @@ namespace Xmip.Gui.Test;
 /// <summary>
 /// One host, one surface per cluster, each of its own kind (the design
 /// approved 2026-11-12, sections 3.4 and 3.5): the test cluster local at a
-/// node that gathers its view, and the second cluster a snapshot. The run
-/// line names both, and says where the records in view come from: for the
-/// gathered one, after where the node is reached, what its view says of
-/// itself — who gathered it and how many nodes it reached, in the node's own
-/// words, never composed here. Web and Desktop render this one component.
+/// node that gathers its view, and the second cluster a snapshot. The
+/// chooser names both, and the status bar says where the records in view come
+/// from: for the gathered one, after where the node is reached, what its view
+/// says of itself — who gathered it and how many nodes it reached, in the
+/// node's own words, never composed here. Web and Desktop render these
+/// components.
 /// </summary>
 public sealed class GatheredClusterViewTest : BunitContext
 {
@@ -31,7 +33,7 @@ public sealed class GatheredClusterViewTest : BunitContext
     }
 
     [Fact]
-    public void TheRunLineNamesEachClusterAndSaysWhoGatheredTheOneInView()
+    public void TheChooserNamesEachClusterAndTheStatusBarSaysWhoGatheredTheOneInView()
     {
         using HeldCaller me = RuntimeLibrary.Rules.SecurityRoles.Process(out string refused)
             ?? throw new InvalidOperationException(refused);
@@ -53,14 +55,13 @@ public sealed class GatheredClusterViewTest : BunitContext
             gathered.FindAll("a.cluster-pick").Select(pick => pick.TextContent.Trim()));
         Assert.Equal(
             $"LOCAL — {served.Address} — {Words}",
-            gathered.Find("p.run-line span.source").TextContent.Trim());
+            Render<StatusBar>().Find(".status-source").TextContent.Trim());
 
         Services.GetRequiredService<NavigationManager>()
             .NavigateTo($"/?{ClusterView.Query}={second}");
-        IRenderedComponent<Cluster> snapshot = Render<Cluster>();
 
         Assert.StartsWith(
-            "SNAPSHOT — ", snapshot.Find("p.run-line span.source").TextContent.Trim(),
+            "SNAPSHOT — ", Render<StatusBar>().Find(".status-source").TextContent.Trim(),
             StringComparison.Ordinal);
     }
 
