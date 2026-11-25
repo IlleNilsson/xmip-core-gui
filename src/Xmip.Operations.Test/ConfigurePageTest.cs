@@ -29,7 +29,8 @@ public sealed class ConfigurePageTest : BunitContext
             Estate.Library(),
             new ProgramAudit("xmip-operations", _directory.Inside("audit")),
             new SliceDelivery(
-                _path, _directory.Inside("slices"), Estate.Cluster.Nodes[0])));
+                _path, _directory.Inside("slices"), Estate.Cluster.Nodes[0],
+                _directory.Inside("kept"))));
         Services.AddSingleton(new RoleContext(Role.Operator, RoleAssignment.ProcessCaller()));
     }
 
