@@ -61,8 +61,8 @@ public sealed class ReportsViewTest : BunitContext
 
         if (desktop)
         {
-            ReportHosting.Add(
-                Services, new SliceDelivery(Configured.Path, _place.Inside("slices"), node, _place.Inside("kept")));
+            ReportHosting.Add(Services, new SliceDelivery(
+                Configured.Path, _place.Inside("slices"), node, _place.Inside("kept")));
         }
     }
 

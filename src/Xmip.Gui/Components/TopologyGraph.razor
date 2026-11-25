@@ -7,7 +7,11 @@
    RX-Parties, which it delivers to, along the right, each labeled as the
    runtime names it, outside the open node's frame, the operation band on
    top, the path across the middle, a standby below its primary, executing in
-   a lane of its own (TopologyGraph.Place.cs). The map stands still while the
+   a lane of its own (TopologyGraph.Place.cs). Beneath its label each box
+   says its kind, and a Storage node of several where it stands as it
+   reports itself running, Storage, primary or Storage, standby (the owner,
+   2026-11-25: *Also the DS2 standby node is not shown*; ADR-0052, amendment
+   2026-11-25). The map stands still while the
    pulses move: each line a curve, what moved over it pulses riding it from
    sender to receiver as often as its rate says, a node pulsing as fast as
    what moved through it (Motion; amendment 2026-11-10); paused, or for
@@ -139,7 +143,7 @@
                 <rect class="node-body" x="-56" y="-30" width="112" height="60" rx="12" />
                 <circle class="node-state" cx="-41" cy="-14" r="5" />
                 <text class="node-label" text-anchor="middle" y="-4">@node.Label</text>
-                <text class="node-kind" text-anchor="middle" y="12">@English.Name(node.Kind)</text>
+                <text class="node-kind" text-anchor="middle" y="12">@English.Kind(node)</text>
                 <rect class="node-load-track" x="-42" y="19" width="84" height="4" rx="2" />
                 <rect class="node-load" x="-42" y="19" width="@LoadWidth(node)"
                       height="4" rx="2" />
@@ -385,10 +389,11 @@
         + $" activity-{NodeBand(node)}"
         + (node.Id == SelectedId ? " selected" : "");
 
-    // What a node is, its mood and evidence; and a node of the cluster what it
-    // is for, by the roles it declares, a role a line (English.Purpose).
+    // What a node is — where a Storage node stands, as its box says it — its
+    // mood and evidence; and a node of the cluster what it is for, by the
+    // roles it declares, a role a line (English.Purpose).
     private static string Title(TopologyNode node) =>
-        $"{node.Label}: {English.Name(node.Kind)}, {English.Mood(node.State)}. {node.Evidence}"
+        $"{node.Label}: {English.Kind(node)}, {English.Mood(node.State)}. {node.Evidence}"
         + (node.Kind == TopologyNodeKind.Node ? $"\n{English.Purpose(node.Roles)}" : string.Empty);
 
     private static string Transform(Spot node) =>

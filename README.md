@@ -41,9 +41,14 @@ view onto another, or presses *Arrange* for a ‹ and a › beside each and
 *Reset* for the default; the Web host keeps the order in the browser's
 cookie, the Desktop in `preferences.toml` in its data folder
 (`BarOrder`, `IPreferenceStore`), and the bare address opens the first view.
-The *Theme* button beside *Arrange* turns the paint from the system's to
-light, to dark and round again, kept by the same store (`ThemeChoice`;
-ADR-0052, amendment 2026-11-12: the theme).
+The cog at the bar's end, named *Settings*, opens the operator's own
+settings beneath it, a row each (`Settings`; ADR-0052, amendment
+2026-11-25); Escape, the cog again or a press outside closes them. The
+first is the *Theme*: the system's, light or dark, the one in force
+pressed, kept by the same store (`ThemeChoice`; ADR-0052, amendment
+2026-11-12: the theme). On a phone the cog stays at the bar's right edge
+while the bar scrolls, and the settings open as a sheet at the screen's
+foot.
 By default: **Monitor**, at `/monitor`, the board that follows Receive → Process →
 Send; **Dead Message Queue**, the accepted Messages no Subscription matched,
 the one view where something waits on a person (ADR-0052, amendment
@@ -134,20 +139,10 @@ never the GUI's (`GatheredClusterViewTest`), on the Web and the Desktop
 alike. A cluster whose node has not answered yet is named in the chooser
 when it first publishes. The navigation is one component for both hosts, `TopNav`: the nine
 views, what the host adds after them — the desktop's Configure, for a role
-that may configure — and the role it runs as, described once
-(`Roles.Describe`). The filter box and what it narrows are the views'
-base, `ClusterView`, once.
-
-The run line carries one checkbox on every view, *show test clusters*, beside
-the cluster chooser (the owner, 2026-09-29; ADR-0052, amendment 2026-09-30).
-Off — the default — a cluster whose run declared itself hidden
-(`Start-XmipTest -Hidden`) is not in the chooser, not reached by an address
-that names it, and its audit records are neither counted nor grouped; on, it
-is, and its pill, its audit group and its records say `· test`, outlined
-dashed. Hidden is what the run declared, never its name (`ClusterSurfaces`).
-The box is in the address, `hidden=include`, and every link a view writes
-carries it beside the cluster (`Carry`, `ScopeLink`), so a link reproduces the
-view.
+that may configure — the role it runs as, described once
+(`Roles.Describe`), and the Settings cog. The filter box and what it narrows are the views'
+base, `ClusterView`, once. Every link a view writes carries the cluster
+(`Carry`, `ScopeLink`), so a link reproduces the view.
 
 **The Audit view** (`/audit`; the owner, 2026-09-29: *audited entries in the
 clusters. Drill-down, sorting and filtering*) reads the records every Xmip
@@ -395,8 +390,8 @@ moved through it and is still where nothing did — `Motion` is the one rule,
 and the inspector says what moved in words, never a percent. Paused, or where
 the reader's system asks for reduced motion, the pulses stand along the line
 and a busy node keeps its ring, so where traffic is still shows; the Desktop
-and the Web load the one stylesheet. A Systems Tests roll of real nodes, CL1
-among them, draws no line yet: no node publishes what it hands another, and
+and the Web load the one stylesheet. A System Tests roll on virtual
+machines, `-As VirtualMachine`, every node a real node, draws no line yet: no node publishes what it hands another, and
 the roll matches its Parties to endpoints by transport while a real node
 names its endpoints by Location, so there only the nodes move (open problem
 62). The System Tests' stand-in Parties are one per node facing outside:
@@ -417,7 +412,12 @@ node the canvas is open at — by the roles it declares and the order of
 the left edge and the RX-Parties at the right, outside the open node's
 frame, receiving, Storage and sending across the path, processing over
 Storage, the operation band on top, a standby below its primary and
-executing in a lane of its own. The canvas scales the unit square into its
+executing in a lane of its own. The primary on the path is the Storage node
+reporting itself the primary as it runs, and each Storage node's box says
+where it stands beneath its label, *Storage, primary* or *Storage,
+standby*, the runtime's words (`English.Kind`; the owner, 2026-11-25: *Also
+the DS2 standby node is not shown*; amendment 2026-11-25). The canvas
+scales the unit square into its
 view box (`TopologyGraph.Place.cs`): across from 78 to 922, down from 110 to
 760, so the layout's clearance of 0.05 is more than half a node's height and
 a line clears every node it does not join; a thing given no place stands in

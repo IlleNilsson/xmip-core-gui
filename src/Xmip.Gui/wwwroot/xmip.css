@@ -123,16 +123,6 @@ body {
    cluster never disappears from under the operator's hand. */
 .cluster-pick.ended { opacity: 0.55; font-style: italic; }
 
-/* The "show test clusters" box, beside the chooser it governs (ADR-0052,
-   amendment 2026-09-30), and what it shows once ticked: a cluster, a group
-   or a record whose run declared itself hidden says "test" in words, and is
-   outlined dashed — never a mood's colour, never the brand's. */
-.run-hidden { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; }
-.cluster-pick.test,
-.audit-group.test,
-.audit-row.test,
-.run-said.test { outline: 1px dashed var(--muted); outline-offset: -1px; }
-
 /* The filter: one line under the run line, on every view. The views are
    crowded (the owner, twice), so this reduces noise and must not add to it —
    a label, a box and what came of it, and nothing else. */
@@ -434,19 +424,57 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
 /* The operator's own order (ADR-0052, amendment 2026-11-12): a view dragged
    onto another takes its place; Arrange shows a ‹ and a › beside each view
    for the keyboard, and Reset. The buttons are the links' own color, warm
-   to lime on hover as they do, and Arrange pressed stays lime. */
+   to lime on hover as they do, and Arrange pressed stays lime, as the
+   Settings cog does while it is open. */
 .topnav-tab { display: inline-flex; align-items: center; gap: 0.1rem; }
 .topnav-tab.dragged { opacity: 0.5; }
-.topnav-move, .topnav-arrange {
+.topnav-move, .topnav-arrange, .settings-cog {
     color: #cbd5e0; background: none; border: 1px solid transparent;
     font: inherit; font-size: 0.85rem; cursor: pointer;
     padding: 0.2rem 0.45rem; border-radius: 6px;
 }
-.topnav-move:hover:not(:disabled), .topnav-arrange:hover {
+.topnav-move:hover:not(:disabled), .topnav-arrange:hover, .settings-cog:hover {
     color: var(--brand); border-color: rgba(117,201,59,0.4);
 }
 .topnav-move:disabled { opacity: 0.3; cursor: default; }
-.topnav-arrange[aria-pressed="true"] { color: var(--brand); border-color: var(--brand); }
+.topnav-arrange[aria-pressed="true"], .settings-cog[aria-expanded="true"] {
+    color: var(--brand); border-color: var(--brand);
+}
+
+/* The operator's own settings (ADR-0052, amendment 2026-11-25): the cog at
+   the bar's end opens a panel beneath it, a row each, the theme first. The
+   panel is the page's own paper and text in either theme, and the choice in
+   force is outlined lime. A press outside the panel lands on its backdrop,
+   which closes it; the backdrop shows nothing but on a phone. */
+.settings { position: relative; z-index: 30; display: flex; align-items: center; }
+.settings-cog { display: inline-flex; align-items: center; justify-content: center; }
+.settings-icon { width: 1.25rem; height: 1.25rem; }
+.settings-backdrop { position: fixed; inset: 0; }
+.settings-panel {
+    position: absolute; top: calc(100% + 0.6rem); right: 0; z-index: 1;
+    min-width: 16rem; padding: 0.75rem 1rem 0.25rem;
+    color: var(--text); background: var(--paper);
+    border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.settings-title {
+    margin: 0 0 0.5rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
+.settings-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 0.5rem 1.5rem; padding: 0.6rem 0; border-top: 1px solid var(--line);
+}
+.settings-name { font-weight: 600; }
+.settings-choices { display: inline-flex; gap: 0.35rem; }
+.settings-choice {
+    padding: 0.25rem 0.7rem; border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; color: inherit; background: var(--paper); cursor: pointer;
+}
+.settings-choice:hover { border-color: var(--brand); background: var(--brand-tint); }
+.settings-choice[aria-pressed="true"] {
+    border-color: var(--brand); background: var(--brand-tint); font-weight: 700;
+}
 
 /* The role concept (ADR-0009): who is at the keyboard shapes what is offered.
    Observer watches; Operator also configures; Developer also builds. */
@@ -960,11 +988,15 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     color: var(--muted); font-size: 0.8rem; font-weight: 400;
     text-transform: uppercase; letter-spacing: 0.04em;
 }
-.report-icon {
-    width: 1.4em; height: 1.4em; flex: none;
+.icon {
+    /* Every icon drawn here, a Report's kind and the Settings cog alike
+       (ADR-0052, amendment 2026-11-25): a line on a grid of 16 in the
+       text's own color, neither the brand nor a mood. */
+    flex: none;
     stroke: currentColor; fill: none; stroke-width: 1.5;
     stroke-linejoin: round; stroke-linecap: round;
 }
+.report-icon { width: 1.4em; height: 1.4em; }
 .report-legend {
     display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
     margin: 0 0 1rem; padding: 0; list-style: none;
@@ -1010,8 +1042,21 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     }
 
     .topnav { flex-wrap: nowrap; overflow-x: auto; padding: 0 0.5rem; }
-    .topnav-link, .topnav-tab, .topnav-arrange, .role { flex: none; }
+    .topnav-link, .topnav-tab, .topnav-arrange, .role, .settings { flex: none; }
     .topnav-link { display: inline-flex; align-items: center; min-height: 44px; }
+
+    /* The Settings cog stays at the bar's right edge while the bar scrolls
+       beneath it, and its panel is a sheet at the screen's foot, over a
+       dimmed page. */
+    .settings { position: sticky; right: 0; padding-left: 0.25rem; background: var(--ink); }
+    .settings-cog { min-width: 44px; min-height: 44px; }
+    .settings-backdrop { background: color-mix(in srgb, var(--ink) 50%, transparent); }
+    .settings-panel {
+        position: fixed; top: auto; left: 0; right: 0; bottom: 0;
+        border-bottom: 0; border-radius: 10px 10px 0 0;
+        padding: 1rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+    }
+    .settings-choice { min-height: 44px; }
 
     .run-line, .scope-filter { padding-left: 1rem; padding-right: 1rem; }
     .run-line .source { margin-left: 0; overflow-wrap: anywhere; }
@@ -1066,6 +1111,11 @@ h2 small { font-weight: 400; color: var(--muted); margin-left: 0.5rem; }
     .cluster-pick:hover:not(.current), .crumbs .crumb-btn:hover {
         background: none; color: var(--muted);
     }
-    .topnav-link:hover:not(.active) { background: none; color: #cbd5e0; }
+    .topnav-link:hover:not(.active), .settings-cog:hover:not([aria-expanded="true"]) {
+        background: none; color: #cbd5e0; border-color: transparent;
+    }
+    .settings-choice:hover:not([aria-pressed="true"]) {
+        border-color: var(--line); background: var(--paper);
+    }
     .stage:hover:not(.selected), .branch:hover { border-color: var(--line); }
 }

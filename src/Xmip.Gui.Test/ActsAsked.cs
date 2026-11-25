@@ -25,7 +25,7 @@ internal static class ActsAsked
         }
 
         AuditRead read = new ProgramAudit("Xmip.Gui.Test", audit)
-            .Read(new AuditQuery { Order = "ascending", IncludeHidden = true });
+            .Read(new AuditQuery { Order = "ascending" });
 
         return
         [

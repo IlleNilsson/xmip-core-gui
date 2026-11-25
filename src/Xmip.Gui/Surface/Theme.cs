@@ -17,9 +17,9 @@ public enum Theme
 /// <summary>
 /// The one rule for the operator's theme (the owner, 2026-11-12: "Themes are
 /// missing, I like Dark Mode. Make it a choice"): its word, as a store keeps
-/// it and the stylesheet reads it, what a word kept is read as, and what the
-/// bar's button turns it to next. A word the rule does not know is the
-/// system's, so a theme added later is never an error.
+/// it and the stylesheet reads it, what a word kept is read as, and its name,
+/// as Settings offers it (ADR-0052, amendment 2026-11-25). A word the rule
+/// does not know is the system's, so a theme added later is never an error.
 /// </summary>
 public static class ThemeChoice
 {
@@ -50,19 +50,7 @@ public static class ThemeChoice
         };
     }
 
-    /// <summary>What the bar's button turns <paramref name="theme"/> to:
-    /// the system's, light, dark, and round again.</summary>
-    public static Theme Next(Theme theme)
-    {
-        return theme switch
-        {
-            Theme.System => Theme.Light,
-            Theme.Light => Theme.Dark,
-            Theme.Dark or _ => Theme.System,
-        };
-    }
-
-    /// <summary>Its name, as the bar's button shows it.</summary>
+    /// <summary>Its name, as Settings offers it.</summary>
     public static string Name(Theme theme)
     {
         return theme switch

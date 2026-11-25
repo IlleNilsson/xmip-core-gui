@@ -27,11 +27,11 @@
         </div>
         @foreach (AuditEntry entry in Records)
         {
-            <a class="audit-row severity-@entry.Severity @(entry.Hidden ? "test" : "")" role="row"
+            <a class="audit-row severity-@entry.Severity" role="row"
                href="@ScopeLink.Audit(Query with { Record = entry.AuditId }, Carried)">
                 <span class="dot" title="severity @entry.Severity"></span>
                 <span class="audit-at">@Audit.Time(entry.At)</span>
-                <span class="audit-node">@(entry.Node ?? "—")@English.Test(entry.Hidden)</span>
+                <span class="audit-node">@(entry.Node ?? "—")</span>
                 <span class="audit-program">@entry.Program</span>
                 <span class="audit-action">@entry.Action</span>
                 <span class="audit-phase">@entry.Phase</span>

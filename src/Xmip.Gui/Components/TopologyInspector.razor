@@ -7,7 +7,9 @@
    as such (ADR-0052, amendments 2026-09-25 and 2026-11-13). The lists are
    what a page prerendered without a circuit, a reader of the page, and a test
    can all follow; each link's ends are a button that selects it, the canvas's
-   line by keyboard and as text. *@
+   line by keyboard and as text. A thing's kind is said as its box says it:
+   a Storage node where it stands, Storage, standby, which is what a phone,
+   drawing no canvas, shows of the map (amendment 2026-11-25). *@
 @using Xmip.Gui.Surface
 
 <aside class="topology-inspector">
@@ -36,7 +38,7 @@
     {
         <h2>@FocusNode.Label</h2>
         <dl>
-            <dt>Kind</dt><dd>@English.Name(FocusNode.Kind)</dd>
+            <dt>Kind</dt><dd>@English.Kind(FocusNode)</dd>
             <dt>State</dt>
             <dd class="@MoodClass.Of(FocusNode.State)">@English.Mood(FocusNode.State)</dd>
             <dt>Evidence</dt><dd>@English.Value(FocusNode.Evidence)</dd>
@@ -122,7 +124,7 @@
             {
                 <li class="@MoodClass.Of(child.State)">
                     <a class="beneath-open" href="@Drill(child)">@child.Label</a>
-                    <span class="kind">@English.Name(child.Kind)</span>
+                    <span class="kind">@English.Kind(child)</span>
                     <a href="@ScopeLink.Configuration(child.Scope, Cluster)">configuration</a>
                     <a href="@ScopeLink.Monitor(child.Scope, Cluster)">monitor</a>
                     <Why Leaf="Index.Worst(child.Scope)" Cluster="@Cluster" Linked="true" />

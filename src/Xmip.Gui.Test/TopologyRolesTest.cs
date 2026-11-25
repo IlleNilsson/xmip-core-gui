@@ -172,16 +172,67 @@ public sealed class TopologyRolesTest : BunitContext
             item => Assert.False(string.IsNullOrEmpty(item.GetAttribute("title"))));
     }
 
+    /// <summary>The owner, 2026-11-25: <i>Also the DS2 standby node is not
+    /// shown</i>. A Storage node's box says where it stands as it reports
+    /// itself running, in the runtime's words, and its hover says the same;
+    /// the one reporting itself the primary stands on the path and its standby
+    /// below it, whatever <c>[storage] nodes</c> listed first — after a
+    /// switchover too (ADR-0052, amendment 2026-11-25). A node that reports
+    /// no standing says its kind. The inspector's list, a phone's map, says
+    /// the same.</summary>
+    [Fact]
+    public void AStorageNodesBoxSaysWhereItStandsAsItReportsAndThePrimaryStandsOnThePath()
+    {
+        TopologySnapshot reported = Mapped(busy: false, standing: (Primary, Standby));
+        IRenderedComponent<TopologyGraph> canvas = Drawn(reported);
+
+        Assert.Equal("Storage, primary", Kind(canvas, Primary));
+        Assert.Equal("Storage, standby", Kind(canvas, Standby));
+        Assert.Equal(English.Name(TopologyNodeKind.Node), Kind(canvas, Receiver));
+        Assert.StartsWith(
+            $"{Standby}: Storage, standby, ",
+            Node(canvas, Standby).QuerySelector("title")!.TextContent,
+            StringComparison.Ordinal);
+        Assert.True(Down(canvas, Primary) < Down(canvas, Standby));
+        TopologyNode cluster = reported.Nodes.Single(node => node.Id == "cluster");
+        IRenderedComponent<TopologyInspector> inspector = Render<TopologyInspector>(
+            parameters => parameters
+                .Add(shown => shown.Snapshot, reported)
+                .Add(shown => shown.FocusNode, cluster));
+        Assert.Equal(
+            "Storage, standby",
+            inspector.FindAll(".topology-beneath li")
+                .Single(item => item.QuerySelector(".beneath-open")!.TextContent == Standby)
+                .QuerySelector(".kind")!.TextContent);
+
+        // The one listed second reports itself the primary: it stands on the
+        // path, and the one listed first below it.
+        IRenderedComponent<TopologyGraph> switched =
+            Drawn(Mapped(busy: false, standing: (Standby, Primary)));
+        Assert.Equal("Storage, primary", Kind(switched, Standby));
+        Assert.Equal("Storage, standby", Kind(switched, Primary));
+        Assert.True(Down(switched, Standby) < Down(switched, Primary));
+        Assert.Equal(Across(canvas, Primary), Across(switched, Standby));
+    }
+
     // The test cluster's map, read through the runtime as a surface reads a
     // publication: five nodes by their roles and four relations, quiet — every
-    // line configured, nothing passed — or busy.
-    private static TopologySnapshot Mapped(bool busy)
+    // line configured, nothing passed — or busy; where `standing` names them,
+    // the Storage node reporting itself the primary and the one reporting
+    // itself its standby.
+    private static TopologySnapshot Mapped(
+        bool busy, (string Primary, string Standby)? standing = null)
     {
         string origin = busy ? "both" : "configured";
+        string? Stands(string name) =>
+            standing is { } said
+                ? name == said.Primary ? "primary" : name == said.Standby ? "standby" : null
+                : null;
         string text = $"node = \"{Names.Scope}\"\n[topology]\nsource = \"drawn for the test\"\n"
             + "[[topology.nodes]]\nid = \"cluster\"\nkind = \"cluster\"\n"
             + $"label = \"{Names.Name}\"\nscope = \"{Names.Scope}\"\n"
-            + Thing(Receiver, null) + Thing(Primary, 0) + Thing(Standby, 1)
+            + Thing(Receiver, null) + Thing(Primary, 0, Stands(Primary))
+            + Thing(Standby, 1, Stands(Standby))
             + Thing(Sender, null) + Thing(Operator, null)
             + Link("writes", Receiver, Primary, TopologyRelation.WritesInto, origin, busy)
             + Link("hands", Primary, Sender, TopologyRelation.HandsWorkTo, origin, busy)
@@ -196,10 +247,11 @@ public sealed class TopologyRolesTest : BunitContext
             ?? throw new InvalidOperationException(refusal);
     }
 
-    private static string Thing(string name, int? place) =>
+    private static string Thing(string name, int? place, string? standing = null) =>
         $"[[topology.nodes]]\nid = \"node/{name}\"\nparent = \"cluster\"\nlabel = \"{name}\"\n"
         + $"kind = \"node\"\nscope = \"{Names.Scope}/node/{name}\"\nroles = \"{Declared(name)}\"\n"
-        + (place is { } at ? $"place = {at}\n" : string.Empty);
+        + (place is { } at ? $"place = {at}\n" : string.Empty)
+        + (standing is { } stands ? $"standing = \"{stands}\"\n" : string.Empty);
 
     private static string Link(
         string id, string from, string to, TopologyRelation relation, string origin, bool busy) =>
@@ -226,6 +278,10 @@ public sealed class TopologyRolesTest : BunitContext
     private static IElement Node(IRenderedComponent<TopologyGraph> canvas, string label) =>
         canvas.FindAll("g.topology-node")
             .Single(node => node.QuerySelector(".node-label")!.TextContent == label);
+
+    // What a box says beneath its label.
+    private static string Kind(IRenderedComponent<TopologyGraph> canvas, string label) =>
+        Node(canvas, label).QuerySelector(".node-kind")!.TextContent;
 
     private static IElement Line(IRenderedComponent<TopologyGraph> canvas, string id) =>
         canvas.FindAll("g.topology-link")

@@ -67,15 +67,12 @@ public sealed class BarOrderTest : IDisposable
     }
 
     [Fact]
-    public void AThemeIsReadByOneRuleAndTheButtonGoesRound()
+    public void AThemeIsReadByOneRule()
     {
         Assert.Equal(
             [Theme.System, Theme.Light, Theme.Dark, Theme.System],
             [ThemeChoice.Read(null), ThemeChoice.Read("light"), ThemeChoice.Read(" dark "),
                 ThemeChoice.Read("unknown")]);
-        Assert.Equal(Theme.Light, ThemeChoice.Next(Theme.System));
-        Assert.Equal(Theme.Dark, ThemeChoice.Next(Theme.Light));
-        Assert.Equal(Theme.System, ThemeChoice.Next(Theme.Dark));
         Assert.All(Enum.GetValues<Theme>(), theme =>
             Assert.Equal(theme, ThemeChoice.Read(ThemeChoice.Word(theme))));
     }

@@ -19,9 +19,7 @@ namespace Xmip.Gui.Surface;
 /// a link that dropped the cluster would land on another cluster's tree at a
 /// scope that is not in it. So every link carries the cluster it was written
 /// on, and a host holding one omits it — the addresses a single-cluster host
-/// writes are the ones it always wrote. Since 2026-09-30 a link carries the
-/// "show test clusters" box too (<see cref="Carry"/>), so a view that shows
-/// them leads to views that do (ADR-0052, amendment of that date).
+/// writes are the ones it always wrote (<see cref="Carry"/>).
 /// </remarks>
 public static class ScopeLink
 {
@@ -73,17 +71,8 @@ public static class ScopeLink
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        // The box and the query say "include what is hidden" in one word, so
-        // either asking it is the address saying it once.
-        AuditQuery asked = query with
-        {
-            IncludeHidden = query.IncludeHidden || carry is { IncludeHidden: true },
-        };
-
         return Address(
-            "/audit",
-            carry is null ? null : carry with { IncludeHidden = false },
-            [.. asked.Pairs().Select(pair => (pair.Key, (string?)pair.Value))]);
+            "/audit", carry, [.. query.Pairs().Select(pair => (pair.Key, (string?)pair.Value))]);
     }
 
     /// <summary>
@@ -214,37 +203,13 @@ public static class ScopeLink
 
     /// <summary>
     /// This same view, on another cluster: the path the operator is on and
-    /// nothing else of the address but the "show test clusters" box. A scope
-    /// of the cluster being left names nothing in the one being entered, so
-    /// the drill and the filter start over rather than pointing at something
-    /// that is not there.
+    /// nothing else of the address. A scope of the cluster being left names
+    /// nothing in the one being entered, so the drill and the filter start
+    /// over rather than pointing at something that is not there.
     /// </summary>
-    public static string Cluster(string relative, string cluster, bool includeHidden = false)
+    public static string Cluster(string relative, string cluster)
     {
-        return Address(PathOf(relative), new Carry(cluster, includeHidden));
-    }
-
-    /// <summary>
-    /// This same view with the "show test clusters" box ticked or not: the
-    /// address the operator is on, every word of it kept but the box's own
-    /// (ADR-0052, amendment 2026-09-30). A hidden cluster the address names is
-    /// left for the view to answer, which puts the operator on the first
-    /// cluster listed rather than on an error page.
-    /// </summary>
-    public static string Hidden(string relative, bool includeHidden)
-    {
-        int query = relative.IndexOf('?', StringComparison.Ordinal);
-        string[] kept = query < 0
-            ? []
-            : [
-                .. relative[(query + 1)..]
-                    .Split('&', StringSplitOptions.RemoveEmptyEntries)
-                    .Where(word => !word.StartsWith(Carry.Query + "=", StringComparison.Ordinal)),
-            ];
-        string[] said = includeHidden ? [.. kept, Carry.Query + "=" + Carry.Included] : kept;
-        string path = PathOf(relative);
-
-        return said.Length == 0 ? path : path + "?" + string.Join('&', said);
+        return Address(PathOf(relative), new Carry(cluster));
     }
 
     /// <summary>A scope as an element id: its letters and digits, the rest

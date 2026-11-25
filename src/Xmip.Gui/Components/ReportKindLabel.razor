@@ -15,7 +15,7 @@
 <span class="report-kind @Words.Word" title="@($"{Words.Name}: {Words.Meaning}")">
     @if (Glyph is { } glyph)
     {
-        <svg class="report-icon @glyph.Name" viewBox="0 0 16 16" role="img"
+        <svg class="icon report-icon @glyph.Name" viewBox="0 0 16 16" role="img"
              aria-label="@Words.Name" focusable="false">
             <path d="@glyph.Path" />
         </svg>
