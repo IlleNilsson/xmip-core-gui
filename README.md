@@ -402,8 +402,9 @@ moved through it and is still where nothing did — `Motion` is the one rule,
 and the inspector says what moved in words, never a percent. Paused, or where
 the reader's system asks for reduced motion, the pulses stand along the line
 and a busy node keeps its ring, so where traffic is still shows; the Desktop
-and the Web load the one stylesheet. A System Tests roll on virtual
-machines, `-As VirtualMachine`, every node a real node, draws no line yet: no node publishes what it hands another, and
+and the Web load the one stylesheet. A System Tests or Systems Tests roll
+on virtual machines, `-VirtualMachine`, every node a real node, draws no
+line yet: no node publishes what it hands another, and
 the roll matches its Parties to endpoints by transport while a real node
 names its endpoints by Location, so there only the nodes move (open problem
 62). The System Tests' stand-in Parties are one per node facing outside:

@@ -54,9 +54,10 @@ public sealed class TopologyRolesTest : BunitContext
         // Operational and monitoring: a role a line.
         Assert.Equal(2, English.Purpose(Declared(Operator)).Split('\n').Length);
 
+        string staging = $"node/{Names.Nodes[0]}/receive";
         TopologyNode stage = new(
-            "node/x/receive", null, "receive", TopologyNodeKind.Stage,
-            $"{Names.Scope}/node/x/receive", HealthState.Fine, TopologyOrigin.Both, 0D, 0D,
+            staging, null, "receive", TopologyNodeKind.Stage,
+            $"{Names.Scope}/{staging}", HealthState.Fine, TopologyOrigin.Both, 0D, 0D,
             "said");
         string staged = Node(Drawn(new TopologySnapshot(
             [stage], [], DateTimeOffset.UnixEpoch, "drawn for the test")), "receive")
