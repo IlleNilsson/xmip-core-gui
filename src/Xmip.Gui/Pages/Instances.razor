@@ -1,0 +1,121 @@
+@page "/instances"
+@using Xmip.Gui.Surface
+@inherits ClusterView
+@inject RoleContext Role
+@inject ProgramAudit Audited
+
+<PageTitle>Xmip — Instances</PageTitle>
+
+<ClusterChooser Cluster="@Cluster" />
+
+@* The Instances of each Work Process (runtime-model.md section 22; ADR-0066,
+   amendment 2026-11-25; the owner, 2026-11-25: "A Work Process is like an
+   Orchestration in BizTalk. So it is aware via subscriptions, even when
+   running or not"): which Instances each Work Process has, as BizTalk's
+   console shows running, dehydrated and suspended ones — each running,
+   waiting for a Message of its key until its deadline, failed with its code
+   and why, dismissed or completed, its own values and its turns — and the
+   Messages that failed in its queue. One opened shows its history of
+   Messages. The drill is in the address: where, the Work Process and the
+   Instance are a link that reproduces the view. An Operator retries or
+   dismisses a failed Message, which the node that runs the Work Process
+   takes; an Observer is shown the Instances and no act. *@
+<section class="drill subscriptions instances">
+    <DrillTrail Top="instances" Location="@Asking.Location" Carried="@Carried"
+                At="@(at => Link(Asking with { Location = at, Instance = null }))"
+                Opened="@(Opened is { } one
+                    ? ($"instance {one.Instance.Instance}", Link(Asking))
+                    : null)" />
+
+    <ActNotes Answer="@Answer" Counted="@Counted"
+              Where="@ActSaid.Where(Surface, "the node that runs the Work Process")" />
+
+    @if (Opened is { } opened)
+    {
+        <InstanceDetail Instance="opened.Instance" MayAct="Role.MayOperate()"
+                        Acted="@(asked => Act(opened.Process.Node, asked))" />
+    }
+    else
+    {
+        @foreach (WorkProcessInstances process in Shown)
+        {
+            <section class="work-process" data-work-process="@process.WorkProcess">
+                <h2>
+                    <a href="@Link(Asking with { WorkProcess = process.WorkProcess })">
+                        @process.WorkProcess</a>
+                    on @ScopeTree.Node(process.Node)
+                </h2>
+                <p class="subs-act-said">@Said(process)</p>
+                <InstanceTable Instances="process.Instances"
+                               Opened="@(one => Link(Asking with { Instance = one.Instance }))" />
+                @if (process.Failed.Count > 0)
+                {
+                    <FailedActs Messages="process.Failed" MayAct="Role.MayOperate()"
+                                RetryTitle="@InstanceDetail.RetrySaid"
+                                DismissTitle="@InstanceDetail.DismissSaid"
+                                Asked="InstanceDetail.Asked"
+                                Acted="@(asked => Act(process.Node, asked))" />
+                }
+            </section>
+        }
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "location")] public string? AskedLocation { get; set; }
+    [SupplyParameterFromQuery(Name = "work-process")] public string? AskedWorkProcess { get; set; }
+    [SupplyParameterFromQuery(Name = "instance")] public string? AskedInstance { get; set; }
+
+    private WorkProcessInstanceQuery Asking { get; set; } = new();
+
+    private WorkProcessInstanceList Listed { get; set; } = WorkProcessInstanceList.Empty;
+
+    private IReadOnlyList<WorkProcessInstances> Shown { get; set; } = [];
+
+    // The Instance opened, with its Work Process; null where none is.
+    private (WorkProcessInstances Process, WorkProcessInstanceRecord Instance)? Opened { get; set; }
+
+    // What the last act said, which stays while the publications tick under it.
+    private string Answer { get; set; } = string.Empty;
+
+    private string Counted =>
+        $"{English.Figure((ulong)Shown.Sum(process => process.Instances.Count))} of "
+        + $"{English.Figure((ulong)Listed.Instances.Count())} Instance(s) · each node publishes "
+        + "the newest twenty of each Work Process it runs";
+
+    protected override void Read()
+    {
+        // A view asked for a cluster and for no one in it stands at that
+        // cluster: the scope its publisher publishes at, never a name.
+        string? location = AskedLocation;
+        if (location is null && Asked is not null)
+        {
+            location = Surface.Root();
+        }
+
+        Asking = new WorkProcessInstanceQuery
+        {
+            Location = location,
+            WorkProcess = string.IsNullOrEmpty(AskedWorkProcess) ? null : AskedWorkProcess,
+            Instance = string.IsNullOrEmpty(AskedInstance) ? null : AskedInstance,
+        };
+        Listed = Surface.WorkProcessInstances();
+        Shown = Asking.Apply(Listed);
+        Opened = Asking.One(Listed);
+    }
+
+    private string Link(WorkProcessInstanceQuery query) => ScopeLink.Instances(query, Carried);
+
+    private static string Said(WorkProcessInstances process) =>
+        $"{English.Figure((ulong)process.Instances.Count)} Instance(s) · "
+        + $"{English.Figure(process.FailedCount)} failed in its queue";
+
+    // An act on a Message that failed at the Work Process the node at
+    // `node` runs, through the one gate and recorded as every act on a
+    // failed Message is (MessageActing); said, and the view read again.
+    private void Act(string node, (string Journey, MessageAct Act) asked)
+    {
+        Answer = MessageActing.Act(Surface, (Role, Audited), (node, asked.Journey), asked.Act);
+        Read();
+    }
+}

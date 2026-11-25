@@ -4,9 +4,10 @@ using Xmip.Surface;
 namespace Xmip.Gui.Surface;
 
 /// <summary>
-/// Where a scope is reached in each of the views. The web GUI is nine points
+/// Where a scope is reached in each of the views. The web GUI is ten points
 /// to drill from — Configuration, Monitor, Topology, Subscriptions (since
-/// 2026-09-30), Dead Message Queue (since 2026-10-03), Event subscriptions,
+/// 2026-09-30), Dead Message Queue (since 2026-10-03), Instances (since
+/// 2026-11-25), Event subscriptions,
 /// Secrets (since 2026-10-30), Audit (since 2026-09-29) and Reports (since
 /// 2026-11-10) — and from
 /// any of them a scope leads to the same scope in the others (the owner,
@@ -136,6 +137,24 @@ public static class ScopeLink
             ("pattern", query.Pattern),
             ("sort", query.Sort),
             ("order", query.Order));
+    }
+
+    /// <summary>
+    /// The Instances view asking <paramref name="query"/>, on this cluster:
+    /// where the drill stands, the Work Process and the one Instance opened,
+    /// by the names <see cref="WorkProcessInstanceQuery"/> gives them, so a
+    /// link reproduces the view (ADR-0066, amendment 2026-11-25).
+    /// </summary>
+    public static string Instances(WorkProcessInstanceQuery query, Carry? carry = null)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        return Address(
+            "/instances",
+            carry,
+            ("location", query.Location),
+            ("work-process", query.WorkProcess),
+            ("instance", query.Instance));
     }
 
     /// <summary>

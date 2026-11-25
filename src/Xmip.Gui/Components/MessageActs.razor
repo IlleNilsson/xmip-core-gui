@@ -37,43 +37,8 @@
         {
             <span class="subs-act-said message-blocked">@BlockedSaid</span>
         }
-        <ul class="message-list">
-            @foreach (FailedMessageRecord failed in Shown)
-            {
-                <li class="message-failed" data-journey="@failed.Journey">
-                    @if (Role.MayOperate())
-                    {
-                        <button class="act" title="@RetrySaid"
-                                @onclick="() => Act(failed.Journey, MessageAct.Retry)">
-                            Retry
-                        </button>
-                        <button class="act" title="@DismissSaid"
-                                @onclick="() => Confirming = failed.Journey">
-                            Dismiss
-                        </button>
-                    }
-                    <span class="subs-act-said">the Message of the Journey @failed.Journey</span>
-                    @if (failed.Reason.Length > 0)
-                    {
-                        <span class="subs-act-said"> — @failed.Reason</span>
-                    }
-                    @if (Confirming == failed.Journey && Role.MayOperate())
-                    {
-                        <span class="message-confirm" role="alertdialog"
-                              aria-label="Dismiss the Message of the Journey @failed.Journey">
-                            <span class="subs-act-said">@Asked(failed.Journey)</span>
-                            <button class="act dismiss-confirm"
-                                    @onclick="() => Act(failed.Journey, MessageAct.Dismiss)">
-                                Dismiss for good
-                            </button>
-                            <button class="act dismiss-keep" @onclick="() => Confirming = null">
-                                Keep it
-                            </button>
-                        </span>
-                    }
-                </li>
-            }
-        </ul>
+        <FailedActs Messages="Shown" MayAct="Role.MayOperate()" RetryTitle="@RetrySaid"
+                    DismissTitle="@DismissSaid" Asked="Asked" Acted="Act" />
         @if (Next is { } next)
         {
             <button class="act more" @onclick="() => Page(next)">More</button>
@@ -138,9 +103,6 @@
     // from the queue's head.
     private string? Paged { get; set; }
 
-    // The Message whose Dismiss waits for the Operator to confirm it.
-    private string? Confirming { get; set; }
-
     private string Counted => Count == 1
         ? "1 Message failed in its Send Port's queue"
         : $"{Count} Messages failed in its Send Port's queue";
@@ -160,7 +122,6 @@
         {
             Paged = Record.Scope;
             From = 0;
-            Confirming = null;
             Answer = string.Empty;
         }
 
@@ -235,31 +196,13 @@
         Read();
     }
 
-    // An act, through the one gate as the proven caller (ADR-0009, amendment
-    // 2026-10-06), which refuses one whose role may not act; recorded in this
-    // host's audit with what came of it (ADR-0062) under the action
-    // observe::Noun::Message gives it — message.retry or message.dismiss — and
-    // said. An Observer is shown no act.
-    private async Task Act(string journey, MessageAct act)
+    // An act at the Port's scope, through the one gate and recorded as every
+    // act on a failed Message is (MessageActing); said. An Observer is shown
+    // no act.
+    private async Task Act((string Journey, MessageAct Act) asked)
     {
-        string action = $"{MessageOperation.Noun}.{MessageOperation.Word(act)}";
-        string who = Role.Who ?? string.Empty;
-        Confirming = null;
-
-        MessageOperation done = new GatedOperator(Surface, Role, Audited)
-            .Act(Record.Scope, journey, act, who, Role.Caller);
-        Audited.Record(
-            action,
-            ActSaid.Recorded(done.Outcome).Phase,
-            ActSaid.Recorded(done.Outcome).Severity,
-            done.Result,
-            new Dictionary<string, string>
-            {
-                ["node"] = done.Node,
-                ["journey"] = journey,
-                ["who"] = who,
-            });
-        Answer = ActSaid.Answer(done.Outcome, done.Result);
+        Answer = MessageActing.Act(
+            Surface, (Role, Audited), (Record.Scope, asked.Journey), asked.Act);
         await Acted.InvokeAsync().ConfigureAwait(true);
     }
 }

@@ -1,0 +1,81 @@
+@using Xmip.Operate
+
+@* Messages that failed, each with why and, for an Operator, Retry and
+   Dismiss: the list MessageActs shows at a Send Port and the Instances view
+   at a Work Process (runtime-model.md sections 13 and 22). A Retry is taken
+   at once; a Dismiss only once the view has named the Message and said it
+   leaves its queue for good, and the Operator confirmed it. An Observer is
+   shown the Messages and no act. The act itself is the view's, raised with
+   the Journey and the act (MessageActing). *@
+<ul class="message-list">
+    @foreach (FailedMessageRecord failed in Messages)
+    {
+        <li class="message-failed" data-journey="@failed.Journey">
+            @if (MayAct)
+            {
+                <button class="act" title="@RetryTitle"
+                        @onclick="() => Act(failed.Journey, MessageAct.Retry)">
+                    Retry
+                </button>
+                <button class="act" title="@DismissTitle"
+                        @onclick="() => Confirming = failed.Journey">
+                    Dismiss
+                </button>
+            }
+            <span class="subs-act-said">the Message of the Journey @failed.Journey</span>
+            @if (failed.Reason.Length > 0)
+            {
+                <span class="subs-act-said"> — @failed.Reason</span>
+            }
+            @if (Confirming == failed.Journey && MayAct)
+            {
+                <span class="message-confirm" role="alertdialog"
+                      aria-label="Dismiss the Message of the Journey @failed.Journey">
+                    <span class="subs-act-said">@Asked(failed.Journey)</span>
+                    <button class="act dismiss-confirm"
+                            @onclick="() => Act(failed.Journey, MessageAct.Dismiss)">
+                        Dismiss for good
+                    </button>
+                    <button class="act dismiss-keep" @onclick="() => Confirming = null">
+                        Keep it
+                    </button>
+                </span>
+            }
+        </li>
+    }
+</ul>
+
+@code {
+    /// <summary>The Messages that failed, in the order shown.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FailedMessageRecord> Messages { get; set; } = [];
+
+    /// <summary>Whether the viewer's role may act.</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    /// <summary>What a Retry does, where the view says it.</summary>
+    [Parameter, EditorRequired]
+    public string RetryTitle { get; set; } = string.Empty;
+
+    /// <summary>What a Dismiss does, where the view says it.</summary>
+    [Parameter, EditorRequired]
+    public string DismissTitle { get; set; } = string.Empty;
+
+    /// <summary>What the view asks before it dismisses a Journey.</summary>
+    [Parameter, EditorRequired]
+    public Func<string, string> Asked { get; set; } = journey => journey;
+
+    /// <summary>Raised with the Journey and the act an Operator took.</summary>
+    [Parameter]
+    public EventCallback<(string Journey, MessageAct Act)> Acted { get; set; }
+
+    // The Message whose Dismiss waits for the Operator to confirm it.
+    private string? Confirming { get; set; }
+
+    private async Task Act(string journey, MessageAct act)
+    {
+        Confirming = null;
+        await Acted.InvokeAsync((journey, act)).ConfigureAwait(true);
+    }
+}

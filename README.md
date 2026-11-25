@@ -34,7 +34,7 @@ word — the worst leaf beneath it and that leaf's evidence — at the banner, t
 stage tile, the node row and every branch of the drill-down; there is no
 *follow the error* button, the operator drills or reads the audit.
 
-Nine views, and nine points to drill from, most wanted first on the bar
+Ten views, and ten points to drill from, most wanted first on the bar
 by default (ADR-0052, amendments 2026-11-12; the owner, the same day:
 *Monitor is the most desired view*). An operator arranges them: drags a
 view onto another, or presses *Arrange* for a ‹ and a › beside each and
@@ -52,7 +52,9 @@ foot.
 By default: **Monitor**, at `/monitor`, the board that follows Receive → Process →
 Send; **Dead Message Queue**, the accepted Messages no Subscription matched,
 the one view where something waits on a person (ADR-0052, amendment
-2026-10-01); **Subscriptions**, what picks a published Message up and opens
+2026-10-01); **Instances**, what each Work Process holds, as BizTalk's
+console shows its Orchestrations' instances (ADR-0066, amendment
+2026-11-25); **Subscriptions**, what picks a published Message up and opens
 a Journey, beside the queue it usually fixes (ADR-0013, amendment
 2026-09-30); **Topology** (ADR-0052, amendments 2026-09-14 and 2026-09-18);
 **Configuration**, the classic tree, holding still; **Event
@@ -63,8 +65,8 @@ Probing report icon (ADR-0072, amendments 2026-11-10 and 2026-11-12), the
 Audit Report opening at the Audit view; and **Secrets** last, what a
 Location presents to the party it connects to (ADR-0014, amendment
 2026-10-30), the least visited and the most sensitive — the Subscriptions,
-the Dead Message Queue, the Event subscriptions, the Audit, the Reports and
-the Secrets described below. A
+the Dead Message Queue, the Instances, the Event subscriptions, the Audit,
+the Reports and the Secrets described below. A
 scope reached in one leads to the same scope in the others, written in one
 place, `ScopeLink`: a Configuration row to the Monitor's drill and to the
 same thing on the Topology, the Monitor's drill to the Configuration row, a
@@ -262,7 +264,31 @@ the `FAILED:` sentence and offers nothing.
 The act goes through `IOperatorSurface.Act` — asked at a node's door and
 taken by the node that sends the Port, and declined over a snapshot, which
 is never acted on — and is recorded in the host's audit as `message.retry`
-or `message.dismiss`. An Observer is shown the Messages and no act.
+or `message.dismiss`. An Observer is shown the Messages and no act. The
+list and its two acts are written once (`FailedActs.razor`), and the act
+itself once (`MessageActing`), for this place and the Instances view.
+
+**The Instances view** (`/instances`; runtime-model.md section 22; ADR-0066,
+amendment 2026-11-25) lists the Instances of each Work Process, through
+`IOperatorSurface.WorkProcessInstances`: per Work Process and the node that
+runs it, each Instance by its identifier with its state — running, waiting,
+failed, dismissed or completed — what it waits for and until when, each
+Correlation it holds a key in, its own values and its turns, newest written
+first, and the Messages that failed in the Work Process's queue; a node
+publishes the newest twenty of each Work Process it runs. It drills cluster →
+node → one Instance, a Work Process's heading narrows to it, all
+`WorkProcessInstanceQuery`'s — the runtime's choice, which `xmip instances`
+makes too — all in the address
+(`/instances?location=xmip:///CL1/node/PR1&instance=<id>`). The one opened shows the same and its history of Messages in the order handled,
+each with the Journey of its turn, and, where it failed, why and the Message
+whose turn failed it. An Operator is offered Retry and Dismiss on each failed
+Message, the list's and the one opened's alike: Retry takes the Message's
+turn again from where its Instance stood, Dismiss ends that Instance. Each
+goes through `IOperatorSurface.Act` with the noun `message` and the Journey —
+asked at a node's door and taken by the node that runs the Work Process, and
+declined over a snapshot, which is never acted on — and is recorded in the
+host's audit as `message.retry` or `message.dismiss`. An Observer is shown
+the Instances and no act.
 
 **The Event subscriptions view** (`/event-subscriptions`; the owner,
 2026-09-29: *a view of event subscriptions. Subscriber, Cluster, Node, Action.
@@ -361,7 +387,8 @@ that is none, a cluster's file with no node — is the runtime's sentence.
 `src/Xmip.Gui.Test` holds the pages' tests (ADR-0052 clause 6): bUnit renders
 the views over the surface library's own published fixture, the Audit view
 over an audit file in the capability's shape, and the Subscriptions, the
-Dead Message Queue and the Event subscriptions views over a publication,
+Dead Message Queue, the Instances and the Event subscriptions views over a
+publication,
 each act they ask read back from the host's audit (`ActsAsked`), so what is
 asserted is what an operator sees and no surface is faked. The Secrets view and the failed Messages' paging
 are rendered over a surface the test composes (`ScriptedSurface`), since no

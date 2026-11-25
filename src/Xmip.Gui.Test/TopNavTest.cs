@@ -10,7 +10,7 @@ using Xmip.Surface;
 namespace Xmip.Gui.Test;
 
 /// <summary>
-/// One navigation for both hosts: the nine views in the operator's own
+/// One navigation for both hosts: the ten views in the operator's own
 /// order and what a host adds after them; every role is described in one
 /// set of words, which the status bar shows since 2026-11-25
 /// (<see cref="StatusBarTest"/>). Until 2026-09-27 the web host and the
@@ -38,25 +38,26 @@ public sealed class TopNavTest : BunitContext
     }
 
     [Fact]
-    public void TheBarLinksTheNineViewsInOrder()
+    public void TheBarLinksTheTenViewsInOrder()
     {
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         // Most wanted first (ADR-0052, amendment 2026-11-12): the Monitor,
-        // the Dead Message Queue and the Subscriptions that fix it, the
+        // the Dead Message Queue, the Instances of each Work Process (ADR-0066,
+        // amendment 2026-11-25) and the Subscriptions that fix them, the
         // Topology, the Configuration, the Event subscriptions, the Audit,
         // the Reports offered an Observer too (ADR-0072, amendment
         // 2026-11-10), and the Secrets last, each tab by what it is.
         Assert.Equal(
             [
-                "/monitor", "/dead-messages", "/subscriptions", "/topology", "/configuration",
-                "/event-subscriptions", "/audit", "/reports", "/secrets",
+                "/monitor", "/dead-messages", "/instances", "/subscriptions", "/topology",
+                "/configuration", "/event-subscriptions", "/audit", "/reports", "/secrets",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.GetAttribute("href")));
         Assert.Equal(
             [
-                "Monitor", "Dead Message Queue", "Subscriptions", "Topology", "Configuration",
-                "Event subscriptions", "Audit", "Reports", "Secrets",
+                "Monitor", "Dead Message Queue", "Instances", "Subscriptions", "Topology",
+                "Configuration", "Event subscriptions", "Audit", "Reports", "Secrets",
             ],
             bar.FindAll("a.topnav-link").Select(link => link.TextContent.Trim()));
     }
@@ -67,7 +68,7 @@ public sealed class TopNavTest : BunitContext
         IRenderedComponent<TopNav> bar = Render<TopNav>();
 
         // The Topology dropped on the Monitor: first, and the bare address's.
-        bar.FindAll(".topnav-tab")[3].DragStart();
+        bar.FindAll(".topnav-tab")[4].DragStart();
         bar.FindAll(".topnav-tab")[0].Drop();
 
         Assert.Equal("/topology", Hrefs(bar)[0]);

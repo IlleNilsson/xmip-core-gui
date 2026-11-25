@@ -1,0 +1,52 @@
+@using System.Globalization
+@using Xmip.Gui.Surface
+
+@* One Work Process's Instances, newest written first (runtime-model.md
+   section 22; ADR-0066, amendment 2026-11-25): each by its identifier — a
+   link that opens it with its history of Messages — its state, what it waits
+   for and until when, each Correlation it holds a key in, its own values and
+   its turns. *@
+<table class="subs-table instance-table">
+    <thead>
+        <tr>
+            <th>instance</th>
+            <th>state</th>
+            <th>waits for</th>
+            <th>until</th>
+            <th>correlation</th>
+            <th>values</th>
+            <th>turns</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (WorkProcessInstanceRecord one in Instances)
+        {
+            <tr class="instance-row" data-instance="@one.Instance">
+                <td><a href="@Opened(one)">@one.Instance</a></td>
+                <td class="instance-state">@one.State</td>
+                <td>@one.WaitsFor</td>
+                <td>@(one.Until?.ToString("u", CultureInfo.InvariantCulture))</td>
+                <td>@Pairs(one.Correlations)</td>
+                <td class="instance-values">@Pairs(one.Values)</td>
+                <td>@English.Figure(one.Turns)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    /// <summary>The Instances, in the order shown.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<WorkProcessInstanceRecord> Instances { get; set; } = [];
+
+    /// <summary>Where an Instance opens: the view's link to it.</summary>
+    [Parameter, EditorRequired]
+    public Func<WorkProcessInstanceRecord, string> Opened { get; set; } = _ => string.Empty;
+
+    /// <summary>Name and value pairs as one cell: <c>name value, name
+    /// value</c>.</summary>
+    public static string Pairs(IEnumerable<KeyValuePair<string, string>> pairs)
+    {
+        return string.Join(", ", pairs.Select(pair => $"{pair.Key} {pair.Value}"));
+    }
+}

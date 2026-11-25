@@ -2,7 +2,7 @@
 @using Xmip.Gui.Surface
 @inject IPreferenceStore Bar
 
-@* The bar every host shows, once: the nine views this library draws, in
+@* The bar every host shows, once: the ten views this library draws, in
    the order the operator arranged them, else most wanted first (ADR-0052,
    amendments 2026-11-12; BarOrder holds the views and the rule) — and what
    the host adds after them. The web host adds nothing; the desktop adds
@@ -62,7 +62,7 @@
 
     private bool arranging;
 
-    /// <summary>What the host adds after the nine views.</summary>
+    /// <summary>What the host adds after the ten views.</summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 

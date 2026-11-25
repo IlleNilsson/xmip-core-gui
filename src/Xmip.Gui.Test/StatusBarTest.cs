@@ -59,7 +59,7 @@ public sealed partial class StatusBarTest : BunitContext
     [Fact]
     public void EveryViewStandsOverOneStatusBarThatSaysWhatItStandsOn()
     {
-        // The nine views of the bar, each in the frame both hosts draw.
+        // The ten views of the bar, each in the frame both hosts draw.
         Assert.Equal(BarOrder.Default.Count, Views.Length);
 
         foreach (Type view in Views)

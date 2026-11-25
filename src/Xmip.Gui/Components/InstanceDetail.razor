@@ -1,0 +1,115 @@
+@using System.Globalization
+
+@* One Instance of a Work Process, opened (runtime-model.md section 22;
+   ADR-0066, amendment 2026-11-25): where it stands — running, waiting for a
+   Message of its key until its deadline, failed with its code and why,
+   dismissed or completed — each Correlation it holds a key in, its own
+   values, and its history of Messages in the order handled, each with the
+   Journey of its turn. Where it failed, the Message whose turn failed it is
+   retried or dismissed as every failed Message is: Retry takes that turn
+   again from where the Instance stood, Dismiss ends the Instance. *@
+<article class="subs-detail instance-detail">
+    <h2>Instance @Instance.Instance of @Instance.WorkProcess</h2>
+    <dl class="subs-fields">
+        <dt>node</dt><dd>@Instance.Node</dd>
+        <dt>state</dt><dd class="instance-state">@Instance.State</dd>
+        @if (Instance.WaitsFor.Length > 0)
+        {
+            <dt>waits for</dt><dd>@Instance.WaitsFor</dd>
+        }
+        @if (Instance.Until is { } until)
+        {
+            <dt>until</dt><dd>@until.ToString("u", CultureInfo.InvariantCulture)</dd>
+        }
+        <dt>correlation</dt><dd>@InstanceTable.Pairs(Instance.Correlations)</dd>
+        @if (Instance.Code.Length > 0)
+        {
+            <dt>threw</dt><dd class="instance-threw">@Instance.Code: @Instance.Reason</dd>
+        }
+        <dt>turns</dt><dd>@English.Figure(Instance.Turns)</dd>
+        <dt>written</dt><dd>@English.Age(Instance.Updated)</dd>
+    </dl>
+    <h3>values</h3>
+    @if (Instance.Values.Count == 0)
+    {
+        <p class="empty">none</p>
+    }
+    else
+    {
+        <dl class="subs-fields instance-values">
+            @foreach ((string name, string value) in Instance.Values)
+            {
+                <dt>@name</dt><dd>@value</dd>
+            }
+        </dl>
+    }
+    <h3>history of Messages</h3>
+    @if (Instance.Earlier > 0)
+    {
+        <p class="subs-act-said">@English.Figure(Instance.Earlier) earlier</p>
+    }
+    <table class="subs-table instance-history">
+        <thead><tr><th>at</th><th>what</th><th>message</th><th>journey</th></tr></thead>
+        <tbody>
+            @foreach (InstanceHandledRecord entry in Instance.History)
+            {
+                <tr>
+                    <td>@entry.At.ToString("u", CultureInfo.InvariantCulture)</td>
+                    <td>@entry.What</td>
+                    <td>@entry.Message</td>
+                    <td>@entry.Journey</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (Instance.FailedBy.Length > 0)
+    {
+        <FailedActs Messages="FailedBy" MayAct="MayAct" RetryTitle="@RetrySaid"
+                    DismissTitle="@DismissSaid" Asked="Asked" Acted="Acted" />
+    }
+</article>
+
+@code {
+    /// <summary>What a Retry does at a Work Process, in the words the view
+    /// says it.</summary>
+    public const string RetrySaid =
+        "Turned again, its tries begun anew, from the end of its Work Process's queue: where "
+        + "its turn failed its Instance, that turn takes the Instance on from where it stood.";
+
+    /// <summary>What a Dismiss does at a Work Process, in the words the view
+    /// says it.</summary>
+    public const string DismissSaid =
+        "Given up: written Dismissed, its history, Message and Stream kept, and taken out of "
+        + "its Work Process's queue; the Instance it failed ends.";
+
+    /// <summary>The Instance opened.</summary>
+    [Parameter, EditorRequired]
+    public WorkProcessInstanceRecord Instance { get; set; } = default!;
+
+    /// <summary>Whether the role at the keyboard may act (ADR-0009).</summary>
+    [Parameter]
+    public bool MayAct { get; set; }
+
+    /// <summary>Raised with the Journey and the act an Operator took.</summary>
+    [Parameter]
+    public EventCallback<(string Journey, MessageAct Act)> Acted { get; set; }
+
+    /// <summary>What the view asks before it dismisses
+    /// <paramref name="journey"/> at a Work Process.</summary>
+    public static string Asked(string journey)
+    {
+        return $"Dismiss the Message of the Journey {journey}? It leaves its Work Process's "
+            + "queue for good, and the Instance it failed ends.";
+    }
+
+    // The Message whose turn failed it, as its queue lists every failed one.
+    private IReadOnlyList<FailedMessageRecord> FailedBy =>
+    [
+        new FailedMessageRecord(
+            Instance.Node,
+            string.Empty,
+            Instance.FailedBy,
+            0,
+            $"{Instance.Code}: {Instance.Reason}"),
+    ];
+}

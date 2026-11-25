@@ -5,7 +5,7 @@ namespace Xmip.Gui.Surface;
 public sealed record BarTab(string Word, string Href, string Name);
 
 /// <summary>
-/// The bar's nine views and the one rule for their order (ADR-0052,
+/// The bar's ten views and the one rule for their order (ADR-0052,
 /// amendment 2026-11-12; the owner, the same day: "An operator has to be
 /// able to rearrange the major tabs"). The default is most wanted first; an
 /// operator moves a view anywhere, and the first view is where the bare
@@ -24,6 +24,7 @@ public static class BarOrder
     [
         new("monitor", "/monitor", "Monitor"),
         new("dead-messages", "/dead-messages", "Dead Message Queue"),
+        new("instances", "/instances", "Instances"),
         new("subscriptions", "/subscriptions", "Subscriptions"),
         new("topology", "/topology", "Topology"),
         new("configuration", "/configuration", "Configuration"),
