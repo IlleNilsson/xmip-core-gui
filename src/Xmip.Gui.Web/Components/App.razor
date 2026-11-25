@@ -16,7 +16,11 @@
     @* The one inline script, carrying this response's nonce: the content
        security policy runs no other (ContentSecurity, Xmip.Surface.Relay). *@
     <ImportMap nonce="@ContentSecurity.Nonce(HttpContext)" />
-    <HeadOutlet />
+    @* The head is rendered as the routes are, in the one circuit, so each
+       view's PageTitle sets the tab's title as the operator moves between
+       views. Until 2026-11-25 it was static, kept the first page's title, and
+       the host warned on every page that a section crossed render modes. *@
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>

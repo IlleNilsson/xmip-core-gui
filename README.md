@@ -404,6 +404,14 @@ a Quest probes, and a runtime that carries no Reports said in its words.
 The desktop's hosting is `ReportHosting.Add`, which the test hosts the view
 by.
 
+The web host itself is started as ASP.NET Core tests one, its own `Program`
+over an in-memory server (`WebHeadTest`): the head is rendered interactive on
+the server as the routes are, in the one circuit, the host warns of no
+section crossing render modes, and the tab's title follows the view the
+operator moves to. Until 2026-11-25 `App.razor` gave `HeadOutlet` no render
+mode, the head was static and kept the first page's title, and the host
+warned of it on every page.
+
 Every folder these tests and `src/Xmip.Operations.Test`'s write in is a
 `TestFolder`, the one helper every .NET test links from
 xmip-core-operate's `Xmip.Surface.Test`, disposed last in the page test's

@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The shared pages' tests (ADR-0052 clause 6: every surface is tested and
-    verified in its own language). The three views are rendered over a real
-    published snapshot, the surface library's own fixture, so what is asserted
-    is what an operator sees and no surface is faked.
+    The shared pages' tests and the web host's (ADR-0052 clause 6: every
+    surface is tested and verified in its own language). The three views are
+    rendered over a real published snapshot, the surface library's own
+    fixture, so what is asserted is what an operator sees and no surface is
+    faked.
 
     Target framework and the rest come from Directory.Build.props.
   -->
@@ -27,6 +28,9 @@
 
   <ItemGroup>
     <PackageReference Include="bunit" Version="2.15.2" />
+    <!-- The web host started as ASP.NET Core documents testing one: its own
+         Program over an in-memory server (WebHeadTest). -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.1" />
     <PackageReference Include="xunit.v3" Version="4.0.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
@@ -37,6 +41,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xmip.Gui\Xmip.Gui.csproj" />
+    <!-- The web host, whose head and routes are tested as it renders them. -->
+    <ProjectReference Include="..\Xmip.Gui.Web\Xmip.Gui.Web.csproj" />
     <Using Include="Xunit" />
   </ItemGroup>
 
