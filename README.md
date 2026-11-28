@@ -395,8 +395,9 @@ each act they ask read back from the host's audit (`ActsAsked`), so what is
 asserted is what an operator sees and no surface is faked. The Secrets view and the failed Messages' paging
 are rendered over a surface the test composes (`ScriptedSurface`), since no
 publication carries a node's secrets. The Reports view is rendered over the
-runtime's own list, and its Quests probe the estate's test cluster,
-`test/cluster.xmip`, into an audit directory of the test's own
+runtime's own list, and its Quests probe the estate's test cluster, the
+Reference Environment, read by `TestCluster.Read`, into an audit directory
+of the test's own
 (`ReportsViewTest`): the legend, each entry's kind and glyph, one not yet
 available, a quick one opening at its view on the cluster in view, the last
 probe's time, the three levels in the address, the tally and the rows

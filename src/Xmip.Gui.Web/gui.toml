@@ -50,7 +50,7 @@ Surface = "local"
 # named here: XMIP_RUNTIME_LIBRARY, else the library beside the executable.
 
 # The file to read when Surface = "snapshot". The System Tests write
-# <cluster>-snapshot.xmip, named for the cluster a roll was started as, under
+# <cluster>-snapshot.xmip, named for the cluster the roll's file names, under
 # .local-work/system-test at the estate root; name the same file here. A path
 # with no file behind it is said so on the page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL1-snapshot.xmip"

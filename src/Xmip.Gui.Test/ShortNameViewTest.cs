@@ -12,7 +12,7 @@ namespace Xmip.Gui.Test;
 /// publisher says, the tooltip carrying the rest, Web and Desktop alike
 /// (ADR-0028 and ADR-0052, amendments 2026-11-28): the status bar, each
 /// cluster in the chooser, and the drill's cluster crumb. The link keeps the
-/// name the run gives the cluster. Rendered over the test cluster's fixture
+/// cluster's name, the one its file declares. Rendered over the test cluster's fixture
 /// with a <c>[cluster]</c> table written beneath it, and the second
 /// cluster's fixture, which says none.
 /// </summary>

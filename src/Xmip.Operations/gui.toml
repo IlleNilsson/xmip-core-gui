@@ -43,7 +43,7 @@ Node = "edge-01"
 # SliceDirectory = ".local-work/slices"
 
 # The file to read when Surface = "snapshot". The System Tests write
-# <cluster>-snapshot.xmip, named for whatever the roll's cluster was called;
+# <cluster>-snapshot.xmip, named for the cluster the roll's file names;
 # name the file yours writes. A path with no file behind it is said so on the
 # page, not silently replaced.
 # Snapshot = "D:/Repos/Xmip/.local-work/system-test/CL1-snapshot.xmip"

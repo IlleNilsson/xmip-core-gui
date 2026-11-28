@@ -42,8 +42,8 @@
     private string? Here(string held) => Showing(held) ? "page" : null;
 
     // Each cluster as every surface shows it, its short name, the tooltip
-    // carrying the rest (ADR-0028, amendment 2026-11-28); the link keeps the
-    // name the run gives it.
+    // carrying the rest (ADR-0028, amendments 2026-11-28); the link keeps the
+    // cluster's name, the one its file declares.
     private ClusterNamed Named(string held) => ClusterNamed.Of(held, Surfaces.For(held));
 
     private string Title(string held) =>
