@@ -1,4 +1,5 @@
 @using Xmip.Gui.Surface
+@inject ClusterSurfaces Surfaces
 
 @* Where a drill view's drill stands, written once for every view that
    drills: the view's top, then the steps that are no scope — the Reports
@@ -7,9 +8,9 @@
    each a link that reproduces the view there — and the Monitor at the same
    scope. *@
 <nav class="crumbs" aria-label="@($"{Top} drill-down")">
-    @foreach ((string label, string href) in Trail)
+    @foreach ((string label, string href, string? title) in Trail)
     {
-        <a class="crumb-btn" href="@href">@label</a>
+        <a class="crumb-btn" href="@href" title="@title">@label</a>
         <span class="sep">/</span>
     }
     @if (Location is { Length: > 0 } scope)
@@ -46,15 +47,17 @@
     [Parameter]
     public IReadOnlyList<(string Label, string Href)> Steps { get; set; } = [];
 
-    private IEnumerable<(string Label, string Href)> Trail
+    // Each crumb, and its tooltip where it has one: the cluster's, as every
+    // surface names it (ADR-0028, amendment 2026-11-28).
+    private IEnumerable<(string Label, string Href, string? Title)> Trail
     {
         get
         {
-            yield return (Top, At(null));
+            yield return (Top, At(null), null);
 
             foreach ((string Label, string Href) step in Steps)
             {
-                yield return step;
+                yield return (step.Label, step.Href, null);
             }
 
             if (Location is not { Length: > 0 } location)
@@ -65,18 +68,20 @@
             string[] parts = ScopeTree.Parts(location);
             if (parts.Length > 0)
             {
-                yield return ($"cluster {parts[0]}", At(ScopeTree.Join([parts[0]])));
+                ClusterNamed named = ClusterNamed.Of(parts[0], Surfaces.For(parts[0]));
+                string cluster = ScopeTree.Join([parts[0]]);
+                yield return ($"cluster {named.Shown}", At(cluster), named.Title);
             }
 
             string node = ScopeTree.Node(location);
             if (node.Length > 0)
             {
-                yield return ($"node {node}", At(location));
+                yield return ($"node {node}", At(location), null);
             }
 
             if (Opened is { } opened)
             {
-                yield return opened;
+                yield return (opened.Label, opened.Href, null);
             }
         }
     }

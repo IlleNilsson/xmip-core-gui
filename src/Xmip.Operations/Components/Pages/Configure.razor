@@ -18,8 +18,9 @@
 <section class="cfg-layout">
     <aside class="configs">
         <h2>Cluster</h2>
-        <button class="config-item @Sel(Overview)" @onclick="() => Show(Overview)">
-            <span class="config-name">@Say(_cluster?.Name, "Overview")</span>
+        <button class="config-item @Sel(Overview)" @onclick="() => Show(Overview)"
+                title="@_cluster?.Named.Title">
+            <span class="config-name">@Say(_cluster?.Named.Shown, "Overview")</span>
         </button>
 
         <h2>Nodes</h2>

@@ -9,7 +9,9 @@
    view stands on, said once here and nowhere at a page's top — who is signed
    in, as the runtime's gate proved them, and the role they were assigned
    (ADR-0009, amendment 2026-10-06), described in one set of words; the
-   cluster in view; where the records come from, so nobody mistakes a stale
+   cluster in view, by the short name its file declares, its tooltip carrying
+   the rest (ADR-0028, amendment 2026-11-28); where the records come from,
+   so nobody mistakes a stale
    file for a node (ADR-0052 clause 3), with what a gathered view says of
    itself; and what the run was started with (the owner, 2026-09-19), where
    its publisher says. It reads the cluster the address names and follows
@@ -30,7 +32,7 @@
         {
             <div class="status-fact">
                 <dt>cluster</dt>
-                <dd class="status-cluster">@Cluster</dd>
+                <dd class="status-cluster" title="@ShownCluster.Title">@ShownCluster.Shown</dd>
             </div>
         }
         <div class="status-fact">

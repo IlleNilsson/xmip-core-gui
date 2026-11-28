@@ -28,9 +28,9 @@
    payload, so an Observer may (ADR-0009, amendment 2026-09-06). *@
 <section class="drill audit">
     <nav class="crumbs" aria-label="Audit drill-down">
-        @foreach ((string label, string href) in Trail)
+        @foreach ((string label, string href, string? title) in Trail)
         {
-            <a class="crumb-btn" href="@href">@label</a>
+            <a class="crumb-btn" href="@href" title="@title">@label</a>
             <span class="sep">/</span>
         }
         @if (Asking.Location is { Length: > 0 } scope)
@@ -184,7 +184,9 @@
               + "there; what is shown is the audit of the machine this host runs on."
             : string.Empty;
 
-    private IEnumerable<(string Label, string Href)> Trail
+    // Each crumb, and its tooltip where it has one: the cluster's, as every
+    // surface names it (ADR-0028, amendment 2026-11-28).
+    private IEnumerable<(string Label, string Href, string? Title)> Trail
     {
         get
         {
@@ -192,29 +194,30 @@
             {
                 Location = null, Host = null, Program = null, Record = null, Offset = 0,
             };
-            yield return ("audit", ScopeLink.Audit(top));
+            yield return ("audit", ScopeLink.Audit(top), null);
 
             if (Asking.Host is { Length: > 0 } host)
             {
-                yield return ($"host {host}", Link(top with { Host = host }));
+                yield return ($"host {host}", Link(top with { Host = host }), null);
             }
 
             if (Asking.Location is { Length: > 0 } location)
             {
-                foreach ((string label, string scope) in Steps(location))
+                foreach ((string label, string scope, string? title) in Steps(location))
                 {
-                    yield return (label, Link(top with { Location = scope }));
+                    yield return (label, Link(top with { Location = scope }), title);
                 }
             }
 
             if (Asking.Program is { Length: > 0 } program)
             {
-                yield return (program, Link(Asking with { Program = program, Record = null }));
+                string named = Link(Asking with { Program = program, Record = null });
+                yield return (program, named, null);
             }
 
             if (Detail is { } entry)
             {
-                yield return (Time(entry.At), Link(Asking));
+                yield return (Time(entry.At), Link(Asking), null);
             }
         }
     }
@@ -222,7 +225,7 @@
     // The steps down to a location: its cluster, the node it is on, and the
     // scope itself where it sits deeper — by the one scope rule, so the node
     // marker is never a step of its own.
-    private static IEnumerable<(string Label, string Scope)> Steps(string location)
+    private IEnumerable<(string Label, string Scope, string? Title)> Steps(string location)
     {
         string[] parts = ScopeTree.Parts(location);
         if (parts.Length == 0)
@@ -231,19 +234,20 @@
         }
 
         string cluster = ScopeTree.Join([parts[0]]);
-        yield return ($"cluster {parts[0]}", cluster);
+        ClusterNamed named = ClusterNamed.Of(parts[0], Surfaces.For(parts[0]));
+        yield return ($"cluster {named.Shown}", cluster, named.Title);
 
         string node = ScopeTree.Node(location);
         string nodeScope = node.Length > 0 ? $"{cluster}/node/{node}" : cluster;
         if (node.Length > 0)
         {
-            yield return ($"node {node}", nodeScope);
+            yield return ($"node {node}", nodeScope, null);
         }
 
         string whole = ScopeTree.Join(parts);
         if (!string.Equals(whole, nodeScope, StringComparison.Ordinal))
         {
-            yield return (ScopeTree.Name(location), whole);
+            yield return (ScopeTree.Name(location), whole, null);
         }
     }
 

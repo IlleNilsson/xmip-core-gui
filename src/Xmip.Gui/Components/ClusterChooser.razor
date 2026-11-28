@@ -16,7 +16,7 @@
         {
             <a class="cluster-pick @Mark(held)" aria-current="@Here(held)"
                title="@Title(held)"
-               href="@ScopeLink.Cluster(Path, held)">@held</a>
+               href="@ScopeLink.Cluster(Path, held)">@Named(held).Shown</a>
         }
     </nav>
 }
@@ -41,8 +41,13 @@
     // not the one in view carries no aria-current at all.
     private string? Here(string held) => Showing(held) ? "page" : null;
 
+    // Each cluster as every surface shows it, its short name, the tooltip
+    // carrying the rest (ADR-0028, amendment 2026-11-28); the link keeps the
+    // name the run gives it.
+    private ClusterNamed Named(string held) => ClusterNamed.Of(held, Surfaces.For(held));
+
     private string Title(string held) =>
         Surfaces.Publishing(held)
-            ? $"cluster {held}"
-            : $"cluster {held} — nothing published; its roll has ended";
+            ? Named(held).Title
+            : $"{Named(held).Title} — nothing published; its roll has ended";
 }

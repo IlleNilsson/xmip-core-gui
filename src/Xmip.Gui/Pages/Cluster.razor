@@ -66,7 +66,12 @@
     <nav class="crumbs">
         @foreach (Crumb crumb in ScopeTree.Trail(Focus, Top, Index))
         {
-            <a class="crumb-btn" href="@ScopeLink.Monitor(crumb.Scope, Carried)">@crumb.Label</a>
+            @* The cluster's own crumb says it as every surface does: its short
+               name, the tooltip carrying the rest (ADR-0028, amendment
+               2026-11-28). *@
+            bool atCluster = crumb.Scope == ScopeTree.Join([Cluster]);
+            <a class="crumb-btn" href="@ScopeLink.Monitor(crumb.Scope, Carried)"
+               title="@(atCluster ? ShownCluster.Title : null)">@(atCluster ? ShownCluster.Shown : crumb.Label)</a>
             <span class="sep">/</span>
         }
         <a class="crumb-link" href="@ScopeLink.Configuration(Focus, Carried)">configuration</a>

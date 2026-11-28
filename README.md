@@ -137,7 +137,9 @@ whatever is scrolled or opened (`StatusBar`; ADR-0052, amendment
 2026-11-25; the owner, the same day: *that should be on a status bar at the
 bottom of the page*): who is signed in, as the runtime's gate proved them,
 or *nobody proven*; the role they were assigned, described once
-(`Roles.Describe`); the cluster in view; the source; and what the run was
+(`Roles.Describe`); the cluster in view, by the short name its file declares,
+with its tooltip (`ClusterNamed`; ADR-0028, amendment 2026-11-28), as the
+chooser and the drills' cluster crumbs say it too; the source; and what the run was
 started with, where its publisher says. It reads the cluster the address
 names and follows its change feed as the views do (`ClusterView`); a fact
 too long for the window scrolls the bar sideways, and the page keeps the

@@ -52,6 +52,11 @@ public abstract class ClusterView : ComponentBase, IDisposable
     /// <summary>The cluster this view is on, as the chooser marks it.</summary>
     protected string Cluster => Surfaces.Showing(Asked);
 
+    /// <summary>The cluster this view is on as every surface shows it: its
+    /// short name, with the tooltip carrying the rest (ADR-0028, amendment
+    /// 2026-11-28).</summary>
+    protected ClusterNamed ShownCluster => ClusterNamed.Of(Cluster, Surface);
+
     /// <summary>What a link out of this view carries: the cluster where the
     /// host lists more than one. A host with one cluster writes the addresses
     /// it always wrote.</summary>
